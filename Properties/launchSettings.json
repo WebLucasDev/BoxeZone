@@ -1,9 +1,6 @@
 {
   "profiles": {
-    "boxezone (Package)": {
-      "commandName": "MsixPackage"
-    },
-    "boxezone (Unpackaged)": {
+    "BoxeZone": {
       "commandName": "Project"
     }
   }
