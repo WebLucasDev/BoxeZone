@@ -16,6 +16,12 @@ namespace BoxeZone.Services
 
         public GoogleCredentials? Google { get; private init; }
 
+        /// <summary>Entra ID application (client) ID for OneDrive. Public client: no secret.</summary>
+        public string? MicrosoftClientId { get; private init; }
+
+        /// <summary>Dropbox app key. PKCE flow: no secret.</summary>
+        public string? DropboxAppKey { get; private init; }
+
         public static AppCredentials Load()
         {
             string path = Path.Combine(AppContext.BaseDirectory, FileName);
@@ -34,6 +40,8 @@ namespace BoxeZone.Services
             return new AppCredentials
             {
                 Google = googleId is not null && googleSecret is not null ? new GoogleCredentials(googleId, googleSecret) : null,
+                MicrosoftClientId = ReadString(root, "Microsoft", "ClientId"),
+                DropboxAppKey = ReadString(root, "Dropbox", "AppKey"),
             };
         }
 

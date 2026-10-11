@@ -11,16 +11,14 @@ namespace BoxeZone.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
-        public MainViewModel(IStorageProvider googleDrive)
+        public MainViewModel(IStorageProvider googleDrive, IStorageProvider oneDrive, IStorageProvider dropbox)
         {
             var strings = new ResourceLoader();
             Providers =
             [
                 new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "G", googleDrive),
-
-                // Still simulated until step 6.
-                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "O", null),
-                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "D", null),
+                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "O", oneDrive),
+                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "D", dropbox),
             ];
 
             foreach (ProviderViewModel provider in Providers)

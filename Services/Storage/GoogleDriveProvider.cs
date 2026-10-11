@@ -146,7 +146,7 @@ namespace BoxeZone.Services.Storage
                     UserKey,
                     ct,
                     _dataStore,
-                    new LocalServerCodeReceiver(BuildSignedInPage()));
+                    new LocalServerCodeReceiver(SignInPage.Build()));
 
                 var drive = new DriveService(new BaseClientService.Initializer
                 {
@@ -243,14 +243,5 @@ namespace BoxeZone.Services.Storage
 
         // Drive query strings are single-quoted; backslash and quote must be escaped.
         private static string EscapeQuery(string value) => value.Replace("\\", "\\\\").Replace("'", "\\'");
-
-        /// <summary>Page shown in the browser once the sign-in completes.</summary>
-        private static string BuildSignedInPage()
-        {
-            string message = WebUtility.HtmlEncode(new ResourceLoader().GetString("SignedInPageMessage"));
-            return "<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><title>BoxeZone</title></head>" +
-                "<body style=\"font-family:'Segoe UI',sans-serif;padding:48px;color:#1b1b1b\">" +
-                $"<p style=\"font-size:15px\">{message}</p></body></html>";
-        }
     }
 }

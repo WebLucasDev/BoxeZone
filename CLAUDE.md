@@ -17,7 +17,7 @@ Idioma da interface: **português (pt-BR)**. Código, nomes de classes, métodos
 - Ícone de bandeja: `H.NotifyIcon.WinUI`
 - Provedores:
   - Google Drive: `Google.Apis.Drive.v3`
-  - OneDrive: `Microsoft.Graph` + `Microsoft.Identity.Client` (MSAL)
+  - OneDrive: `Microsoft.Identity.Client` (MSAL) para o login; as chamadas ao Microsoft Graph (upload session) são feitas com `HttpClient`. O SDK `Microsoft.Graph` ficou de fora de propósito: são só duas chamadas e ele pesaria dezenas de MB no app.
   - Dropbox: `Dropbox.Api`
 - Não usar Electron, Tauri, WebView ou WPF.
 
@@ -63,8 +63,9 @@ Services/
     IStorageProvider.cs      # interface + StorageProviderException
     GoogleDriveProvider.cs
     GoogleTokenDataStore.cs  # IDataStore do Google sobre o TokenStore
-    OneDriveProvider.cs
-    DropboxProvider.cs
+    OneDriveProvider.cs      # MSAL + Graph por HTTP
+    DropboxProvider.cs       # PKCE com listener em localhost:53682
+    SignInPage.cs            # página "Conta conectada" mostrada no navegador
   WindowDockService.cs       # estados Normal / Docked / Hidden, snap na borda
   HotkeyService.cs           # RegisterHotKey via P/Invoke
   SettingsService.cs         # preferências em JSON em %LocalAppData%\BoxeZone
@@ -101,7 +102,7 @@ public interface IStorageProvider
 - Na inicialização, `MainViewModel.RestoreSessionsAsync` reconecta em segundo plano os provedores com sessão salva.
 
 - Uploads são sempre `async`, com `IProgress<double>` para a barra de progresso e `CancellationToken`.
-- Arquivos grandes usam o upload em partes/retomável de cada provedor (Drive: resumable upload; Graph: upload session; Dropbox: upload session acima de 150 MB).
+- Todo envio usa o upload em partes de cada provedor, para ter progresso real: Drive resumable upload (partes de 8 MB), Graph upload session (10 MiB, múltiplo de 320 KiB; arquivo vazio vai num PUT simples) e Dropbox upload session (8 MB; o envio simples não informa progresso e para em 150 MB). Nome repetido não sobrescreve: Graph usa `conflictBehavior=rename` e Dropbox `WriteMode.Add` + `autorename`.
 - Atualizações de UI vindas de outra thread passam por `DispatcherQueue.TryEnqueue`.
 - Um provedor com falha não pode derrubar os outros: erros são capturados por upload e exibidos na própria área de drop.
 - Arquivos chegam por drag and drop: `AllowDrop="True"`, `DragOver` com `AcceptedOperation = Copy`, `Drop` lê `e.DataView.GetStorageItemsAsync()`. O drop não funciona se o app rodar como administrador.
@@ -111,7 +112,7 @@ public interface IStorageProvider
 - Todos usam OAuth de **app desktop** (navegador do sistema + redirect em loopback):
   - **Google**: credencial "Desktop app" (client ID + client secret), escopo `drive.file`. Esse escopo só enxerga o que o próprio app criou, então "Alterar" a pasta de destino é um caminho digitado (o app cria a pasta), não um navegador do Drive. E-mail da conta via `about.get` (`fields=user`).
   - **Microsoft**: registro no Entra ID, cliente público, redirect `http://localhost`, navegador do sistema (`WithUseEmbeddedWebView(false)`), escopo `Files.ReadWrite`. E-mail via `IAccount.Username`.
-  - **Dropbox**: OAuth com PKCE (só App key, sem secret), permissões `files.content.write` e `account_info.read`. Sem `sharing.write`, o "Abrir" leva à pasta no Dropbox web em vez de criar link compartilhado.
+  - **Dropbox**: OAuth com PKCE (só App key, sem secret), permissões `files.content.write` e `account_info.read`. O redirect é `http://localhost:53682/`, que precisa estar cadastrado exatamente assim no console do Dropbox (Redirect URIs), com "Allow public clients" ligado. Sem `sharing.write`, o "Abrir" leva à pasta no Dropbox web com o arquivo em pré-visualização, em vez de criar link compartilhado.
 - Tokens ficam no `TokenStore`, criptografados por usuário do Windows com `Windows.Security.Cryptography.DataProtection.DataProtectionProvider("LOCAL=user")`, em arquivos em `%LocalAppData%\BoxeZone`. Não usar `ProtectedData` (exige outro NuGet) nem `PasswordVault` (limite de tamanho, o cache do MSAL não cabe).
   - Google: implementar `IDataStore` sobre o `TokenStore`; nunca usar `FileDataStore` (grava JSON em texto puro).
   - MSAL: serializar o token cache pelos callbacks `SetBeforeAccess`/`SetAfterAccess`.

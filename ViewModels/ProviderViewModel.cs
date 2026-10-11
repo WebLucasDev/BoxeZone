@@ -38,7 +38,7 @@ namespace BoxeZone.ViewModels
         private List<StorageFile> _failedFiles = [];
         private string? _uploadedLink;
 
-        public ProviderViewModel(string id, string name, string initial, IStorageProvider? provider)
+        public ProviderViewModel(string id, string name, string initial, IStorageProvider provider)
         {
             Id = id;
             Name = name;
@@ -55,8 +55,7 @@ namespace BoxeZone.ViewModels
         /// <summary>Letter shown in the 28 px provider icon.</summary>
         public string Initial { get; }
 
-        /// <summary>Null while the provider is still simulated (OneDrive and Dropbox until step 6).</summary>
-        public IStorageProvider? Provider { get; }
+        public IStorageProvider Provider { get; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(Status), nameof(IsDropZoneVisible))]
@@ -113,11 +112,6 @@ namespace BoxeZone.ViewModels
         /// <summary>Signs in silently from a saved session, at startup.</summary>
         public async Task RestoreAsync()
         {
-            if (Provider is null)
-            {
-                return;
-            }
-
             try
             {
                 await Provider.RestoreAsync(CancellationToken.None);
@@ -133,12 +127,6 @@ namespace BoxeZone.ViewModels
         {
             if (IsUploading || files.Count == 0)
             {
-                return;
-            }
-
-            if (Provider is null)
-            {
-                await SimulateUploadAsync(files);
                 return;
             }
 
@@ -172,7 +160,7 @@ namespace BoxeZone.ViewModels
         [RelayCommand]
         private async Task RetryAsync()
         {
-            if (Provider is { IsConnected: false })
+            if (!Provider.IsConnected)
             {
                 await ConnectAsync();
                 if (!Provider.IsConnected)
@@ -203,7 +191,7 @@ namespace BoxeZone.ViewModels
             }
 
             ConnectError = null;
-            if (Provider is { IsConnected: false } && !IsConnecting)
+            if (!Provider.IsConnected && !IsConnecting)
             {
                 _ = ConnectAsync();
             }
@@ -211,11 +199,6 @@ namespace BoxeZone.ViewModels
 
         private async Task ConnectAsync()
         {
-            if (Provider is null)
-            {
-                return;
-            }
-
             using var cts = new CancellationTokenSource(SignInTimeout);
             _connectCts = cts;
             IsConnecting = true;
@@ -252,26 +235,6 @@ namespace BoxeZone.ViewModels
                 StorageErrorKind.QuotaExceeded => "ErrorQuotaExceeded",
                 _ => "ErrorUnknown",
             });
-        }
-
-        // TEMP (until step 6): fakes the upload for providers that are not implemented yet.
-        private async Task SimulateUploadAsync(IReadOnlyList<StorageFile> files)
-        {
-            foreach (StorageFile file in files)
-            {
-                FileName = file.Name;
-                Progress = 0;
-                State = UploadState.Uploading;
-
-                while (Progress < 100)
-                {
-                    await Task.Delay(90);
-                    Progress = Math.Min(100, Progress + 4 + Random.Shared.Next(7));
-                }
-            }
-
-            _uploadedLink = null;
-            State = UploadState.Done;
         }
     }
 }

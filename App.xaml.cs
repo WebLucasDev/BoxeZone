@@ -46,7 +46,10 @@ namespace BoxeZone
         {
             AppCredentials credentials = AppCredentials.Load();
             var tokenStore = new TokenStore();
-            var viewModel = new MainViewModel(new GoogleDriveProvider(credentials.Google, tokenStore));
+            var viewModel = new MainViewModel(
+                new GoogleDriveProvider(credentials.Google, tokenStore),
+                new OneDriveProvider(credentials.MicrosoftClientId, tokenStore),
+                new DropboxProvider(credentials.DropboxAppKey, tokenStore));
             _window = new MainWindow(viewModel);
             _tabWindow = new TabWindow();
             _dockService = new WindowDockService(_window, _tabWindow, viewModel);
