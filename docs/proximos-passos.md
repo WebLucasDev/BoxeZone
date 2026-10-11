@@ -10,7 +10,8 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Ícones reais dos provedores** no lugar das iniciais (branch `feat/provider-logos`): SVGs oficiais em `Assets/Providers/`, 18 px dentro do quadrado de 28 px, no widget e nas Configurações. Falta o teste do usuário.
+- [ ] **Ícones reais dos provedores** no lugar das iniciais (branch `feat/provider-logos`, `adaa1fb`): SVGs oficiais em `Assets/Providers/`, 18 px dentro do quadrado de 28 px, no widget e nas Configurações. Falta o merge na `main`.
+- [ ] **Logo nova: luva de boxe** (branch `feat/glove-logo`) no lugar da seta de envio: `.ico` (exe e bandeja), `.png` (notificações) e cabeçalho do widget. Falta o teste do usuário.
 
 ## Distribuição
 

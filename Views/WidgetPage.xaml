@@ -33,17 +33,31 @@
                 VerticalAlignment="Center"
                 Background="{StaticResource BoxeZoneAccentBrush}"
                 CornerRadius="5">
-                <Viewbox Width="12" Height="12">
-                    <Path
-                        Width="16"
-                        Height="16"
-                        Data="M8,11 L8,3 M4.5,6.5 L8,3 L11.5,6.5 M3,13 L13,13"
-                        Stretch="None"
-                        Stroke="{StaticResource OnAccentForegroundBrush}"
-                        StrokeEndLineCap="Round"
-                        StrokeLineJoin="Round"
-                        StrokeStartLineCap="Round"
-                        StrokeThickness="2" />
+                <!-- Boxing glove, same geometry as Assets/BoxeZone-small.svg (without the tile). -->
+                <Viewbox Width="18" Height="18">
+                    <Canvas Width="256" Height="256">
+                        <Canvas.RenderTransform>
+                            <TransformGroup>
+                                <RotateTransform Angle="40" CenterX="132" CenterY="128" />
+                                <TranslateTransform X="-6" Y="4" />
+                            </TransformGroup>
+                        </Canvas.RenderTransform>
+                        <Rectangle
+                            Canvas.Left="98"
+                            Canvas.Top="184"
+                            Width="86"
+                            Height="48"
+                            Fill="{StaticResource OnAccentForegroundBrush}"
+                            RadiusX="12"
+                            RadiusY="12" />
+                        <Path Data="M104,172 C98,150 96,128 98,108 C100,56 126,26 162,28 C194,30 210,60 206,100 C202,136 192,156 178,172 Z" Fill="{StaticResource OnAccentForegroundBrush}" />
+                        <Path
+                            Data="M100,172 C78,162 66,138 70,116 C74,94 92,86 110,92 C127,99 132,118 123,134 C116,147 109,159 107,172 Z"
+                            Fill="{StaticResource OnAccentForegroundBrush}"
+                            Stroke="{StaticResource BoxeZoneAccentBrush}"
+                            StrokeLineJoin="Round"
+                            StrokeThickness="16" />
+                    </Canvas>
                 </Viewbox>
             </Border>
 
