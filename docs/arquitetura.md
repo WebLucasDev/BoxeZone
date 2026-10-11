@@ -141,6 +141,7 @@ public interface IStorageProvider
 - Nome de `VisualState` não pode repetir nome de evento do controle (`DragOver` gerava CS0108); usar `DragTarget`.
 - `x:Bind` converte `bool` em `Visibility`, mas não o inverso: usar `BindConverters`. Função estática no próprio code-behind é chamada como de instância pelo `x:Bind` e não compila.
 - Seletor de tema: `RadioButton` nativo com o estilo `SegmentRadioButtonStyle` (o WinUI não tem controle segmentado sem pacote extra).
+- Logos dos provedores: SVGs oficiais em `Assets/Providers/`, carregados com `SvgImageSource` por `ms-appx:///` (funciona sem pacote, porque os arquivos são `Content` copiados ao lado do `.exe`). O `SvgImageSource` usa o SVG do Direct2D, que não desenha `<mask>`, folhas de estilo (`<style>`, `class`) nem texto: no SVG baixado, a máscara vira `<clipPath>` e os estilos viram atributos (`fill`, `fill-opacity`). O `viewBox` é recortado no contorno do logo para ele ocupar os 18 px. Diretrizes de marca: não recolorir nem distorcer os logos.
 
 ## Testes manuais automatizados (UI Automation)
 

@@ -20,7 +20,6 @@
                     <SolidColorBrush x:Key="CaptionButtonBackgroundPressedBrush" Color="#0AFFFFFF" />
                     <SolidColorBrush x:Key="ProviderRowOnBackgroundBrush" Color="#0AFFFFFF" />
                     <SolidColorBrush x:Key="ProviderIconBackgroundBrush" Color="#17FFFFFF" />
-                    <SolidColorBrush x:Key="ProviderIconForegroundBrush" Color="#EEF1F5" />
                     <SolidColorBrush x:Key="DropZoneBackgroundBrush" Color="#08FFFFFF" />
                     <SolidColorBrush x:Key="DropZoneBackgroundPointerOverBrush" Color="#12FFFFFF" />
                     <SolidColorBrush x:Key="DropZoneBorderBrush" Color="#42FFFFFF" />
@@ -65,7 +64,6 @@
                     <StaticResource x:Key="CaptionButtonBackgroundPressedBrush" ResourceKey="SubtleFillColorTertiaryBrush" />
                     <StaticResource x:Key="ProviderRowOnBackgroundBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <SolidColorBrush x:Key="ProviderIconBackgroundBrush" Color="#12000000" />
-                    <StaticResource x:Key="ProviderIconForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
                     <SolidColorBrush x:Key="DropZoneBackgroundBrush" Color="#05000000" />
                     <SolidColorBrush x:Key="DropZoneBackgroundPointerOverBrush" Color="#0D000000" />
                     <SolidColorBrush x:Key="DropZoneBorderBrush" Color="#42000000" />

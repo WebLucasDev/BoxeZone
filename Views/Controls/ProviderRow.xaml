@@ -55,13 +55,11 @@
                 Height="28"
                 Background="{ThemeResource ProviderIconBackgroundBrush}"
                 CornerRadius="6">
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    FontSize="12"
-                    FontWeight="Bold"
-                    Foreground="{ThemeResource ProviderIconForegroundBrush}"
-                    Text="{x:Bind ViewModel.Initial, Mode=OneWay}" />
+                <Image Width="18" Height="18">
+                    <Image.Source>
+                        <SvgImageSource UriSource="{x:Bind ViewModel.Logo, Mode=OneWay}" />
+                    </Image.Source>
+                </Image>
             </Border>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">

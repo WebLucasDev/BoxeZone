@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-Nada no momento.
+- [ ] **Ícones reais dos provedores** no lugar das iniciais (branch `feat/provider-logos`): SVGs oficiais em `Assets/Providers/`, 18 px dentro do quadrado de 28 px, no widget e nas Configurações. Falta o teste do usuário.
 
 ## Distribuição
 
@@ -39,7 +39,6 @@ Nada no momento.
 
 ## Interface
 
-- [ ] **Ícones reais dos provedores** no lugar das iniciais (seguindo as diretrizes de marca de cada um).
 - [ ] **Brilho na faixa recolhida**, como no protótipo (`box-shadow` azul); a janela nativa hoje só tem a sombra padrão.
 - [ ] **Dicas (tooltips)** na aba e na faixa, sem cortar dentro de janelas tão finas.
 - [ ] **Inglês** (`Strings/en-US/Resources.resw`) e seleção de idioma.

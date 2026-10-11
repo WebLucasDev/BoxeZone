@@ -49,11 +49,11 @@ namespace BoxeZone.ViewModels
         private string? _uploadedLink;
         private bool _isRestoring;
 
-        public ProviderViewModel(string id, string name, string initial, IStorageProvider provider, ProviderSettings settings, Action save)
+        public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save)
         {
             Id = id;
             Name = name;
-            Initial = initial;
+            Logo = new Uri($"ms-appx:///Assets/Providers/{logoFile}");
             Provider = provider;
             _settings = settings;
             _save = save;
@@ -69,8 +69,8 @@ namespace BoxeZone.ViewModels
 
         public string Name { get; }
 
-        /// <summary>Letter shown in the 28 px provider icon.</summary>
-        public string Initial { get; }
+        /// <summary>Official logo (SVG) shown in the 28 px provider icon.</summary>
+        public Uri Logo { get; }
 
         public IStorageProvider Provider { get; }
 
