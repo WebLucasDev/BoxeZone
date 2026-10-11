@@ -1,241 +1,96 @@
 # BoxeZone
 
-App nativo para Windows 11: uma janelinha flutuante no canto da tela onde o usuário arrasta arquivos e eles são enviados direto para o **Google Drive**, **OneDrive** ou **Dropbox**. Cada provedor tem um switch; quando ligado, ganha a sua própria área de drop e a janela cresce.
+App nativo para Windows 11: uma janelinha flutuante no canto da tela onde o usuário arrasta arquivos e eles são enviados para o **Google Drive**, **OneDrive** ou **Dropbox**. Cada provedor tem um switch; ligado, ganha a sua área de drop e a janela cresce.
 
-Idioma da interface: **português (pt-BR)**. Código, nomes de classes, métodos e commits: **inglês**.
+Interface em **pt-BR**. Código, nomes, comentários e commits em **inglês**.
+
+| Documento | Quando ler |
+|---|---|
+| `docs/arquitetura.md` | Antes de mexer em janelas, aba/faixa, upload, autenticação, preferências, notificações ou estilos: estados, decisões e as armadilhas que já custaram bugs. |
+| `docs/proximos-passos.md` | Roadmap, ideias e limitações conhecidas. Atualizar ao começar ou terminar um item. |
+| `docs/*.dc.html` | Protótipo visual (fonte da verdade). Ver "Visual" abaixo. |
 
 ## Stack
 
-- **WinUI 3** (Windows App SDK) + **C# / .NET 10** (`net10.0-windows10.0.19041.0`)
-- **Unpackaged**, distribuído como `.exe` comum. O projeto nasceu do template empacotado; o `.csproj` deve ter:
-  - `<WindowsPackageType>None</WindowsPackageType>`
-  - `<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>` (roda sem instalar o runtime do Windows App SDK)
-  - `<DefaultLanguage>pt-BR</DefaultLanguage>` (os recursos só existem em pt-BR)
-  - `<PublishTrimmed>false</PublishTrimmed>` também no Release (os SDKs dos provedores usam reflexão)
-  - O `Package.appxmanifest` e o perfil `MsixPackage` do `launchSettings.json` não são usados.
-- **MVVM** com `CommunityToolkit.Mvvm`: `ObservableObject`, `[RelayCommand]` e `[ObservableProperty]` em **propriedades parciais** (`public partial string Status { get; set; }`), não em campos.
-- Ícone de bandeja: `H.NotifyIcon.WinUI`
-- Provedores:
-  - Google Drive: `Google.Apis.Drive.v3`
-  - OneDrive: `Microsoft.Identity.Client` (MSAL) para o login; as chamadas ao Microsoft Graph (upload session) são feitas com `HttpClient`. O SDK `Microsoft.Graph` ficou de fora de propósito: são só duas chamadas e ele pesaria dezenas de MB no app.
-  - Dropbox: `Dropbox.Api`
+- **WinUI 3** (Windows App SDK) + **C# / .NET 10** (`net10.0-windows10.0.19041.0`).
+- **Unpackaged e self-contained** (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`): `.exe` comum, sem instalar runtime. `DefaultLanguage=pt-BR`; `PublishTrimmed=false` (os SDKs dos provedores usam reflexão).
+- **MVVM** com `CommunityToolkit.Mvvm`: `[ObservableProperty]` em **propriedades parciais** (`public partial string Status { get; set; }`), não em campos.
+- Pacotes permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.BuildTools`, `CommunityToolkit.Mvvm`, `H.NotifyIcon.WinUI` (bandeja), `Google.Apis.Drive.v3`, `Microsoft.Identity.Client` (MSAL; o Graph é chamado por `HttpClient`, sem o SDK `Microsoft.Graph`) e `Dropbox.Api`. Qualquer outro: perguntar antes.
 - Não usar Electron, Tauri, WebView ou WPF.
-
-Pacotes NuGet permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.BuildTools` e os listados acima. Qualquer outro, perguntar antes.
 
 ## Comandos
 
 ```powershell
-dotnet restore
 dotnet build -c Debug -p:Platform=x64
 dotnet run -c Debug --property:Platform=x64
-
-# versão para distribuir (self-contained, roda sem instalar nada):
-dotnet publish -c Release -p:Platform=x64
-# saída: bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\ (~300 MB, leva o .NET e o Windows App SDK)
+dotnet publish -c Release -p:Platform=x64   # bin\Release\...\win-x64\publish\ (~300 MB)
 ```
 
-A pasta publicada inclui o `appsettings.local.json`. Em app de desktop, client ID (e o secret do Google, que o próprio Google trata como não confidencial nesse tipo de app) vão junto com o programa; tokens de usuário nunca.
+Um BoxeZone aberto trava o `.exe` e o build falha ao copiá-lo: fechar pelo "Sair" da bandeja (ou encerrar o processo) antes de compilar.
 
 ## Estrutura
 
-Os arquivos do projeto ficam na raiz do repositório. Namespace raiz: `BoxeZone`.
+Projeto na raiz do repositório, namespace `BoxeZone`.
 
 ```
-BoxeZone.csproj / BoxeZone.slnx
-Program.cs                   # Main próprio (DISABLE_XAML_GENERATED_MAIN): instância única, depois o Main gerado pelo XAML
-App.xaml(.cs)                # startup: janela, ícone de bandeja, hotkey; cores em ThemeDictionaries
-app.manifest
-appsettings.example.json     # modelo das credenciais, campos vazios (commitado)
-appsettings.local.json       # credenciais reais (no .gitignore)
-Assets/
-Strings/pt-BR/Resources.resw # todas as strings de UI
-docs/                        # protótipos HTML: fonte da verdade visual
+Program.cs                 # Main próprio: instância única, depois o Main do XAML
+App.xaml(.cs)              # monta serviços e janelas; cores (ThemeDictionaries) e estilos
+Strings/pt-BR/Resources.resw
+Assets/                    # BoxeZone.ico (exe/bandeja), BoxeZone.png (notificações)
+appsettings.example.json   # modelo; as credenciais reais ficam em appsettings.local.json (git-ignored)
 Views/
-  MainWindow.xaml(.cs)       # janela sem borda; hospeda um Frame e os estados Docked (faixa e painel compacto)
-  TabWindow.xaml(.cs)        # a aba lateral, numa janela própria colada à esquerda do widget
-  WidgetPage.xaml(.cs)       # cabeçalho, aba lateral, linhas de provedor, áreas de drop, rodapé
-  SettingsPage.xaml(.cs)     # contas, comportamento, atalho e tema
-  Controls/
-    ProviderRow.xaml(.cs)    # uma linha de provedor + a área de drop dele (IsCompact: só a área, no painel compacto)
-    TabHandle.xaml(.cs)      # conteúdo da aba: estados visuais e o arrasto
-    AccountCard.xaml(.cs)    # um provedor em Configurações > Contas (conta + pasta de destino)
-ViewModels/
-  MainViewModel.cs
-  ProviderViewModel.cs       # estado de um provedor: ligado, conectado, upload em andamento
-  SettingsViewModel.cs
+  MainWindow               # janela do widget: Frame (WidgetPage/SettingsPage), faixa e painel compacto
+  TabWindow                # aba lateral, numa janela própria
+  WidgetPage, SettingsPage
+  Controls/                # ProviderRow, AccountCard, TabHandle
+ViewModels/                # MainViewModel, ProviderViewModel, SettingsViewModel
 Services/
-  AppCredentials.cs          # lê appsettings.local.json
-  Storage/
-    IStorageProvider.cs      # interface + StorageProviderException
-    GoogleDriveProvider.cs
-    GoogleTokenDataStore.cs  # IDataStore do Google sobre o TokenStore
-    OneDriveProvider.cs      # MSAL + Graph por HTTP
-    DropboxProvider.cs       # PKCE com listener em localhost:53682
-    SignInPage.cs            # página "Conta conectada" mostrada no navegador
-  WindowDockService.cs       # estados Normal / Docked / Hidden, snap na borda
-  HotkeyService.cs           # RegisterHotKey via P/Invoke
-  SettingsService.cs         # preferências em JSON em %LocalAppData%\BoxeZone
-  TokenStore.cs              # tokens criptografados por usuário do Windows
-  NotificationService.cs     # notificações do Windows (toast com AppUserModelID próprio)
-  StartupService.cs          # "Iniciar com o Windows" (chave Run + --startup)
-  CrashLog.cs                # exceções não tratadas em %LocalAppData%\BoxeZone\crash.log
-Helpers/
-  Win32.cs                   # P/Invoke (GetCursorPos, RegisterHotKey, SetWindowSubclass etc.)
-  WindowExtensions.cs        # tamanho e posição das janelas pela moldura visível
+  WindowDockService        # estados Normal/Docked/Hidden e posição das janelas
+  HotkeyService, SettingsService, TokenStore, NotificationService, StartupService, CrashLog, AppCredentials
+  Storage/                 # IStorageProvider + Google Drive, OneDrive, Dropbox, SignInPage
+Helpers/                   # Win32 (P/Invoke), WindowExtensions, BindConverters
 ```
 
-Configurações abre **na mesma janela**: o `Frame` navega de `WidgetPage` para `SettingsPage`, a janela cresce de 300 para 440 px de largura, e "Voltar" retorna ao widget.
+## Regras de arquitetura
 
-## Arquitetura
+- Toda integração passa por `IStorageProvider`; a UI nunca chama SDK de provedor. Falhas saem como `StorageProviderException` (com `StorageErrorKind`) e a UI mostra a mensagem do `.resw`.
+- Um provedor com falha não pode derrubar os outros: erros ficam na área de drop dele.
+- Uploads sempre `async`, em partes (progresso real), com `IProgress<double>` e `CancellationToken`.
+- OAuth de app desktop (navegador do sistema + loopback) nos três provedores. Tokens só no `TokenStore` (criptografados por usuário do Windows): nunca em texto puro, nunca em log.
+- Preferências em `%LocalAppData%\BoxeZone\settings.json` (`ApplicationData.Current` não funciona sem pacote).
+- Strings de UI em `Strings/pt-BR/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas.
 
-Toda integração passa por uma interface única. A UI nunca chama SDK de provedor diretamente.
+## Armadilhas (detalhes em `docs/arquitetura.md`)
 
-```csharp
-public interface IStorageProvider
-{
-    string Id { get; }            // "gdrive" | "onedrive" | "dropbox"
-    string DisplayName { get; }
-    bool IsConnected { get; }
-    string? AccountEmail { get; } // exibido em Configurações ("Conectado · e-mail")
-    Task RestoreAsync(CancellationToken ct);     // reconecta pela sessão salva, sem abrir o navegador
-    Task ConnectAsync(CancellationToken ct);     // fluxo OAuth no navegador
-    Task DisconnectAsync();
-    Task<string> UploadAsync(StorageFile file, string targetFolder,
-                             IProgress<double> progress, CancellationToken ct); // retorna link do arquivo
-}
-```
+- **Tamanho e posição de janela** só por `WindowExtensions` (moldura visível, mover + redimensionar juntos, conteúdo num `Canvas`).
+- **Topmost**: o widget é possuído pela aba e isso tira o topmost; ele é reaplicado a cada show (`ApplyTopmost`).
+- **Largura mínima** do Windows (~70 px) é removida por subclasse (`WM_WINDOWPOSCHANGING`); sem isso aba e faixa engordam.
+- **Arrasto da aba** lê o cursor por `GetCursorPos` a cada quadro; o WinUI não manda `PointerMoved` fora da janela.
+- **Notificações**: `AppNotificationManager` não funciona self-contained; usar `Windows.UI.Notifications` com o AUMID `BoxeZone.App`.
+- **Tema** se aplica no `Window.Content`, senão o Acrylic não acompanha.
+- **Lightweight styling** com o mesmo valor nos dois temas vai no dicionário principal do `App.xaml`, não nos `ThemeDictionaries`.
+- Exceção no `OnLaunched` derruba o app em silêncio: ver `%LocalAppData%\BoxeZone\crash.log`.
 
-- Falhas saem como `StorageProviderException` com um `StorageErrorKind` (NotConfigured, AccessDenied, SessionExpired, Offline, QuotaExceeded, Unknown). O provedor traduz as exceções do SDK; a UI só conhece o tipo e mostra a mensagem do `.resw`.
-- Ligar o switch de um provedor não conectado inicia o login (status "Conectando…", área de drop escondida, limite de 3 min). Se o login falhar ou for cancelado, o switch volta a desligar e o status mostra o motivo.
-- Envio com falha: a área de drop mostra "Não foi possível enviar · nome", o motivo numa segunda linha e "Tentar de novo", que reenvia a partir do arquivo que falhou (e reconecta antes, se a sessão expirou).
-- Na inicialização, `MainViewModel.RestoreSessionsAsync` reconecta em segundo plano os provedores com sessão salva.
+## Visual
 
-- Uploads são sempre `async`, com `IProgress<double>` para a barra de progresso e `CancellationToken`.
-- Todo envio usa o upload em partes de cada provedor, para ter progresso real: Drive resumable upload (partes de 8 MB), Graph upload session (10 MiB, múltiplo de 320 KiB; arquivo vazio vai num PUT simples) e Dropbox upload session (8 MB; o envio simples não informa progresso e para em 150 MB). Nome repetido não sobrescreve: Graph usa `conflictBehavior=rename` e Dropbox `WriteMode.Add` + `autorename`.
-- Atualizações de UI vindas de outra thread passam por `DispatcherQueue.TryEnqueue`.
-- Um provedor com falha não pode derrubar os outros: erros são capturados por upload e exibidos na própria área de drop.
-- Arquivos chegam por drag and drop: `AllowDrop="True"`, `DragOver` com `AcceptedOperation = Copy`, `Drop` lê `e.DataView.GetStorageItemsAsync()`. O drop não funciona se o app rodar como administrador.
-
-## Autenticação
-
-- Todos usam OAuth de **app desktop** (navegador do sistema + redirect em loopback):
-  - **Google**: credencial "Desktop app" (client ID + client secret), escopo `drive.file`. Esse escopo só enxerga o que o próprio app criou, então "Alterar" a pasta de destino é um caminho digitado (o app cria a pasta), não um navegador do Drive. E-mail da conta via `about.get` (`fields=user`).
-  - **Microsoft**: registro no Entra ID, cliente público, redirect `http://localhost`, navegador do sistema (`WithUseEmbeddedWebView(false)`), escopo `Files.ReadWrite`. E-mail via `IAccount.Username`.
-  - **Dropbox**: OAuth com PKCE (só App key, sem secret), permissões `files.content.write` e `account_info.read`. O redirect é `http://localhost:53682/`, que precisa estar cadastrado exatamente assim no console do Dropbox (Redirect URIs), com "Allow public clients" ligado. Sem `sharing.write`, o "Abrir" leva à pasta no Dropbox web com o arquivo em pré-visualização, em vez de criar link compartilhado.
-- Tokens ficam no `TokenStore`, criptografados por usuário do Windows com `Windows.Security.Cryptography.DataProtection.DataProtectionProvider("LOCAL=user")`, em arquivos em `%LocalAppData%\BoxeZone`. Não usar `ProtectedData` (exige outro NuGet) nem `PasswordVault` (limite de tamanho, o cache do MSAL não cabe).
-  - Google: implementar `IDataStore` sobre o `TokenStore`; nunca usar `FileDataStore` (grava JSON em texto puro).
-  - MSAL: serializar o token cache pelos callbacks `SetBeforeAccess`/`SetAfterAccess`.
-- Tokens nunca em texto puro, nunca em log.
-- Client IDs e secrets ficam em `appsettings.local.json` (no `.gitignore`), copiado para a pasta do `.exe` no build e lido por `AppCredentials`. Manter `appsettings.example.json` com os campos vazios.
-
-## Janela e comportamento
-
-Três estados, controlados pelo `WindowDockService`:
-
-1. **Normal**: widget de 300 px de largura (altura acompanha o conteúdo), a 16 px do canto inferior direito da `DisplayArea.WorkArea`, sempre no topo.
-2. **Docked** ("Encostada" no protótipo): faixa de 10–12 px de largura e ~104–120 px de altura colada na borda direita, na cor de destaque com brilho suave e um traço vertical no centro.
-   - Mouse em cima: a faixa alarga para 16 px. Clique: volta ao Normal.
-   - Arquivo arrastado sobre ela (`DragEnter`): abre um painel compacto (~200 px, colado na borda) só com as áreas de drop dos provedores ligados, destacando a zona sob o cursor. Recolhe quando o arrasto sai, exceto durante upload.
-3. **Hidden** ("Escondida"): janela oculta (`AppWindow.Hide()`), processo continua rodando; volta pelo ícone da bandeja ou pela hotkey.
-
-Transições:
-- Botão "–" (dica "Minimizar") → Docked. Botão "X" (dica "Fechar") → Hidden, **não** encerra.
-- Aba lateral esquerda (15×80 px) é a alça de arrastar: mesma cor do container em repouso, cor de destaque enquanto pressionada. Ao soltar:
-  - centro do widget fora de todos os monitores → Hidden (volta depois na posição de antes do arrasto);
-  - borda direita do widget a menos de 24 px da borda direita da tela → Docked. Só vale para uma borda real: a divisa entre dois monitores não recolhe;
-  - qualquer outro lugar → continua Normal onde foi solto (ajustado para dentro da área de trabalho).
-- "Recolher após o envio" ligado → Docked quando o upload termina.
-- Encerrar o app só pelo menu do ícone da bandeja ("Sair").
-
-Implementação nativa:
-- Sem barra de título: `OverlappedPresenter.SetBorderAndTitleBar(true, false)` com `IsResizable`, `IsMaximizable` e `IsMinimizable` em `false`. Isso mantém os cantos arredondados, a sombra e a borda de 1 px do Windows 11. Os botões "–" e "X" são desenhados no XAML (44×36 px; "X" fica `#C42B1C` no hover).
-- `AppWindow.IsShownInSwitchers = false` (fora da barra de tarefas e do Alt+Tab).
-- `AppWindow` trabalha em pixels físicos: multiplicar tamanhos pela escala (`GetDpiForWindow / 96` ou `XamlRoot.RasterizationScale`).
-- Sem barra de título, a área XAML também cobre a legenda escondida, então `ResizeClient` deixa a janela maior que o conteúdo: o tamanho sai da diferença medida entre a janela e `XamlRoot.Size`. Posicionar pela moldura visível (`DWMWA_EXTENDED_FRAME_BOUNDS`), porque o retângulo da janela inclui bordas invisíveis de ~8 px. Tudo isso está em `WindowExtensions`.
-- Mover e redimensionar juntos (`SetVisibleBounds` → `AppWindow.MoveAndResize`). Redimensionar primeiro e mover depois faz a janela invadir por um instante o monitor vizinho, que tem outra escala, e o Windows a reescala.
-- O Windows e o WinUI impõem largura mínima (~70 px) a janelas com borda. `PreferredMinimumWidth` e `WM_GETMINMAXINFO` não bastam: a subclasse em `Win32.RemoveMinimumSize` restaura o tamanho pedido em `WM_WINDOWPOSCHANGING`. Sem isso, a aba (23 px) e a faixa (12 px) não ficam finas.
-- O conteúdo da janela fica dentro de um `Canvas`: assim ele é medido sem o tamanho atual da janela como limite e pode pedir mais altura. Sem isso, a janela nunca cresce.
-- Aba lateral: no protótipo ela fica **fora** do container (`left: -15px`), então é uma janela própria (`TabWindow`, 15 px visíveis + 8 px escondidos atrás do widget). O widget é "possuído" pela aba (`GWLP_HWNDPARENT`), o que o mantém sempre por cima dela; a aba tem `WS_EX_NOACTIVATE` para não tirar o foco do widget. Trocar o dono tira o topmost do widget (ele some atrás de outros apps e só a aba fica visível): `Win32.MakeTopmost` é reaplicado ao definir o dono e a cada vez que o widget é mostrado.
-- O WinUI para de mandar `PointerMoved` quando o cursor sai de uma janela, então o arrasto da aba lê `GetCursorPos` e o estado do botão a cada quadro (`CompositionTarget.Rendering`).
-- Faixa Docked: ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso; conferir a posição real do cursor antes de estreitar de novo.
-- Hotkey padrão `Ctrl+Alt+D`: com o widget em Normal, esconde; em qualquer outro estado (Hidden, Docked), traz para o Normal. Configurável na etapa 7. `RegisterHotKey` exige receber `WM_HOTKEY`: o `HotkeyService` faz subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`. Se outro app já usa o atalho, o registro falha e o BoxeZone segue funcionando pela bandeja.
-- Instância única (`AppInstance.FindOrRegisterForKey` em `Program.Main`): abrir o `.exe` de novo redireciona a ativação para o que está rodando, que volta ao Normal, e a segunda cópia encerra.
-- Animações de transição curtas (150–250 ms). Trocas de modo (widget, faixa, painel compacto) e de página (widget ↔ Configurações) fazem fade de 180 ms só no conteúdo; o fundo não, para o tema escuro não piscar o Acrylic mais claro. A janela muda de tamanho na hora: animar o tamanho de uma janela nativa fica travado.
-
-## Diretrizes visuais
-
-O protótipo aprovado está em `docs/` e é a **fonte da verdade visual**. Antes de criar ou alterar qualquer tela, leia o arquivo correspondente e reproduza medidas, cores, espaçamentos, textos e estados:
+O protótipo em `docs/` é a **fonte da verdade visual**: antes de criar ou alterar uma tela, ler o arquivo dela e reproduzir medidas, cores, espaçamentos, textos e estados.
 
 | Arquivo | Tela |
 |---|---|
-| `docs/widget.dc.html` | Widget principal: cabeçalho, aba lateral, linhas de provedor, áreas de drop, upload, rodapé, estado recolhido |
-| `docs/configuracoes.dc.html` | Tela de Configurações |
-| `docs/estados-janela.dc.html` | Os três estados da janela (Normal, Docked, Hidden) e o painel compacto ao arrastar |
+| `docs/widget.dc.html` | Widget: cabeçalho, aba, linhas de provedor, áreas de drop, upload, rodapé |
+| `docs/configuracoes.dc.html` | Configurações |
+| `docs/estados-janela.dc.html` | Normal, Docked, Hidden e o painel compacto (esboço; nos detalhes do widget vale o `widget.dc.html`) |
 
-Como ler esses arquivos (são protótipos HTML, não código para portar):
-- Eles dependem de um `support.js` que não está no repositório. Ler como texto, não abrir no navegador.
-- Os `style="…"` inline e o bloco `<style>` em `<helmet>` têm os valores exatos (px, cores, raios, sombras). Converter para XAML: `px` → unidades efetivas do WinUI, `rgba(...)` → `Color` com alfa, `backdrop-filter` → `DesktopAcrylicBackdrop`.
-- `<sc-for>`, `<sc-if>` e `{{...}}` são a sintaxe de template do protótipo: equivalem a `ItemsRepeater`/`ListView`, `Visibility` com binding e `{x:Bind}`.
-- O `<script>` com `class Component` no fim mostra os estados e a lógica de interação (switches, progresso do upload, recolher/expandir); usar como referência para os ViewModels.
-- O que fica fora do widget é só cenário do protótipo: fundo com manchas, título "POC · BoxeZone", "Clique na faixa para expandir", "Rodando na bandeja · clique para reabrir".
-- `estados-janela.dc.html` é um esboço simplificado. Em detalhes do widget (por exemplo, ele mostra só os destinos ativos), vale o `widget.dc.html`, que lista os três provedores com switch.
-- Não copiar HTML, CSS ou JS para o projeto. Se algo do protótipo não tiver equivalente nativo no WinUI, escolher o controle nativo mais próximo e avisar.
-
-Referência de estilo geral: EarTrumpet, Dropover e Fluent do Windows 11.
-
-- Fundo `DesktopAcrylicBackdrop`; tema segue o sistema (claro/escuro), com opção nas configurações.
-- O protótipo só mostra o tema **escuro**. Os valores dele valem para o escuro; o claro usa os recursos de tema do WinUI equivalentes. Cores ficam em `ThemeDictionaries` (Dark/Light), nunca fixas nos controles.
-- Sobrescrever recursos de controles nativos (lightweight styling, como `ToggleSwitchFillOn`) no dicionário principal do `App.xaml` quando o valor é igual nos dois temas: dentro dos `ThemeDictionaries` do App a sobrescrita do `ToggleSwitch` não teve efeito.
-- Cor de destaque: `#4CC2FF`, definida como recurso. As alternativas `#60CDBA` e `#F7A35C` do protótipo são só opções de design, não uma configuração do usuário.
-- Container: largura 300 px (widget) ou 440 px (Configurações), cantos de 8 px, fundo `rgba(32,34,40,.72)`, borda de 1 px `rgba(255,255,255,.12)`, sombra suave. Linhas e áreas de drop: cantos de 6 px.
-- Fonte: Segoe UI Variable (padrão do WinUI). Título do cabeçalho 12 px semibold, nomes 13 px, status 11 px secundário (`#B3BCC8` no escuro).
-- Cabeçalho (36 px): logo quadrado de 20 px na cor de destaque, "BoxeZone", botões "–" e "X".
-- Linha de provedor: ícone de 28 px (no protótipo, a inicial "G", "O" ou "D" num quadrado), nome, status de uma linha ("Pronto", "Enviando…", "Desligado") e `ToggleSwitch` nativo, sem o texto On/Off (`OnContent`/`OffContent` vazios, `MinWidth` 0). Nenhum ligado: "Ative um destino para começar."
-- Área de drop (altura mínima 64 px): borda tracejada, ícone de upload + "Solte arquivos aqui"; durante upload mostra nome do arquivo, porcentagem e barra fina (3 px); ao terminar, "Enviado · nome" com ação "Abrir".
-- Rodapé: atalho em destaque ("Ctrl+Alt+D") + "abre e fecha", e o link "Configurações".
-- Configurações: seções "Contas" (Conectar/Desconectar, pasta de destino com "Alterar"), "Comportamento" (quatro switches com descrição) e "Atalho e aparência" (atalho com "Alterar", tema Sistema/Claro/Escuro).
-- Pouco texto, nada de emoji. Usar controles nativos do WinUI antes de criar controles próprios.
-
-## Configurações persistidas
-
-Provedores ligados, pasta de destino por provedor (padrão `/BoxeZone`), iniciar com o Windows, sempre no topo, recolher após envio, notificar ao concluir (notificação do Windows), hotkey, tema, última posição/estado da janela.
-
-- `SettingsService` grava `%LocalAppData%\BoxeZone\settings.json` (System.Text.Json, enums como texto) 500 ms depois da última mudança, via arquivo temporário; "Sair" grava na hora. Arquivo ilegível volta aos padrões.
-- Ao abrir, um provedor só volta ligado se a sessão salva reconectar; se não, o switch fica desligado (sem abrir o navegador sozinho) e a preferência salva não é apagada.
-- A posição volta só se ainda estiver em algum monitor; se a janela estava recolhida, abre recolhida. Hidden não é restaurado: abrir o app mostra o widget (o `--startup` da etapa 8 é que abre escondido).
-- "Sempre no topo" vale para o widget aberto. A faixa e o painel compacto ficam sempre no topo, senão não teriam como ser alcançados. O `OverlappedPresenter.IsAlwaysOnTop` acompanha a preferência, ou o WinUI recoloca a janela no topo ao ativar.
-- "Recolher após o envio": 1,5 s depois do "Enviado", se nada mais estiver enviando.
-- Pasta de destino: editada no próprio cartão ("Alterar" vira caixa de texto; Enter salva, Esc cancela). `\` vira `/`, espaços nas pontas saem, `<>:"|?*` e a raiz pura são recusados.
-- Atalho: "Alterar" libera o atalho atual e captura a próxima combinação (precisa de Ctrl, Alt, Shift ou Win; Esc cancela). Se outro app já usa, volta o anterior e a tela avisa. O atalho é registrado na janela da aba, que existe antes do widget.
-- Tema: aplicado no conteúdo raiz de cada janela (`Window.Content`), porque o Acrylic segue o tema desse elemento; num elemento interno, o fundo continuaria no tema do Windows.
-- "Iniciar com o Windows" grava (ou apaga) a entrada da chave Run na hora e de novo a cada início, para o caminho do `.exe` continuar certo se o app mudar de pasta.
-- "Notificar ao concluir": uma notificação por lote de arquivos soltos ("Enviado para o Google Drive" + nome ou "N arquivos", com "Abrir"), e uma em caso de falha, com o motivo.
-
-## Armadilhas do modo unpackaged
-
-- `ApplicationData.Current` (e `LocalSettings`) falha sem pacote: usar arquivos em `%LocalAppData%\BoxeZone`.
-- Iniciar com o Windows: chave `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` com o argumento `--startup`, que abre direto em Hidden ("Abre direto na bandeja"). `StartupTask` só existe para apps empacotados.
-- Notificações: o `AppNotificationManager` do Windows App SDK **não funciona** em app self-contained sem pacote (`Register` falha com 0x8007007E). O app usa a API do Windows (`Windows.UI.Notifications`) com um AppUserModelID próprio, `BoxeZone.App`, registrado em `HKCU\Software\Classes\AppUserModelId` com nome e ícone (`Assets\BoxeZone.png`). Cliques na notificação funcionam com o app aberto; depois do "Sair", clicar numa notificação antiga não faz nada.
-- Uma exceção no `OnLaunched` derruba o app sem mensagem (só `0xC000027B` no log de eventos): o `CrashLog` grava tipo, mensagem e pilha em `%LocalAppData%\BoxeZone\crash.log`.
-- Strings: `x:Uid` no XAML e `ResourceLoader` (de `Microsoft.Windows.ApplicationModel.Resources`) no código.
-
-## Ordem de desenvolvimento
-
-0. Base do projeto: renomear para `BoxeZone` (`.csproj`, `.slnx`, namespace), migrar para .NET 10, configurar unpackaged conforme a seção Stack, `git init` + `.gitignore` (`bin/`, `obj/`, `.vs/`, `*.user`, `appsettings.local.json`), pastas, `Resources.resw` e `appsettings.example.json`.
-1. Janela sem borda no canto, Acrylic, ícone de bandeja, "X" escondendo e "Sair" encerrando.
-2. Lista de provedores com switches e áreas de drop expandindo (sem upload real).
-3. `WindowDockService`: estados Normal/Docked/Hidden, aba lateral e painel compacto ao arrastar.
-4. Hotkey global.
-5. `IStorageProvider` + Google Drive ponta a ponta (auth, upload, progresso).
-6. OneDrive e Dropbox.
-7. Tela de configurações e persistência.
-8. Notificações, iniciar com o Windows, polimento de animações.
+- São HTML de protótipo (dependem de um `support.js` ausente): ler como texto. Valores exatos nos `style="…"` e no `<style>` do `<helmet>`; `<sc-for>`/`<sc-if>`/`{{…}}` equivalem a `ItemsRepeater`, `Visibility` e `x:Bind`; o `<script>` final mostra estados e lógica. O que fica fora do widget é cenário.
+- Não copiar HTML/CSS/JS. Sem equivalente nativo: usar o controle WinUI mais próximo e avisar.
+- O protótipo só tem o tema escuro: os valores dele vão no `ThemeDictionary` Dark; o Light usa os recursos equivalentes do WinUI. Cores sempre como recursos, nunca fixas nos controles.
+- Destaque `#4CC2FF`. Fundo `DesktopAcrylicBackdrop`. Fonte padrão do WinUI (Segoe UI Variable). Referências: EarTrumpet, Dropover, Fluent do Windows 11.
+- Pouco texto, nada de emoji. Controles nativos antes de controles próprios.
 
 ## Ao trabalhar neste projeto
 
-- Fazer mudanças pequenas e compiláveis; rodar `dotnet build` antes de concluir uma tarefa.
-- Ao terminar uma etapa com UI, rodar o app e comparar com o protótipo.
-- Não adicionar pacotes NuGet além dos listados sem perguntar.
+- Mudanças pequenas e compiláveis; `dotnet build` sem avisos antes de concluir.
+- Mudou UI ou comportamento de janela: rodar o app e conferir (contra o protótipo, nos dois temas, e com o widget por cima de outros apps).
+- Trabalho em branch; merge e push na `main` só depois de o usuário testar.
 - Não commitar credenciais, tokens nem `appsettings.local.json`.
-- Strings de UI em pt-BR centralizadas em `Strings/pt-BR/Resources.resw`, não fixas no XAML.
+- Registrar no `docs/arquitetura.md` toda armadilha nova que custar um bug; manter o `CLAUDE.md` curto.
