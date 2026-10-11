@@ -1,7 +1,9 @@
 using System;
 using BoxeZone.Helpers;
+using BoxeZone.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Graphics;
 using WinRT.Interop;
@@ -16,7 +18,7 @@ namespace BoxeZone.Views
         private readonly IntPtr _hwnd;
         private bool _isExiting;
 
-        public MainWindow()
+        public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
             _hwnd = WindowNative.GetWindowHandle(this);
@@ -38,6 +40,8 @@ namespace BoxeZone.Views
 
             Root.SizeChanged += (_, _) => FitToContent();
             FitToContent();
+
+            ContentFrame.Navigate(typeof(WidgetPage), viewModel, new SuppressNavigationTransitionInfo());
         }
 
         public void ShowWidget()
@@ -67,8 +71,6 @@ namespace BoxeZone.Views
             HideWidget();
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e) => HideWidget();
-
         /// <summary>
         /// Sizes the window to the content and anchors its visible frame to the
         /// bottom-right corner of the work area. AppWindow works in physical pixels.
@@ -86,7 +88,7 @@ namespace BoxeZone.Views
             {
                 // Without a title bar the XAML area also covers the hidden caption, so the
                 // client size is not the XAML size. Resize by the difference instead.
-                double extraWidth = WidgetWidth - Root.XamlRoot.Size.Width;
+                double extraWidth = Root.ActualWidth - Root.XamlRoot.Size.Width;
                 double extraHeight = Root.ActualHeight - Root.XamlRoot.Size.Height;
                 if (Math.Abs(extraWidth) >= 0.5 || Math.Abs(extraHeight) >= 0.5)
                 {

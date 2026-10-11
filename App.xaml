@@ -18,6 +18,23 @@
                     <SolidColorBrush x:Key="CaptionButtonForegroundBrush" Color="#E3E7EC" />
                     <SolidColorBrush x:Key="CaptionButtonBackgroundPointerOverBrush" Color="#14FFFFFF" />
                     <SolidColorBrush x:Key="CaptionButtonBackgroundPressedBrush" Color="#0AFFFFFF" />
+                    <SolidColorBrush x:Key="ProviderRowOnBackgroundBrush" Color="#0AFFFFFF" />
+                    <SolidColorBrush x:Key="ProviderIconBackgroundBrush" Color="#17FFFFFF" />
+                    <SolidColorBrush x:Key="ProviderIconForegroundBrush" Color="#EEF1F5" />
+                    <SolidColorBrush x:Key="DropZoneBackgroundBrush" Color="#08FFFFFF" />
+                    <SolidColorBrush x:Key="DropZoneBackgroundPointerOverBrush" Color="#12FFFFFF" />
+                    <SolidColorBrush x:Key="DropZoneBorderBrush" Color="#42FFFFFF" />
+                    <SolidColorBrush x:Key="DropZoneBorderPointerOverBrush" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="DropZoneIdleForegroundBrush" Color="#CFD8E3" />
+                    <SolidColorBrush x:Key="ProgressTrackBrush" Color="#1FFFFFFF" />
+                    <SolidColorBrush x:Key="FooterBorderBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="HotkeyBadgeBorderBrush" Color="#2EFFFFFF" />
+                    <SolidColorBrush x:Key="HotkeyBadgeForegroundBrush" Color="#DBE1E8" />
+
+                    <!-- Lightweight styling of native controls -->
+                    <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="#9FD8FF" />
+                    <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="#CFEAFF" />
+                    <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="#9FD8FF" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="ContainerBackgroundBrush" Color="#B8F3F3F3" />
@@ -25,6 +42,18 @@
                     <StaticResource x:Key="CaptionButtonForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
                     <StaticResource x:Key="CaptionButtonBackgroundPointerOverBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="CaptionButtonBackgroundPressedBrush" ResourceKey="SubtleFillColorTertiaryBrush" />
+                    <StaticResource x:Key="ProviderRowOnBackgroundBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <SolidColorBrush x:Key="ProviderIconBackgroundBrush" Color="#12000000" />
+                    <StaticResource x:Key="ProviderIconForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <SolidColorBrush x:Key="DropZoneBackgroundBrush" Color="#05000000" />
+                    <SolidColorBrush x:Key="DropZoneBackgroundPointerOverBrush" Color="#0D000000" />
+                    <SolidColorBrush x:Key="DropZoneBorderBrush" Color="#42000000" />
+                    <SolidColorBrush x:Key="DropZoneBorderPointerOverBrush" Color="#66000000" />
+                    <StaticResource x:Key="DropZoneIdleForegroundBrush" ResourceKey="TextFillColorSecondaryBrush" />
+                    <SolidColorBrush x:Key="ProgressTrackBrush" Color="#1F000000" />
+                    <StaticResource x:Key="FooterBorderBrush" ResourceKey="DividerStrokeColorDefaultBrush" />
+                    <SolidColorBrush x:Key="HotkeyBadgeBorderBrush" Color="#2E000000" />
+                    <StaticResource x:Key="HotkeyBadgeForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -34,6 +63,19 @@
             <SolidColorBrush x:Key="CloseButtonBackgroundPointerOverBrush" Color="#C42B1C" />
             <SolidColorBrush x:Key="CloseButtonBackgroundPressedBrush" Color="#E6C42B1C" />
             <SolidColorBrush x:Key="CloseButtonForegroundPointerOverBrush" Color="#FFFFFF" />
+            <!-- Switch "on" colors from the prototype, same in both themes -->
+            <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#4CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#E64CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#CC4CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#4CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#E64CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#CC4CC2FF" />
+            <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#0F1216" />
+            <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPointerOver" Color="#0F1216" />
+            <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPressed" Color="#0F1216" />
+            <!-- Drop target under the cursor, from docs/estados-janela.dc.html -->
+            <SolidColorBrush x:Key="DropZoneBackgroundDragOverBrush" Color="#294CC2FF" />
+            <SolidColorBrush x:Key="DropZoneBorderDragOverBrush" Color="#E64CC2FF" />
 
             <!-- Window caption buttons ("–" and "X"), 44x36 per the prototype. -->
             <Style x:Key="CaptionButtonStyle" TargetType="Button">

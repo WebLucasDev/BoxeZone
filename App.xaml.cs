@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using BoxeZone.ViewModels;
 using BoxeZone.Views;
 using CommunityToolkit.Mvvm.Input;
 using H.NotifyIcon;
@@ -22,9 +23,11 @@ namespace BoxeZone
             InitializeComponent();
         }
 
+        public static MainWindow? MainWindow => ((App)Current)._window;
+
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
+            _window = new MainWindow(new MainViewModel());
             CreateTrayIcon();
             _window.ShowWidget();
         }

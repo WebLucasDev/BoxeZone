@@ -48,6 +48,8 @@ Views/
   MainWindow.xaml(.cs)       # janela sem borda; hospeda um Frame e os estados Docked (faixa e painel compacto)
   WidgetPage.xaml(.cs)       # cabeçalho, aba lateral, linhas de provedor, áreas de drop, rodapé
   SettingsPage.xaml(.cs)     # contas, comportamento, atalho e tema
+  Controls/
+    ProviderRow.xaml(.cs)    # uma linha de provedor + a área de drop dele
 ViewModels/
   MainViewModel.cs
   ProviderViewModel.cs       # estado de um provedor: ligado, conectado, upload em andamento
@@ -125,6 +127,7 @@ Implementação nativa:
 - `AppWindow.IsShownInSwitchers = false` (fora da barra de tarefas e do Alt+Tab).
 - `AppWindow` trabalha em pixels físicos: multiplicar tamanhos pela escala (`GetDpiForWindow / 96` ou `XamlRoot.RasterizationScale`).
 - Sem barra de título, a área XAML também cobre a legenda escondida, então `ResizeClient` deixa a janela maior que o conteúdo: redimensionar pela diferença entre o tamanho desejado e `XamlRoot.Size`. Posicionar pela moldura visível (`DWMWA_EXTENDED_FRAME_BOUNDS`), porque o retângulo da janela inclui bordas invisíveis de ~8 px (ver `MainWindow.FitToContent`).
+- O conteúdo da janela fica dentro de um `Canvas`: assim ele é medido sem o tamanho atual da janela como limite e pode pedir mais altura. Sem isso, a janela nunca cresce.
 - No protótipo a aba lateral fica **fora** do container (`left: -15px`). Uma janela nativa é retangular e o Acrylic preenche tudo, então isso não sai de graça. Decidir na etapa 3 (aba dentro da janela, área transparente ou região de janela) e avisar antes de implementar.
 - Hotkey padrão `Ctrl+Alt+D` alterna Normal/Hidden; configurável. `RegisterHotKey` exige receber `WM_HOTKEY`: fazer subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`.
 - Instância única (`AppInstance.FindOrRegisterForKey`): abrir o `.exe` de novo traz a janela existente para o Normal.
@@ -153,6 +156,7 @@ Referência de estilo geral: EarTrumpet, Dropover e Fluent do Windows 11.
 
 - Fundo `DesktopAcrylicBackdrop`; tema segue o sistema (claro/escuro), com opção nas configurações.
 - O protótipo só mostra o tema **escuro**. Os valores dele valem para o escuro; o claro usa os recursos de tema do WinUI equivalentes. Cores ficam em `ThemeDictionaries` (Dark/Light), nunca fixas nos controles.
+- Sobrescrever recursos de controles nativos (lightweight styling, como `ToggleSwitchFillOn`) no dicionário principal do `App.xaml` quando o valor é igual nos dois temas: dentro dos `ThemeDictionaries` do App a sobrescrita do `ToggleSwitch` não teve efeito.
 - Cor de destaque: `#4CC2FF`, definida como recurso. As alternativas `#60CDBA` e `#F7A35C` do protótipo são só opções de design, não uma configuração do usuário.
 - Container: largura 300 px (widget) ou 440 px (Configurações), cantos de 8 px, fundo `rgba(32,34,40,.72)`, borda de 1 px `rgba(255,255,255,.12)`, sombra suave. Linhas e áreas de drop: cantos de 6 px.
 - Fonte: Segoe UI Variable (padrão do WinUI). Título do cabeçalho 12 px semibold, nomes 13 px, status 11 px secundário (`#B3BCC8` no escuro).

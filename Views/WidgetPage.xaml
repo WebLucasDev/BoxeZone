@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="BoxeZone.Views.WidgetPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:BoxeZone.Views.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:BoxeZone.ViewModels"
+    IsTabStop="True"
+    UseSystemFocusVisuals="False"
+    mc:Ignorable="d">
+
+    <Grid VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Padding="12,0,0,0" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Width="20"
+                Height="20"
+                VerticalAlignment="Center"
+                Background="{StaticResource BoxeZoneAccentBrush}"
+                CornerRadius="5">
+                <Viewbox Width="12" Height="12">
+                    <Path
+                        Width="16"
+                        Height="16"
+                        Data="M8,11 L8,3 M4.5,6.5 L8,3 L11.5,6.5 M3,13 L13,13"
+                        Stretch="None"
+                        Stroke="{StaticResource OnAccentForegroundBrush}"
+                        StrokeEndLineCap="Round"
+                        StrokeLineJoin="Round"
+                        StrokeStartLineCap="Round"
+                        StrokeThickness="2" />
+                </Viewbox>
+            </Border>
+
+            <TextBlock
+                x:Uid="HeaderTitle"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                FontSize="12"
+                FontWeight="SemiBold" />
+
+            <Button
+                x:Uid="MinimizeButton"
+                Grid.Column="2"
+                IsTabStop="False"
+                Style="{StaticResource CaptionButtonStyle}">
+                <FontIcon FontSize="10" Glyph="&#xE921;" />
+            </Button>
+
+            <Button
+                x:Uid="CloseButton"
+                Grid.Column="3"
+                Click="CloseButton_Click"
+                IsTabStop="False"
+                Style="{StaticResource CloseCaptionButtonStyle}">
+                <FontIcon FontSize="10" Glyph="&#xE8BB;" />
+            </Button>
+        </Grid>
+
+        <!-- Providers -->
+        <StackPanel Grid.Row="1" Padding="6,0,6,6">
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Providers}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="2" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ProviderViewModel">
+                        <controls:ProviderRow ViewModel="{x:Bind}" />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <TextBlock
+                x:Uid="NoProviderHint"
+                Margin="10,6,10,10"
+                FontSize="12"
+                Foreground="{ThemeResource TextSecondaryBrush}"
+                Visibility="{x:Bind ViewModel.HasNoProviderEnabled, Mode=OneWay}" />
+        </StackPanel>
+
+        <!-- Footer -->
+        <Grid
+            Grid.Row="2"
+            Padding="12,8"
+            BorderBrush="{ThemeResource FooterBorderBrush}"
+            BorderThickness="0,1,0,0">
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="6">
+                <Border
+                    Padding="6,1"
+                    BorderBrush="{ThemeResource HotkeyBadgeBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <TextBlock
+                        x:Uid="FooterHotkey"
+                        FontSize="11"
+                        Foreground="{ThemeResource HotkeyBadgeForegroundBrush}" />
+                </Border>
+                <TextBlock
+                    x:Uid="FooterHotkeyHint"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="{ThemeResource TextSecondaryBrush}" />
+            </StackPanel>
+            <HyperlinkButton
+                x:Uid="SettingsLink"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                FontSize="11" />
+        </Grid>
+    </Grid>
+</Page>

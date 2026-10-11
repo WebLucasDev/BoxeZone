@@ -80,6 +80,47 @@
   <data name="NoProviderHint.Text" xml:space="preserve">
     <value>Ative um destino para começar.</value>
   </data>
+  <data name="ProviderGoogleDrive" xml:space="preserve">
+    <value>Google Drive</value>
+  </data>
+  <data name="ProviderOneDrive" xml:space="preserve">
+    <value>OneDrive</value>
+  </data>
+  <data name="ProviderDropbox" xml:space="preserve">
+    <value>Dropbox</value>
+  </data>
+  <data name="StatusOff" xml:space="preserve">
+    <value>Desligado</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Pronto</value>
+  </data>
+  <data name="StatusUploading" xml:space="preserve">
+    <value>Enviando…</value>
+  </data>
+  <data name="DropHint.Text" xml:space="preserve">
+    <value>Solte arquivos aqui</value>
+  </data>
+  <data name="DropCaptionFormat" xml:space="preserve">
+    <value>Enviar para {0}</value>
+    <comment>{0} = provider name. Caption shown next to the cursor while dragging.</comment>
+  </data>
+  <data name="UploadDoneFormat" xml:space="preserve">
+    <value>Enviado · {0}</value>
+    <comment>{0} = file name.</comment>
+  </data>
+  <data name="OpenUploadedLink.Content" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="FooterHotkey.Text" xml:space="preserve">
+    <value>Ctrl+Alt+D</value>
+  </data>
+  <data name="FooterHotkeyHint.Text" xml:space="preserve">
+    <value>abre e fecha</value>
+  </data>
+  <data name="SettingsLink.Content" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
   <data name="TrayOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="BoxeZone.Views.Controls.ProviderRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="DropZoneStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                    <VisualState.Setters>
+                        <Setter Target="DropZone.Background" Value="{ThemeResource DropZoneBackgroundPointerOverBrush}" />
+                        <Setter Target="DropZoneBorder.Stroke" Value="{ThemeResource DropZoneBorderPointerOverBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="DragTarget">
+                    <VisualState.Setters>
+                        <Setter Target="DropZone.Background" Value="{StaticResource DropZoneBackgroundDragOverBrush}" />
+                        <Setter Target="DropZoneBorder.Stroke" Value="{StaticResource DropZoneBorderDragOverBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Row background, only while the provider is on. -->
+        <Border
+            Grid.RowSpan="2"
+            Background="{ThemeResource ProviderRowOnBackgroundBrush}"
+            CornerRadius="6"
+            Visibility="{x:Bind ViewModel.IsEnabled, Mode=OneWay}" />
+
+        <!-- Provider line: icon, name + status, switch -->
+        <Grid Padding="10,8,8,8" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Width="28"
+                Height="28"
+                Background="{ThemeResource ProviderIconBackgroundBrush}"
+                CornerRadius="6">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="Bold"
+                    Foreground="{ThemeResource ProviderIconForegroundBrush}"
+                    Text="{x:Bind ViewModel.Initial, Mode=OneWay}" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock
+                    FontSize="13"
+                    Text="{x:Bind ViewModel.Name, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{ThemeResource TextSecondaryBrush}"
+                    Text="{x:Bind ViewModel.Status, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <ToggleSwitch
+                Grid.Column="2"
+                MinWidth="0"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="{x:Bind ViewModel.Name, Mode=OneWay}"
+                IsOn="{x:Bind ViewModel.IsEnabled, Mode=TwoWay}"
+                OffContent=""
+                OnContent="" />
+        </Grid>
+
+        <!-- Drop zone -->
+        <Grid
+            x:Name="DropZone"
+            Grid.Row="1"
+            MinHeight="64"
+            Margin="8,0,8,8"
+            AllowDrop="True"
+            Background="{ThemeResource DropZoneBackgroundBrush}"
+            CornerRadius="6"
+            DragLeave="DropZone_DragLeave"
+            DragOver="DropZone_DragOver"
+            Drop="DropZone_Drop"
+            PointerCanceled="DropZone_PointerExited"
+            PointerEntered="DropZone_PointerEntered"
+            PointerExited="DropZone_PointerExited"
+            Visibility="{x:Bind ViewModel.IsEnabled, Mode=OneWay}">
+            <Grid.BackgroundTransition>
+                <BrushTransition Duration="0:0:0.15" />
+            </Grid.BackgroundTransition>
+
+            <!-- Border has no dashed stroke in WinUI; a Rectangle does. -->
+            <Rectangle
+                x:Name="DropZoneBorder"
+                RadiusX="6"
+                RadiusY="6"
+                Stroke="{ThemeResource DropZoneBorderBrush}"
+                StrokeDashArray="4,3"
+                StrokeThickness="1" />
+
+            <Grid Padding="12,10" VerticalAlignment="Center">
+                <!-- Idle -->
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
+                    <Viewbox Width="16" Height="16">
+                        <Path
+                            Width="16"
+                            Height="16"
+                            Data="M8,10.5 L8,2.5 M5,5.5 L8,2.5 L11,5.5 M2.5,10.5 L2.5,13.5 L13.5,13.5 L13.5,10.5"
+                            Stretch="None"
+                            Stroke="{ThemeResource DropZoneIdleForegroundBrush}"
+                            StrokeEndLineCap="Round"
+                            StrokeLineJoin="Round"
+                            StrokeStartLineCap="Round"
+                            StrokeThickness="1.4" />
+                    </Viewbox>
+                    <TextBlock
+                        x:Uid="DropHint"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{ThemeResource DropZoneIdleForegroundBrush}" />
+                </StackPanel>
+
+                <!-- Uploading -->
+                <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.IsUploading, Mode=OneWay}">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Viewbox
+                            Width="14"
+                            Height="14"
+                            VerticalAlignment="Center">
+                            <Path
+                                Width="16"
+                                Height="16"
+                                Data="M4,1.5 L9,1.5 L12,4.5 L12,14.5 L4,14.5 Z M9,1.5 L9,4.5 L12,4.5"
+                                Stretch="None"
+                                Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                StrokeThickness="1.3" />
+                        </Viewbox>
+                        <TextBlock
+                            Grid.Column="1"
+                            FontSize="12"
+                            Text="{x:Bind ViewModel.FileName, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="2"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            Text="{x:Bind ViewModel.ProgressLabel, Mode=OneWay}" />
+                    </Grid>
+                    <ProgressBar
+                        Height="3"
+                        MinHeight="3"
+                        Background="{ThemeResource ProgressTrackBrush}"
+                        CornerRadius="2"
+                        Foreground="{StaticResource BoxeZoneAccentBrush}"
+                        Maximum="100"
+                        Value="{x:Bind ViewModel.Progress, Mode=OneWay}" />
+                </StackPanel>
+
+                <!-- Done -->
+                <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.IsDone, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="18"
+                        Height="18"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource BoxeZoneAccentBrush}"
+                        CornerRadius="9">
+                        <Viewbox Width="10" Height="10">
+                            <Path
+                                Width="12"
+                                Height="12"
+                                Data="M2.5,6.5 L5,9 L9.5,4"
+                                Stretch="None"
+                                Stroke="{StaticResource OnAccentForegroundBrush}"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="2" />
+                        </Viewbox>
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{x:Bind ViewModel.DoneLabel, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis" />
+                    <HyperlinkButton
+                        x:Uid="OpenUploadedLink"
+                        Grid.Column="2"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{ThemeResource TextSecondaryBrush}" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

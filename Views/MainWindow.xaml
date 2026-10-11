@@ -11,77 +11,16 @@
         <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>
 
-    <!-- Top-aligned so its height is the content height; the window is sized to match it. -->
-    <Grid
-        x:Name="Root"
-        VerticalAlignment="Top"
-        Background="{ThemeResource ContainerBackgroundBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="36" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <Grid Padding="12,0,0,0" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <Border
-                Width="20"
-                Height="20"
-                VerticalAlignment="Center"
-                Background="{StaticResource BoxeZoneAccentBrush}"
-                CornerRadius="5">
-                <Viewbox Width="12" Height="12">
-                    <Path
-                        Width="16"
-                        Height="16"
-                        Data="M8,11 L8,3 M4.5,6.5 L8,3 L11.5,6.5 M3,13 L13,13"
-                        Stretch="None"
-                        Stroke="{StaticResource OnAccentForegroundBrush}"
-                        StrokeEndLineCap="Round"
-                        StrokeLineJoin="Round"
-                        StrokeStartLineCap="Round"
-                        StrokeThickness="2" />
-                </Viewbox>
-            </Border>
-
-            <TextBlock
-                x:Uid="HeaderTitle"
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                FontSize="12"
-                FontWeight="SemiBold" />
-
-            <Button
-                x:Name="MinimizeButton"
-                x:Uid="MinimizeButton"
-                Grid.Column="2"
-                Style="{StaticResource CaptionButtonStyle}">
-                <FontIcon FontSize="10" Glyph="&#xE921;" />
-            </Button>
-
-            <Button
-                x:Name="CloseButton"
-                x:Uid="CloseButton"
-                Grid.Column="3"
-                Click="CloseButton_Click"
-                Style="{StaticResource CloseCaptionButtonStyle}">
-                <FontIcon FontSize="10" Glyph="&#xE8BB;" />
-            </Button>
+    <!--
+        A Canvas measures its child without the window's size as a limit, so Root
+        always reports the size the content wants and the window is resized to match.
+    -->
+    <Canvas>
+        <Grid
+            x:Name="Root"
+            Width="300"
+            Background="{ThemeResource ContainerBackgroundBrush}">
+            <Frame x:Name="ContentFrame" />
         </Grid>
-
-        <!-- Provider list (step 2). For now only the empty state. -->
-        <StackPanel Grid.Row="1" Padding="6,0,6,6">
-            <TextBlock
-                x:Uid="NoProviderHint"
-                Margin="10,6,10,10"
-                FontSize="12"
-                Foreground="{ThemeResource TextSecondaryBrush}" />
-        </StackPanel>
-    </Grid>
+    </Canvas>
 </Window>
