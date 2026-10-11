@@ -164,17 +164,18 @@ namespace BoxeZone.Helpers
         public static void SetOwner(IntPtr owned, IntPtr owner)
         {
             SetWindowLongPtr(owned, GWLP_HWNDPARENT, owner);
-            MakeTopmost(owned);
+            SetTopmost(owned, true);
         }
 
-        /// <summary>Puts the window in the topmost band (above normal windows) without moving or activating it.</summary>
-        public static void MakeTopmost(IntPtr hwnd)
+        /// <summary>Moves the window into (or out of) the topmost band, without moving or activating it.</summary>
+        public static void SetTopmost(IntPtr hwnd, bool topmost)
         {
             const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_NOACTIVATE = 0x0010;
-            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            SetWindowPos(hwnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         }
 
         private static readonly IntPtr HWND_TOPMOST = new(-1);
+        private static readonly IntPtr HWND_NOTOPMOST = new(-2);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

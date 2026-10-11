@@ -39,7 +39,9 @@ namespace BoxeZone.Services
         private readonly MainWindow _main;
         private readonly TabWindow _tab;
         private readonly MainViewModel _viewModel;
+        private readonly SettingsService _settingsService;
         private readonly DispatcherQueueTimer _collapseTimer;
+        private readonly DispatcherQueueTimer _collapseAfterUploadTimer;
 
         private RectInt32? _normalBounds;
         private RectInt32 _dragStartBounds;
@@ -51,11 +53,12 @@ namespace BoxeZone.Services
         private bool _isDragging;
         private bool _isExiting;
 
-        public WindowDockService(MainWindow main, TabWindow tab, MainViewModel viewModel)
+        public WindowDockService(MainWindow main, TabWindow tab, MainViewModel viewModel, SettingsService settingsService)
         {
             _main = main;
             _tab = tab;
             _viewModel = viewModel;
+            _settingsService = settingsService;
 
             // The widget is owned by the tab so it always stays above it and covers the tab's tucked part.
             Win32.SetOwner(_main.GetHwnd(), _tab.GetHwnd());
@@ -79,12 +82,56 @@ namespace BoxeZone.Services
                 provider.PropertyChanged += Provider_PropertyChanged;
             }
 
+            _viewModel.Settings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(SettingsViewModel.AlwaysOnTop))
+                {
+                    ApplyTopmost();
+                }
+            };
+
             _collapseTimer = _main.DispatcherQueue.CreateTimer();
             _collapseTimer.Interval = TimeSpan.FromMilliseconds(150);
             _collapseTimer.Tick += (_, _) => CollapseIfIdle();
+
+            _collapseAfterUploadTimer = _main.DispatcherQueue.CreateTimer();
+            _collapseAfterUploadTimer.Interval = UploadDoneHold;
+            _collapseAfterUploadTimer.IsRepeating = false;
+            _collapseAfterUploadTimer.Tick += (_, _) =>
+            {
+                if (State == DockState.Normal && !_viewModel.Providers.Any(p => p.IsUploading))
+                {
+                    Dock();
+                }
+            };
         }
 
         public DockState State { get; private set; } = DockState.Hidden;
+
+        /// <summary>First show: back where the widget was last time (docked or not), or the default corner.</summary>
+        public void Start()
+        {
+            WindowSettings? saved = _settingsService.Settings.Window;
+            if (saved is not null && saved.Width > 0 && saved.Height > 0)
+            {
+                var bounds = new RectInt32(saved.X, saved.Y, saved.Width, saved.Height);
+
+                // A monitor may have been unplugged since: only reuse a place that is still on a screen.
+                if (DisplayArea.GetFromRect(bounds, DisplayAreaFallback.None) is not null)
+                {
+                    _normalBounds = bounds;
+                    if (saved.WasDocked)
+                    {
+                        _dockCenterY = saved.DockCenterY;
+                        _dockWorkArea = GetWorkArea(bounds);
+                        SetState(DockState.Docked);
+                        return;
+                    }
+                }
+            }
+
+            SetState(DockState.Normal);
+        }
 
         public void ShowNormal() => SetState(DockState.Normal);
 
@@ -121,6 +168,7 @@ namespace BoxeZone.Services
         {
             _isExiting = true;
             _collapseTimer.Stop();
+            _collapseAfterUploadTimer.Stop();
             _main.Close();
             _tab.Close();
         }
@@ -135,8 +183,16 @@ namespace BoxeZone.Services
 
         private void SetState(DockState state)
         {
+            DockState previous = State;
             State = state;
             _collapseTimer.Stop();
+            _collapseAfterUploadTimer.Stop();
+
+            if (state != DockState.Normal)
+            {
+                // Settings is only reachable from the open widget; come back to the widget next time.
+                _main.ShowWidgetPage();
+            }
 
             if (state == DockState.Hidden)
             {
@@ -172,9 +228,7 @@ namespace BoxeZone.Services
                 _main.AppWindow.Show(false);
             }
 
-            // The widget must stay above other apps in every visible state; being owned by the
-            // tab window makes Windows drop that, so it is asserted again on every show.
-            Win32.MakeTopmost(_main.GetHwnd());
+            ApplyTopmost();
 
             // Frame insets are only measurable once the window is shown.
             UpdatePlacement();
@@ -183,6 +237,31 @@ namespace BoxeZone.Services
             {
                 _cursorLastInside = DateTime.UtcNow;
                 _collapseTimer.Start();
+            }
+
+            if (state != previous && state is DockState.Normal or DockState.Docked)
+            {
+                SavePlacement();
+            }
+        }
+
+        /// <summary>
+        /// "Sempre no topo" applies to the open widget. The docked strip and the compact panel
+        /// always stay on top: covered by other windows they could not be reached at all.
+        /// Being owned by the tab window makes Windows drop the topmost style, so it is set on every show.
+        /// </summary>
+        private void ApplyTopmost()
+        {
+            bool topmost = State != DockState.Normal || _viewModel.Settings.AlwaysOnTop;
+            foreach (Microsoft.UI.Xaml.Window window in new Microsoft.UI.Xaml.Window[] { _main, _tab })
+            {
+                // Keep the presenter in sync, or WinUI puts the window back on top when it activates.
+                if (window.AppWindow.Presenter is OverlappedPresenter presenter)
+                {
+                    presenter.IsAlwaysOnTop = topmost;
+                }
+
+                Win32.SetTopmost(window.GetHwnd(), topmost);
             }
         }
 
@@ -207,10 +286,12 @@ namespace BoxeZone.Services
                 int y;
                 if (_normalBounds is RectInt32 previous)
                 {
-                    // Grow away from the nearer screen edge: a widget in the lower half keeps its bottom.
+                    // Grow away from the nearer screen edges: a widget in the lower half keeps its
+                    // bottom, one in the right half keeps its right side (Settings is wider).
                     workArea = GetWorkArea(previous);
                     bool keepBottom = previous.Y + (previous.Height / 2) > workArea.Y + (workArea.Height / 2);
-                    x = previous.X;
+                    bool keepRight = previous.X + (previous.Width / 2) > workArea.X + (workArea.Width / 2);
+                    x = keepRight ? previous.X + previous.Width - width : previous.X;
                     y = keepBottom ? previous.Y + previous.Height - height : previous.Y;
                 }
                 else
@@ -223,8 +304,13 @@ namespace BoxeZone.Services
 
                 RectInt32 bounds = ClampToWorkArea(new RectInt32(x, y, width, height), workArea);
                 _main.SetVisibleBounds(bounds);
+                bool moved = _normalBounds is not RectInt32 old || old.X != bounds.X || old.Y != bounds.Y || old.Width != bounds.Width || old.Height != bounds.Height;
                 _normalBounds = bounds;
                 PlaceTab(bounds);
+                if (moved)
+                {
+                    SavePlacement();
+                }
             }
             else
             {
@@ -234,6 +320,25 @@ namespace BoxeZone.Services
                     _dockWorkArea.Y + _dockWorkArea.Height - height);
                 _main.SetVisibleBounds(new RectInt32(_dockWorkArea.X + _dockWorkArea.Width - width, y, width, height));
             }
+        }
+
+        private void SavePlacement()
+        {
+            if (_normalBounds is not RectInt32 bounds)
+            {
+                return;
+            }
+
+            _settingsService.Settings.Window = new WindowSettings
+            {
+                WasDocked = State is DockState.Docked or DockState.DockedExpanded,
+                X = bounds.X,
+                Y = bounds.Y,
+                Width = bounds.Width,
+                Height = bounds.Height,
+                DockCenterY = _dockCenterY,
+            };
+            _settingsService.Save();
         }
 
         private void PlaceTab(RectInt32 widget)
@@ -283,6 +388,7 @@ namespace BoxeZone.Services
             {
                 _normalBounds = ClampToWorkArea(bounds, workArea);
                 UpdatePlacement();
+                SavePlacement();
             }
         }
 
@@ -316,10 +422,19 @@ namespace BoxeZone.Services
 
         private void Provider_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Keep the compact panel open for a moment so "Enviado" can be seen.
-            if (e.PropertyName == nameof(ProviderViewModel.State) && sender is ProviderViewModel { IsDone: true })
+            if (e.PropertyName != nameof(ProviderViewModel.State) || sender is not ProviderViewModel { IsDone: true })
             {
-                _holdUntil = DateTime.UtcNow + UploadDoneHold;
+                return;
+            }
+
+            // Keep the compact panel open for a moment so "Enviado" can be seen.
+            _holdUntil = DateTime.UtcNow + UploadDoneHold;
+
+            // "Recolher após o envio": back to the edge once "Enviado" has been on screen for a moment.
+            if (State == DockState.Normal && _viewModel.Settings.CollapseAfterUpload)
+            {
+                _collapseAfterUploadTimer.Stop();
+                _collapseAfterUploadTimer.Start();
             }
         }
 

@@ -33,6 +33,25 @@
                     <SolidColorBrush x:Key="TabLineBrush" Color="#66FFFFFF" />
                     <SolidColorBrush x:Key="TabLinePointerOverBrush" Color="#BFFFFFFF" />
 
+                    <!-- Settings (docs/configuracoes.dc.html) -->
+                    <SolidColorBrush x:Key="SectionHeaderForegroundBrush" Color="#DFE5EC" />
+                    <SolidColorBrush x:Key="SettingsCardBackgroundBrush" Color="#0DFFFFFF" />
+                    <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="AccountButtonBackgroundBrush" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="AccountButtonBackgroundPointerOverBrush" Color="#1FFFFFFF" />
+                    <SolidColorBrush x:Key="AccountButtonBackgroundPressedBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="AccountButtonBorderBrush" Color="#24FFFFFF" />
+                    <SolidColorBrush x:Key="AccountButtonForegroundBrush" Color="#EEF1F5" />
+                    <SolidColorBrush x:Key="LinkActionForegroundBrush" Color="#9FD8FF" />
+                    <SolidColorBrush x:Key="LinkActionBackgroundPointerOverBrush" Color="#1FFFFFFF" />
+                    <SolidColorBrush x:Key="ShortcutBadgeBorderBrush" Color="#33FFFFFF" />
+                    <SolidColorBrush x:Key="ShortcutBadgeForegroundBrush" Color="#E8EDF3" />
+                    <SolidColorBrush x:Key="SegmentTrackBrush" Color="#38000000" />
+                    <SolidColorBrush x:Key="SegmentBackgroundPointerOverBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="SegmentBackgroundCheckedBrush" Color="#24FFFFFF" />
+                    <SolidColorBrush x:Key="SegmentForegroundBrush" Color="#C3CBD6" />
+                    <SolidColorBrush x:Key="SegmentForegroundCheckedBrush" Color="#FFFFFF" />
+
                     <!-- Lightweight styling of native controls -->
                     <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="#9FD8FF" />
                     <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="#CFEAFF" />
@@ -58,6 +77,24 @@
                     <StaticResource x:Key="HotkeyBadgeForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
                     <SolidColorBrush x:Key="TabLineBrush" Color="#66000000" />
                     <SolidColorBrush x:Key="TabLinePointerOverBrush" Color="#BF000000" />
+
+                    <StaticResource x:Key="SectionHeaderForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <StaticResource x:Key="SettingsCardBackgroundBrush" ResourceKey="CardBackgroundFillColorDefaultBrush" />
+                    <StaticResource x:Key="SettingsCardBorderBrush" ResourceKey="CardStrokeColorDefaultBrush" />
+                    <StaticResource x:Key="AccountButtonBackgroundBrush" ResourceKey="ControlFillColorDefaultBrush" />
+                    <StaticResource x:Key="AccountButtonBackgroundPointerOverBrush" ResourceKey="ControlFillColorSecondaryBrush" />
+                    <StaticResource x:Key="AccountButtonBackgroundPressedBrush" ResourceKey="ControlFillColorTertiaryBrush" />
+                    <StaticResource x:Key="AccountButtonBorderBrush" ResourceKey="ControlStrokeColorDefaultBrush" />
+                    <StaticResource x:Key="AccountButtonForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <StaticResource x:Key="LinkActionForegroundBrush" ResourceKey="AccentTextFillColorPrimaryBrush" />
+                    <StaticResource x:Key="LinkActionBackgroundPointerOverBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <SolidColorBrush x:Key="ShortcutBadgeBorderBrush" Color="#33000000" />
+                    <StaticResource x:Key="ShortcutBadgeForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <SolidColorBrush x:Key="SegmentTrackBrush" Color="#0F000000" />
+                    <StaticResource x:Key="SegmentBackgroundPointerOverBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="SegmentBackgroundCheckedBrush" ResourceKey="ControlFillColorDefaultBrush" />
+                    <StaticResource x:Key="SegmentForegroundBrush" ResourceKey="TextFillColorSecondaryBrush" />
+                    <StaticResource x:Key="SegmentForegroundCheckedBrush" ResourceKey="TextFillColorPrimaryBrush" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -157,6 +194,172 @@
                                             </VisualState.Setters>
                                         </VisualState>
                                         <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Settings: "Conectar" / "Desconectar" (32 px, 4 px corners, thin border). -->
+            <Style x:Key="AccountButtonStyle" TargetType="Button">
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Background" Value="{ThemeResource AccountButtonBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource AccountButtonBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Foreground" Value="{ThemeResource AccountButtonForegroundBrush}" />
+                <Setter Property="UseSystemFocusVisuals" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid
+                                x:Name="RootGrid"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                                <Grid.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.12" />
+                                </Grid.BackgroundTransition>
+                                <ContentPresenter
+                                    x:Name="ContentPresenter"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    FontSize="{TemplateBinding FontSize}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource AccountButtonBackgroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource AccountButtonBackgroundPressedBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Opacity" Value="0.5" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Settings: text actions such as "Alterar" (28 px, accent text, no border). -->
+            <Style x:Key="LinkActionButtonStyle" TargetType="Button" BasedOn="{StaticResource AccountButtonStyle}">
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="Padding" Value="10,0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource LinkActionForegroundBrush}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid
+                                x:Name="RootGrid"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                                <Grid.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.12" />
+                                </Grid.BackgroundTransition>
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    FontSize="{TemplateBinding FontSize}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource LinkActionBackgroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource LinkActionBackgroundPointerOverBrush}" />
+                                                <Setter Target="RootGrid.Opacity" Value="0.8" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Opacity" Value="0.5" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Settings: one option of the theme selector (Sistema / Claro / Escuro). Native radio buttons keep keyboard and screen reader support. -->
+            <Style x:Key="SegmentRadioButtonStyle" TargetType="RadioButton">
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{ThemeResource SegmentForegroundBrush}" />
+                <Setter Property="UseSystemFocusVisuals" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Grid
+                                x:Name="RootGrid"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                                <Grid.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.12" />
+                                </Grid.BackgroundTransition>
+                                <ContentPresenter
+                                    x:Name="ContentPresenter"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    FontSize="{TemplateBinding FontSize}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource SegmentBackgroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource SegmentBackgroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="CheckStates">
+                                        <VisualState x:Name="Checked">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource SegmentBackgroundCheckedBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource SegmentForegroundCheckedBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Unchecked" />
+                                        <VisualState x:Name="Indeterminate" />
                                     </VisualStateGroup>
                                 </VisualStateManager.VisualStateGroups>
                             </Grid>

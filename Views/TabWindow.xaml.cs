@@ -29,6 +29,9 @@ namespace BoxeZone.Views
 
         public TabHandle TabHandle => Handle;
 
+        /// <summary>The backdrop follows the theme of the window's root content, so it is set there.</summary>
+        public void ApplyTheme(ElementTheme theme) => ((FrameworkElement)Content).RequestedTheme = theme;
+
         private void FitToContent()
         {
             if (this.TryGetVisibleSizeForXaml(Handle, Handle.Width, Handle.Height, out SizeInt32 size))

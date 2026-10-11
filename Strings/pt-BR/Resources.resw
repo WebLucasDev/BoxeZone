@@ -147,9 +147,6 @@
   <data name="OpenUploadedLink.Content" xml:space="preserve">
     <value>Abrir</value>
   </data>
-  <data name="FooterHotkey.Text" xml:space="preserve">
-    <value>Ctrl+Alt+D</value>
-  </data>
   <data name="FooterHotkeyHint.Text" xml:space="preserve">
     <value>abre e fecha</value>
   </data>
@@ -161,6 +158,125 @@
   </data>
   <data name="DockedStrip.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Expandir BoxeZone</value>
+  </data>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="BackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Voltar</value>
+  </data>
+  <data name="BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Voltar</value>
+  </data>
+  <data name="AccountsHeader.Text" xml:space="preserve">
+    <value>Contas</value>
+  </data>
+  <data name="BehaviorHeader.Text" xml:space="preserve">
+    <value>Comportamento</value>
+  </data>
+  <data name="ShortcutHeader.Text" xml:space="preserve">
+    <value>Atalho e aparência</value>
+  </data>
+  <data name="AccountNotConnected" xml:space="preserve">
+    <value>Não conectado</value>
+  </data>
+  <data name="AccountConnected" xml:space="preserve">
+    <value>Conectado</value>
+  </data>
+  <data name="AccountConnectedFormat" xml:space="preserve">
+    <value>Conectado · {0}</value>
+    <comment>{0} = account e-mail.</comment>
+  </data>
+  <data name="AccountConnect" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="AccountDisconnect" xml:space="preserve">
+    <value>Desconectar</value>
+  </data>
+  <data name="TargetFolderLabel.Text" xml:space="preserve">
+    <value>Pasta de destino</value>
+  </data>
+  <data name="FolderBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pasta de destino</value>
+  </data>
+  <data name="ChangeFolderButton.Content" xml:space="preserve">
+    <value>Alterar</value>
+  </data>
+  <data name="SaveFolderButton.Content" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="FolderInvalid" xml:space="preserve">
+    <value>Use um nome de pasta válido, como /BoxeZone</value>
+  </data>
+  <data name="StartupTitle.Text" xml:space="preserve">
+    <value>Iniciar com o Windows</value>
+  </data>
+  <data name="StartupDescription.Text" xml:space="preserve">
+    <value>Abre direto na bandeja ao ligar o computador</value>
+  </data>
+  <data name="StartupSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Iniciar com o Windows</value>
+  </data>
+  <data name="AlwaysOnTopTitle.Text" xml:space="preserve">
+    <value>Sempre no topo</value>
+  </data>
+  <data name="AlwaysOnTopDescription.Text" xml:space="preserve">
+    <value>A janela fica por cima das outras</value>
+  </data>
+  <data name="AlwaysOnTopSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Sempre no topo</value>
+  </data>
+  <data name="CollapseTitle.Text" xml:space="preserve">
+    <value>Recolher após o envio</value>
+  </data>
+  <data name="CollapseDescription.Text" xml:space="preserve">
+    <value>Volta para a borda quando o upload termina</value>
+  </data>
+  <data name="CollapseSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Recolher após o envio</value>
+  </data>
+  <data name="NotifyTitle.Text" xml:space="preserve">
+    <value>Notificar ao concluir</value>
+  </data>
+  <data name="NotifyDescription.Text" xml:space="preserve">
+    <value>Mostra uma notificação do Windows</value>
+  </data>
+  <data name="NotifySwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Notificar ao concluir</value>
+  </data>
+  <data name="HotkeyTitle.Text" xml:space="preserve">
+    <value>Abrir e fechar o BoxeZone</value>
+  </data>
+  <data name="HotkeyChange" xml:space="preserve">
+    <value>Alterar</value>
+  </data>
+  <data name="HotkeyCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="HotkeyCapturing" xml:space="preserve">
+    <value>Pressione o atalho…</value>
+  </data>
+  <data name="HotkeyNeedsModifier" xml:space="preserve">
+    <value>Use Ctrl, Alt, Shift ou Win junto com uma tecla</value>
+  </data>
+  <data name="HotkeyTakenFormat" xml:space="preserve">
+    <value>{0} já está em uso por outro app</value>
+    <comment>{0} = shortcut, like Ctrl+Alt+D.</comment>
+  </data>
+  <data name="ThemeTitle.Text" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="ThemeSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="ThemeSystem.Content" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="ThemeLight.Content" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="ThemeDark.Content" xml:space="preserve">
+    <value>Escuro</value>
   </data>
   <data name="TrayOpen" xml:space="preserve">
     <value>Abrir</value>

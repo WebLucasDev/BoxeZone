@@ -1,6 +1,7 @@
 using BoxeZone.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace BoxeZone.Views
@@ -28,5 +29,8 @@ namespace BoxeZone.Views
         private void MinimizeButton_Click(object sender, RoutedEventArgs e) => App.DockService?.Dock();
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => App.DockService?.Hide();
+
+        private void SettingsLink_Click(object sender, RoutedEventArgs e) =>
+            Frame.Navigate(typeof(SettingsPage), ViewModel, new SuppressNavigationTransitionInfo());
     }
 }

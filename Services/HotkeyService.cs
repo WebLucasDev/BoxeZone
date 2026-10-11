@@ -40,6 +40,40 @@ namespace BoxeZone.Services
 
         public event EventHandler? Pressed;
 
+        /// <summary>"Ctrl+Alt+D" style text for a shortcut.</summary>
+        public static string Format(HotkeyModifiers modifiers, uint virtualKey)
+        {
+            var parts = new System.Collections.Generic.List<string>();
+            if (modifiers.HasFlag(HotkeyModifiers.Control)) parts.Add("Ctrl");
+            if (modifiers.HasFlag(HotkeyModifiers.Alt)) parts.Add("Alt");
+            if (modifiers.HasFlag(HotkeyModifiers.Shift)) parts.Add("Shift");
+            if (modifiers.HasFlag(HotkeyModifiers.Windows)) parts.Add("Win");
+            parts.Add(FormatKey(virtualKey));
+            return string.Join('+', parts);
+        }
+
+        private static string FormatKey(uint virtualKey) => virtualKey switch
+        {
+            >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)virtualKey).ToString(), // 0-9, A-Z
+            >= 0x70 and <= 0x87 => $"F{virtualKey - 0x6F}",                                 // F1-F24
+            >= 0x60 and <= 0x69 => $"Num {virtualKey - 0x60}",
+            0x20 => "Espaço",
+            0x0D => "Enter",
+            0x09 => "Tab",
+            0x08 => "Backspace",
+            0x2E => "Delete",
+            0x2D => "Insert",
+            0x24 => "Home",
+            0x23 => "End",
+            0x21 => "PageUp",
+            0x22 => "PageDown",
+            0x25 => "←",
+            0x26 => "↑",
+            0x27 => "→",
+            0x28 => "↓",
+            _ => ((Windows.System.VirtualKey)virtualKey).ToString(),
+        };
+
         /// <summary>Registers the shortcut, replacing the current one. False if another app already uses it.</summary>
         public bool Register(HotkeyModifiers modifiers, uint virtualKey)
         {

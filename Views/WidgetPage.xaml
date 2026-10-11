@@ -11,7 +11,7 @@
     UseSystemFocusVisuals="False"
     mc:Ignorable="d">
 
-    <Grid VerticalAlignment="Top">
+    <Grid Width="300" VerticalAlignment="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="36" />
             <RowDefinition Height="Auto" />
@@ -110,9 +110,9 @@
                     BorderThickness="1"
                     CornerRadius="4">
                     <TextBlock
-                        x:Uid="FooterHotkey"
                         FontSize="11"
-                        Foreground="{ThemeResource HotkeyBadgeForegroundBrush}" />
+                        Foreground="{ThemeResource HotkeyBadgeForegroundBrush}"
+                        Text="{x:Bind ViewModel.Settings.HotkeyText, Mode=OneWay}" />
                 </Border>
                 <TextBlock
                     x:Uid="FooterHotkeyHint"
@@ -125,6 +125,7 @@
                 Padding="0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
+                Click="SettingsLink_Click"
                 FontSize="11" />
         </Grid>
     </Grid>

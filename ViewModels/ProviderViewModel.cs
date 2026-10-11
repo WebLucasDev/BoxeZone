@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BoxeZone.Services;
 using BoxeZone.Services.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,31 +22,38 @@ namespace BoxeZone.ViewModels
     }
 
     /// <summary>
-    /// State of one provider: switched on/off, connected, and the upload shown in its drop zone.
-    /// Switching on a provider that is not connected starts its sign-in.
+    /// State of one provider: switched on/off, connected, its destination folder and the
+    /// upload shown in its drop zone. Switching on a provider that is not connected starts
+    /// its sign-in.
     /// </summary>
     public partial class ProviderViewModel : ObservableObject
     {
-        // Default destination until Settings (step 7) lets the user change it.
-        private const string DefaultTargetFolder = "/BoxeZone";
-
         // The browser sign-in waits for the user; give up after a while.
         private static readonly TimeSpan SignInTimeout = TimeSpan.FromMinutes(3);
 
+        private static readonly char[] InvalidFolderChars = ['<', '>', ':', '"', '|', '?', '*'];
+
         private static readonly ResourceLoader Strings = new();
 
+        private readonly ProviderSettings _settings;
+        private readonly Action _save;
         private CancellationTokenSource? _connectCts;
         private List<StorageFile> _failedFiles = [];
         private string? _uploadedLink;
+        private bool _isRestoring;
 
-        public ProviderViewModel(string id, string name, string initial, IStorageProvider provider)
+        public ProviderViewModel(string id, string name, string initial, IStorageProvider provider, ProviderSettings settings, Action save)
         {
             Id = id;
             Name = name;
             Initial = initial;
             Provider = provider;
+            _settings = settings;
+            _save = save;
             FileName = string.Empty;
             ErrorMessage = string.Empty;
+            FolderDraft = string.Empty;
+            TargetFolder = settings.TargetFolder;
         }
 
         public string Id { get; }
@@ -62,8 +70,13 @@ namespace BoxeZone.ViewModels
         public partial bool IsEnabled { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(Status), nameof(IsDropZoneVisible))]
+        [NotifyPropertyChangedFor(nameof(Status), nameof(IsDropZoneVisible), nameof(AccountStatus), nameof(AccountAction), nameof(CanChangeAccount))]
         public partial bool IsConnecting { get; set; }
+
+        /// <summary>Mirrors <see cref="IStorageProvider.IsConnected"/>, which is not observable.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(AccountStatus), nameof(AccountAction))]
+        public partial bool IsConnected { get; set; }
 
         /// <summary>Why the last sign-in failed, shown as the status while the switch is off.</summary>
         [ObservableProperty]
@@ -87,6 +100,19 @@ namespace BoxeZone.ViewModels
         [ObservableProperty]
         public partial string ErrorMessage { get; set; }
 
+        /// <summary>Destination folder, like "/BoxeZone".</summary>
+        [ObservableProperty]
+        public partial string TargetFolder { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsEditingFolder { get; set; }
+
+        [ObservableProperty]
+        public partial string FolderDraft { get; set; }
+
+        [ObservableProperty]
+        public partial string? FolderError { get; set; }
+
         public bool IsDropZoneVisible => IsEnabled && !IsConnecting;
 
         public bool IsIdle => State == UploadState.Idle;
@@ -109,7 +135,21 @@ namespace BoxeZone.ViewModels
             : IsUploading ? Strings.GetString("StatusUploading")
             : Strings.GetString("StatusReady");
 
-        /// <summary>Signs in silently from a saved session, at startup.</summary>
+        /// <summary>Settings: "Conectado · e-mail" / "Não conectado".</summary>
+        public string AccountStatus =>
+            IsConnecting ? Strings.GetString("StatusConnecting")
+            : !IsConnected ? Strings.GetString("AccountNotConnected")
+            : Provider.AccountEmail is { Length: > 0 } email ? string.Format(Strings.GetString("AccountConnectedFormat"), email)
+            : Strings.GetString("AccountConnected");
+
+        public string AccountAction => Strings.GetString(IsConnected ? "AccountDisconnect" : "AccountConnect");
+
+        public bool CanChangeAccount => !IsConnecting;
+
+        /// <summary>
+        /// At startup: reconnects from the saved session and, if that works, switches the
+        /// provider back on as it was. Never opens the browser.
+        /// </summary>
         public async Task RestoreAsync()
         {
             try
@@ -120,6 +160,14 @@ namespace BoxeZone.ViewModels
             {
                 // Offline at startup or similar: the user can still sign in by switching the provider on.
                 Debug.WriteLine($"{Id}: restore failed: {ex.GetType().Name}");
+            }
+
+            RefreshConnection();
+            if (_settings.Enabled && IsConnected)
+            {
+                _isRestoring = true;
+                IsEnabled = true;
+                _isRestoring = false;
             }
         }
 
@@ -141,7 +189,7 @@ namespace BoxeZone.ViewModels
                 {
                     // Progress<T> reports on the UI thread (it captures the DispatcherQueue context).
                     var progress = new Progress<double>(value => Progress = value);
-                    _uploadedLink = await Provider.UploadAsync(file, DefaultTargetFolder, progress, CancellationToken.None);
+                    _uploadedLink = await Provider.UploadAsync(file, TargetFolder, progress, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -149,6 +197,7 @@ namespace BoxeZone.ViewModels
                     _failedFiles = files.Skip(i).ToList();
                     ErrorMessage = DescribeError(ex);
                     State = UploadState.Failed;
+                    RefreshConnection();
                     return;
                 }
             }
@@ -181,8 +230,67 @@ namespace BoxeZone.ViewModels
             }
         }
 
+        /// <summary>Settings: "Conectar" signs in; "Desconectar" signs out and switches the provider off.</summary>
+        [RelayCommand]
+        private async Task ToggleAccountAsync()
+        {
+            if (IsConnected)
+            {
+                await Provider.DisconnectAsync();
+                RefreshConnection();
+                IsEnabled = false;
+                ConnectError = null;
+            }
+            else
+            {
+                await ConnectAsync();
+            }
+        }
+
+        [RelayCommand]
+        private void EditFolder()
+        {
+            FolderDraft = TargetFolder;
+            FolderError = null;
+            IsEditingFolder = true;
+        }
+
+        [RelayCommand]
+        private void SaveFolder()
+        {
+            string[] segments = FolderDraft.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToArray();
+
+            if (segments.Length == 0 || segments.Any(s => s.IndexOfAny(InvalidFolderChars) >= 0 || s.Any(char.IsControl)))
+            {
+                FolderError = Strings.GetString("FolderInvalid");
+                return;
+            }
+
+            TargetFolder = "/" + string.Join('/', segments);
+            _settings.TargetFolder = TargetFolder;
+            _save();
+            FolderError = null;
+            IsEditingFolder = false;
+        }
+
+        [RelayCommand]
+        private void CancelFolderEdit()
+        {
+            FolderError = null;
+            IsEditingFolder = false;
+        }
+
         partial void OnIsEnabledChanged(bool value)
         {
+            if (!_isRestoring)
+            {
+                _settings.Enabled = value;
+                _save();
+            }
+
             if (!value)
             {
                 // Switching off while the browser sign-in is open cancels it.
@@ -215,12 +323,21 @@ namespace BoxeZone.ViewModels
             {
                 _connectCts = null;
                 IsConnecting = false;
+                RefreshConnection();
             }
 
             if (!Provider.IsConnected)
             {
                 IsEnabled = false;
             }
+        }
+
+        private void RefreshConnection()
+        {
+            IsConnected = Provider.IsConnected;
+
+            // The e-mail can change without IsConnected changing (another account).
+            OnPropertyChanged(nameof(AccountStatus));
         }
 
         private static string DescribeError(Exception ex)

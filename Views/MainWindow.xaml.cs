@@ -25,6 +25,7 @@ namespace BoxeZone.Views
     {
         private const double StripWidth = 12;
         private const double StripHoverWidth = 16;
+        private const double WidgetWidth = 300;
 
         public MainWindow(MainViewModel viewModel)
         {
@@ -61,6 +62,26 @@ namespace BoxeZone.Views
             Root.UpdateLayout();
         }
 
+        /// <summary>Opens Settings in place of the widget (the window grows to its width).</summary>
+        public void ShowSettingsPage()
+        {
+            if (ContentFrame.Content is not SettingsPage)
+            {
+                ContentFrame.Navigate(typeof(SettingsPage), ViewModel, new SuppressNavigationTransitionInfo());
+            }
+        }
+
+        public void ShowWidgetPage()
+        {
+            if (ContentFrame.Content is not WidgetPage && ContentFrame.CanGoBack)
+            {
+                ContentFrame.GoBack(new SuppressNavigationTransitionInfo());
+            }
+        }
+
+        /// <summary>The backdrop follows the theme of the window's root content, so it is set there.</summary>
+        public void ApplyTheme(ElementTheme theme) => ((FrameworkElement)Content).RequestedTheme = theme;
+
         /// <summary>Visible frame size that fits the current content, in physical pixels.</summary>
         public SizeInt32 GetSizeForContent()
         {
@@ -70,7 +91,7 @@ namespace BoxeZone.Views
             }
 
             // Content not loaded yet: approximate, and let the next SizeChanged correct it.
-            this.ResizeClientApproximately(ContentFrame.Width, 80);
+            this.ResizeClientApproximately(WidgetWidth, 80);
             RectInt32 bounds = this.GetVisibleBounds();
             return new SizeInt32(bounds.Width, bounds.Height);
         }

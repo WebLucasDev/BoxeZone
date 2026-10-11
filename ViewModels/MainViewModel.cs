@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using BoxeZone.Services;
 using BoxeZone.Services.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -11,14 +12,21 @@ namespace BoxeZone.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
-        public MainViewModel(IStorageProvider googleDrive, IStorageProvider oneDrive, IStorageProvider dropbox)
+        public MainViewModel(
+            SettingsService settingsService,
+            SettingsViewModel settings,
+            IStorageProvider googleDrive,
+            IStorageProvider oneDrive,
+            IStorageProvider dropbox)
         {
+            Settings = settings;
             var strings = new ResourceLoader();
+            AppSettings saved = settingsService.Settings;
             Providers =
             [
-                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "G", googleDrive),
-                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "O", oneDrive),
-                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "D", dropbox),
+                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "G", googleDrive, saved.GetProvider("gdrive"), settingsService.Save),
+                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "O", oneDrive, saved.GetProvider("onedrive"), settingsService.Save),
+                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "D", dropbox, saved.GetProvider("dropbox"), settingsService.Save),
             ];
 
             foreach (ProviderViewModel provider in Providers)
@@ -27,6 +35,8 @@ namespace BoxeZone.ViewModels
             }
         }
 
+        public SettingsViewModel Settings { get; }
+
         public IReadOnlyList<ProviderViewModel> Providers { get; }
 
         /// <summary>Switched-on providers, in list order (the compact drop panel shows only these).</summary>
@@ -34,7 +44,10 @@ namespace BoxeZone.ViewModels
 
         public bool HasNoProviderEnabled => EnabledProviders.Count == 0;
 
-        /// <summary>Reconnects every provider with a saved session, without opening the browser.</summary>
+        /// <summary>
+        /// Reconnects every provider with a saved session, without opening the browser, and
+        /// switches back on the ones that were on.
+        /// </summary>
         public Task RestoreSessionsAsync() => Task.WhenAll(Providers.Select(p => p.RestoreAsync()));
 
         private void Provider_PropertyChanged(object? sender, PropertyChangedEventArgs e)

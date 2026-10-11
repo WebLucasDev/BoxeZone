@@ -21,7 +21,8 @@
         <Grid x:Name="Root" Background="{ThemeResource ContainerBackgroundBrush}">
 
             <!-- Normal: the widget -->
-            <Frame x:Name="ContentFrame" Width="300" />
+            <!-- Each page sets its own width: 300 px widget, 440 px Settings. -->
+            <Frame x:Name="ContentFrame" />
 
             <!-- Docked: thin strip on the screen edge -->
             <Grid

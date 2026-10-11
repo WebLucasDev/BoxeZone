@@ -7,6 +7,7 @@ using BoxeZone.ViewModels;
 using BoxeZone.Views;
 using CommunityToolkit.Mvvm.Input;
 using H.NotifyIcon;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -18,14 +19,11 @@ namespace BoxeZone
     /// </summary>
     public partial class App : Application
     {
-        // Default global shortcut: Ctrl+Alt+D (configurable in step 7).
-        private const HotkeyModifiers DefaultHotkeyModifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt;
-        private const uint DefaultHotkeyKey = 0x44; // VK 'D'
-
         private MainWindow? _window;
         private TabWindow? _tabWindow;
         private WindowDockService? _dockService;
         private HotkeyService? _hotkeyService;
+        private SettingsService? _settingsService;
         private TaskbarIcon? _trayIcon;
 
         public App()
@@ -44,26 +42,54 @@ namespace BoxeZone
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
+            _settingsService = new SettingsService(DispatcherQueue.GetForCurrentThread());
             AppCredentials credentials = AppCredentials.Load();
             var tokenStore = new TokenStore();
+
+            // The shortcut lives on the tab window: it exists before the widget and never closes early.
+            _tabWindow = new TabWindow();
+            _hotkeyService = new HotkeyService(_tabWindow.GetHwnd());
+            var settings = new SettingsViewModel(_settingsService, _hotkeyService);
+
             var viewModel = new MainViewModel(
+                _settingsService,
+                settings,
                 new GoogleDriveProvider(credentials.Google, tokenStore),
                 new OneDriveProvider(credentials.MicrosoftClientId, tokenStore),
                 new DropboxProvider(credentials.DropboxAppKey, tokenStore));
             _window = new MainWindow(viewModel);
-            _tabWindow = new TabWindow();
-            _dockService = new WindowDockService(_window, _tabWindow, viewModel);
+            _dockService = new WindowDockService(_window, _tabWindow, viewModel, _settingsService);
 
             // If another app already owns the shortcut, BoxeZone still works through the tray icon.
-            _hotkeyService = new HotkeyService(_window.GetHwnd());
             _hotkeyService.Pressed += (_, _) => _dockService.ToggleNormalHidden();
-            _hotkeyService.Register(DefaultHotkeyModifiers, DefaultHotkeyKey);
+            settings.RegisterSavedHotkey();
+
+            ApplyTheme(settings.Theme);
+            settings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(SettingsViewModel.Theme))
+                {
+                    ApplyTheme(settings.Theme);
+                }
+            };
 
             CreateTrayIcon();
-            _dockService.ShowNormal();
+            _dockService.Start();
 
             // Saved sessions reconnect in the background; the widget is usable meanwhile.
             _ = viewModel.RestoreSessionsAsync();
+        }
+
+        private void ApplyTheme(AppTheme theme)
+        {
+            ElementTheme elementTheme = theme switch
+            {
+                AppTheme.Light => ElementTheme.Light,
+                AppTheme.Dark => ElementTheme.Dark,
+                _ => ElementTheme.Default,
+            };
+            _window?.ApplyTheme(elementTheme);
+            _tabWindow?.ApplyTheme(elementTheme);
         }
 
         private void CreateTrayIcon()
@@ -96,6 +122,7 @@ namespace BoxeZone
 
         private void ExitApp()
         {
+            _settingsService?.SaveNow();
             _trayIcon?.Dispose();
             _hotkeyService?.Dispose();
             _dockService?.Shutdown();

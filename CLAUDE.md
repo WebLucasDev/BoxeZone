@@ -53,6 +53,7 @@ Views/
   Controls/
     ProviderRow.xaml(.cs)    # uma linha de provedor + a área de drop dele (IsCompact: só a área, no painel compacto)
     TabHandle.xaml(.cs)      # conteúdo da aba: estados visuais e o arrasto
+    AccountCard.xaml(.cs)    # um provedor em Configurações > Contas (conta + pasta de destino)
 ViewModels/
   MainViewModel.cs
   ProviderViewModel.cs       # estado de um provedor: ligado, conectado, upload em andamento
@@ -190,6 +191,16 @@ Referência de estilo geral: EarTrumpet, Dropover e Fluent do Windows 11.
 ## Configurações persistidas
 
 Provedores ligados, pasta de destino por provedor (padrão `/BoxeZone`), iniciar com o Windows, sempre no topo, recolher após envio, notificar ao concluir (notificação do Windows), hotkey, tema, última posição/estado da janela.
+
+- `SettingsService` grava `%LocalAppData%\BoxeZone\settings.json` (System.Text.Json, enums como texto) 500 ms depois da última mudança, via arquivo temporário; "Sair" grava na hora. Arquivo ilegível volta aos padrões.
+- Ao abrir, um provedor só volta ligado se a sessão salva reconectar; se não, o switch fica desligado (sem abrir o navegador sozinho) e a preferência salva não é apagada.
+- A posição volta só se ainda estiver em algum monitor; se a janela estava recolhida, abre recolhida. Hidden não é restaurado: abrir o app mostra o widget (o `--startup` da etapa 8 é que abre escondido).
+- "Sempre no topo" vale para o widget aberto. A faixa e o painel compacto ficam sempre no topo, senão não teriam como ser alcançados. O `OverlappedPresenter.IsAlwaysOnTop` acompanha a preferência, ou o WinUI recoloca a janela no topo ao ativar.
+- "Recolher após o envio": 1,5 s depois do "Enviado", se nada mais estiver enviando.
+- Pasta de destino: editada no próprio cartão ("Alterar" vira caixa de texto; Enter salva, Esc cancela). `\` vira `/`, espaços nas pontas saem, `<>:"|?*` e a raiz pura são recusados.
+- Atalho: "Alterar" libera o atalho atual e captura a próxima combinação (precisa de Ctrl, Alt, Shift ou Win; Esc cancela). Se outro app já usa, volta o anterior e a tela avisa. O atalho é registrado na janela da aba, que existe antes do widget.
+- Tema: aplicado no conteúdo raiz de cada janela (`Window.Content`), porque o Acrylic segue o tema desse elemento; num elemento interno, o fundo continuaria no tema do Windows.
+- "Iniciar com o Windows" e "Notificar ao concluir" já são salvos; o efeito entra na etapa 8.
 
 ## Armadilhas do modo unpackaged
 
