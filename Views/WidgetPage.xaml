@@ -57,6 +57,7 @@
             <Button
                 x:Uid="MinimizeButton"
                 Grid.Column="2"
+                Click="MinimizeButton_Click"
                 IsTabStop="False"
                 Style="{StaticResource CaptionButtonStyle}">
                 <FontIcon FontSize="10" Glyph="&#xE921;" />

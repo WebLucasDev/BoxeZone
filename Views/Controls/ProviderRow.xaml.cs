@@ -19,13 +19,27 @@ namespace BoxeZone.Views.Controls
             nameof(ViewModel),
             typeof(ProviderViewModel),
             typeof(ProviderRow),
-            new PropertyMetadata(null, (d, _) => ((ProviderRow)d).Bindings.Update()));
+            new PropertyMetadata(null, (d, _) =>
+            {
+                var row = (ProviderRow)d;
+                row.Bindings.Update();
+                row.ApplyLayout();
+            }));
+
+        public static readonly DependencyProperty IsCompactProperty = DependencyProperty.Register(
+            nameof(IsCompact),
+            typeof(bool),
+            typeof(ProviderRow),
+            new PropertyMetadata(false, (d, _) => ((ProviderRow)d).ApplyLayout()));
 
         private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(180);
+
+        private readonly string _dropHint;
 
         public ProviderRow()
         {
             InitializeComponent();
+            _dropHint = IdleText.Text;
             SetDropZoneShowAnimation();
         }
 
@@ -33,6 +47,28 @@ namespace BoxeZone.Views.Controls
         {
             get => (ProviderViewModel?)GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
+        }
+
+        /// <summary>
+        /// Compact layout for the docked drop panel: only the drop zone, labeled with the
+        /// provider name (docs/estados-janela.dc.html, "Expande ao arrastar").
+        /// </summary>
+        public bool IsCompact
+        {
+            get => (bool)GetValue(IsCompactProperty);
+            set => SetValue(IsCompactProperty, value);
+        }
+
+        private void ApplyLayout()
+        {
+            bool compact = IsCompact;
+            RowBackground.Opacity = compact ? 0 : 1;
+            ProviderLine.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+            DropZone.Margin = compact ? new Thickness(0) : new Thickness(8, 0, 8, 8);
+            DropZone.MinHeight = compact ? 56 : 64;
+            IdleIcon.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+            IdleText.FontSize = compact ? 11 : 12;
+            IdleText.Text = compact ? ViewModel?.Name ?? string.Empty : _dropHint;
         }
 
         /// <summary>Fade in and slide down 4 px when the zone appears (prototype "dzIn", 180 ms ease-out).</summary>

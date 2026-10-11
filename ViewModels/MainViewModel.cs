@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -26,14 +27,25 @@ namespace BoxeZone.ViewModels
 
         public IReadOnlyList<ProviderViewModel> Providers { get; }
 
-        public bool HasNoProviderEnabled => !Providers.Any(p => p.IsEnabled);
+        /// <summary>Switched-on providers, in list order (the compact drop panel shows only these).</summary>
+        public ObservableCollection<ProviderViewModel> EnabledProviders { get; } = [];
+
+        public bool HasNoProviderEnabled => EnabledProviders.Count == 0;
 
         private void Provider_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ProviderViewModel.IsEnabled))
+            if (e.PropertyName != nameof(ProviderViewModel.IsEnabled))
             {
-                OnPropertyChanged(nameof(HasNoProviderEnabled));
+                return;
             }
+
+            EnabledProviders.Clear();
+            foreach (ProviderViewModel provider in Providers.Where(p => p.IsEnabled))
+            {
+                EnabledProviders.Add(provider);
+            }
+
+            OnPropertyChanged(nameof(HasNoProviderEnabled));
         }
     }
 }

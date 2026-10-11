@@ -1,109 +1,113 @@
 using System;
 using BoxeZone.Helpers;
 using BoxeZone.ViewModels;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.Windows.ApplicationModel.Resources;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
-using WinRT.Interop;
 
 namespace BoxeZone.Views
 {
+    public enum MainWindowMode
+    {
+        Widget,
+        Strip,
+        Compact,
+    }
+
+    /// <summary>
+    /// The widget window. It only switches content and sizes itself to it;
+    /// placement and state changes belong to WindowDockService.
+    /// </summary>
     public sealed partial class MainWindow : Window
     {
-        private const int WidgetWidth = 300;
-        private const int ScreenMargin = 16;
-
-        private readonly IntPtr _hwnd;
-        private bool _isExiting;
+        private const double StripWidth = 12;
+        private const double StripHoverWidth = 16;
 
         public MainWindow(MainViewModel viewModel)
         {
+            ViewModel = viewModel;
             InitializeComponent();
-            _hwnd = WindowNative.GetWindowHandle(this);
 
             // Window is not a DependencyObject, so x:Uid does not apply to its title.
             Title = new ResourceLoader().GetString("AppTitle");
+            this.ConfigureAsToolWindow();
 
-            // Keeping the border (but not the title bar) preserves the Windows 11
-            // rounded corners, shadow and 1 px frame.
-            var presenter = OverlappedPresenter.Create();
-            presenter.IsResizable = false;
-            presenter.IsMaximizable = false;
-            presenter.IsMinimizable = false;
-            presenter.IsAlwaysOnTop = true;
-            presenter.SetBorderAndTitleBar(true, false);
-            AppWindow.SetPresenter(presenter);
-            AppWindow.IsShownInSwitchers = false;
-            AppWindow.Closing += AppWindow_Closing;
-
-            Root.SizeChanged += (_, _) => FitToContent();
-            FitToContent();
-
+            Root.SizeChanged += (_, _) => ContentSizeChanged?.Invoke(this, EventArgs.Empty);
             ContentFrame.Navigate(typeof(WidgetPage), viewModel, new SuppressNavigationTransitionInfo());
         }
 
-        public void ShowWidget()
+        public event EventHandler? ContentSizeChanged;
+
+        public event EventHandler? StripClicked;
+
+        public event EventHandler? StripDragEntered;
+
+        public MainViewModel ViewModel { get; }
+
+        public MainWindowMode Mode { get; private set; }
+
+        public void SetMode(MainWindowMode mode)
         {
-            FitToContent();
-            AppWindow.Show(true);
-            Activate();
+            Mode = mode;
+            ContentFrame.Visibility = mode == MainWindowMode.Widget ? Visibility.Visible : Visibility.Collapsed;
+            DockedStrip.Visibility = mode == MainWindowMode.Strip ? Visibility.Visible : Visibility.Collapsed;
+            DockedStrip.Width = StripWidth;
+            CompactPanel.Visibility = mode == MainWindowMode.Compact ? Visibility.Visible : Visibility.Collapsed;
+
+            // Measure now so the window can be resized before the next frame.
+            Root.UpdateLayout();
         }
 
-        public void HideWidget() => AppWindow.Hide();
-
-        /// <summary>Closes the window for real; any other close request only hides it.</summary>
-        public void CloseForExit()
+        /// <summary>Visible frame size that fits the current content, in physical pixels.</summary>
+        public SizeInt32 GetSizeForContent()
         {
-            _isExiting = true;
-            Close();
+            if (Root.ActualWidth > 0 && this.TryGetVisibleSizeForXaml(Root, Root.ActualWidth, Root.ActualHeight, out SizeInt32 size))
+            {
+                return size;
+            }
+
+            // Content not loaded yet: approximate, and let the next SizeChanged correct it.
+            this.ResizeClientApproximately(ContentFrame.Width, 80);
+            RectInt32 bounds = this.GetVisibleBounds();
+            return new SizeInt32(bounds.Width, bounds.Height);
         }
 
-        private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
-        {
-            if (_isExiting)
-            {
-                return;
-            }
+        private void DockedStrip_PointerEntered(object sender, PointerRoutedEventArgs e) => DockedStrip.Width = StripHoverWidth;
 
-            args.Cancel = true;
-            HideWidget();
+        private void DockedStrip_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            // Widening the strip resizes the window under the cursor, which raises a spurious
+            // PointerExited. Only narrow it again once the cursor has really left.
+            Win32.GetCursorPos(out Win32.POINT cursor);
+            RectInt32 bounds = this.GetVisibleBounds();
+            bool isInside =
+                cursor.X >= bounds.X && cursor.X < bounds.X + bounds.Width &&
+                cursor.Y >= bounds.Y && cursor.Y < bounds.Y + bounds.Height;
+            if (!isInside)
+            {
+                DockedStrip.Width = StripWidth;
+            }
         }
 
-        /// <summary>
-        /// Sizes the window to the content and anchors its visible frame to the
-        /// bottom-right corner of the work area. AppWindow works in physical pixels.
-        /// </summary>
-        private void FitToContent()
+        private void DockedStrip_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            double scale = Win32.GetDpiForWindow(_hwnd) / 96.0;
-
-            if (Root.XamlRoot is null || Root.ActualHeight <= 0)
+            if (e.GetCurrentPoint(DockedStrip).Properties.IsLeftButtonPressed)
             {
-                // Before the first layout: rough size so the window does not flash at the default size.
-                AppWindow.ResizeClient(new SizeInt32((int)Math.Round(WidgetWidth * scale), (int)Math.Round(80 * scale)));
+                StripClicked?.Invoke(this, EventArgs.Empty);
             }
-            else
+        }
+
+        private void DockedStrip_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
-                // Without a title bar the XAML area also covers the hidden caption, so the
-                // client size is not the XAML size. Resize by the difference instead.
-                double extraWidth = Root.ActualWidth - Root.XamlRoot.Size.Width;
-                double extraHeight = Root.ActualHeight - Root.XamlRoot.Size.Height;
-                if (Math.Abs(extraWidth) >= 0.5 || Math.Abs(extraHeight) >= 0.5)
-                {
-                    AppWindow.Resize(new SizeInt32(
-                        AppWindow.Size.Width + (int)Math.Round(extraWidth * scale),
-                        AppWindow.Size.Height + (int)Math.Round(extraHeight * scale)));
-                }
+                e.AcceptedOperation = DataPackageOperation.Copy;
             }
 
-            RectInt32 workArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
-            Win32.RECT insets = Win32.GetInvisibleFrameInsets(_hwnd);
-            int margin = (int)Math.Round(ScreenMargin * scale);
-            AppWindow.Move(new PointInt32(
-                workArea.X + workArea.Width - margin + insets.Right - AppWindow.Size.Width,
-                workArea.Y + workArea.Height - margin + insets.Bottom - AppWindow.Size.Height));
+            StripDragEntered?.Invoke(this, EventArgs.Empty);
         }
     }
 }

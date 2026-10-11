@@ -30,6 +30,8 @@
                     <SolidColorBrush x:Key="FooterBorderBrush" Color="#14FFFFFF" />
                     <SolidColorBrush x:Key="HotkeyBadgeBorderBrush" Color="#2EFFFFFF" />
                     <SolidColorBrush x:Key="HotkeyBadgeForegroundBrush" Color="#DBE1E8" />
+                    <SolidColorBrush x:Key="TabLineBrush" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="TabLinePointerOverBrush" Color="#BFFFFFFF" />
 
                     <!-- Lightweight styling of native controls -->
                     <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="#9FD8FF" />
@@ -54,6 +56,8 @@
                     <StaticResource x:Key="FooterBorderBrush" ResourceKey="DividerStrokeColorDefaultBrush" />
                     <SolidColorBrush x:Key="HotkeyBadgeBorderBrush" Color="#2E000000" />
                     <StaticResource x:Key="HotkeyBadgeForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <SolidColorBrush x:Key="TabLineBrush" Color="#66000000" />
+                    <SolidColorBrush x:Key="TabLinePointerOverBrush" Color="#BF000000" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -73,6 +77,9 @@
             <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#0F1216" />
             <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPointerOver" Color="#0F1216" />
             <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPressed" Color="#0F1216" />
+            <!-- Dark lines drawn on top of the accent color (pressed tab, docked strip) -->
+            <SolidColorBrush x:Key="TabLinePressedBrush" Color="#990F1216" />
+            <SolidColorBrush x:Key="DockedStripLineBrush" Color="#8C0F1216" />
             <!-- Drop target under the cursor, from docs/estados-janela.dc.html -->
             <SolidColorBrush x:Key="DropZoneBackgroundDragOverBrush" Color="#294CC2FF" />
             <SolidColorBrush x:Key="DropZoneBorderDragOverBrush" Color="#E64CC2FF" />

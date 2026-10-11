@@ -46,10 +46,12 @@ Strings/pt-BR/Resources.resw # todas as strings de UI
 docs/                        # protótipos HTML: fonte da verdade visual
 Views/
   MainWindow.xaml(.cs)       # janela sem borda; hospeda um Frame e os estados Docked (faixa e painel compacto)
+  TabWindow.xaml(.cs)        # a aba lateral, numa janela própria colada à esquerda do widget
   WidgetPage.xaml(.cs)       # cabeçalho, aba lateral, linhas de provedor, áreas de drop, rodapé
   SettingsPage.xaml(.cs)     # contas, comportamento, atalho e tema
   Controls/
-    ProviderRow.xaml(.cs)    # uma linha de provedor + a área de drop dele
+    ProviderRow.xaml(.cs)    # uma linha de provedor + a área de drop dele (IsCompact: só a área, no painel compacto)
+    TabHandle.xaml(.cs)      # conteúdo da aba: estados visuais e o arrasto
 ViewModels/
   MainViewModel.cs
   ProviderViewModel.cs       # estado de um provedor: ligado, conectado, upload em andamento
@@ -66,6 +68,7 @@ Services/
   TokenStore.cs              # tokens criptografados por usuário do Windows
 Helpers/
   Win32.cs                   # P/Invoke (GetCursorPos, RegisterHotKey, SetWindowSubclass etc.)
+  WindowExtensions.cs        # tamanho e posição das janelas pela moldura visível
 ```
 
 Configurações abre **na mesma janela**: o `Frame` navega de `WidgetPage` para `SettingsPage`, a janela cresce de 300 para 440 px de largura, e "Voltar" retorna ao widget.
@@ -118,7 +121,10 @@ Três estados, controlados pelo `WindowDockService`:
 
 Transições:
 - Botão "–" (dica "Minimizar") → Docked. Botão "X" (dica "Fechar") → Hidden, **não** encerra.
-- Aba lateral esquerda (15×80 px) é a alça de arrastar: mesma cor do container em repouso, cor de destaque enquanto pressionada. Soltar perto da borda → Docked; além da borda → Hidden.
+- Aba lateral esquerda (15×80 px) é a alça de arrastar: mesma cor do container em repouso, cor de destaque enquanto pressionada. Ao soltar:
+  - centro do widget fora de todos os monitores → Hidden (volta depois na posição de antes do arrasto);
+  - borda direita do widget a menos de 24 px da borda direita da tela → Docked. Só vale para uma borda real: a divisa entre dois monitores não recolhe;
+  - qualquer outro lugar → continua Normal onde foi solto (ajustado para dentro da área de trabalho).
 - "Recolher após o envio" ligado → Docked quando o upload termina.
 - Encerrar o app só pelo menu do ícone da bandeja ("Sair").
 
@@ -126,9 +132,13 @@ Implementação nativa:
 - Sem barra de título: `OverlappedPresenter.SetBorderAndTitleBar(true, false)` com `IsResizable`, `IsMaximizable` e `IsMinimizable` em `false`. Isso mantém os cantos arredondados, a sombra e a borda de 1 px do Windows 11. Os botões "–" e "X" são desenhados no XAML (44×36 px; "X" fica `#C42B1C` no hover).
 - `AppWindow.IsShownInSwitchers = false` (fora da barra de tarefas e do Alt+Tab).
 - `AppWindow` trabalha em pixels físicos: multiplicar tamanhos pela escala (`GetDpiForWindow / 96` ou `XamlRoot.RasterizationScale`).
-- Sem barra de título, a área XAML também cobre a legenda escondida, então `ResizeClient` deixa a janela maior que o conteúdo: redimensionar pela diferença entre o tamanho desejado e `XamlRoot.Size`. Posicionar pela moldura visível (`DWMWA_EXTENDED_FRAME_BOUNDS`), porque o retângulo da janela inclui bordas invisíveis de ~8 px (ver `MainWindow.FitToContent`).
+- Sem barra de título, a área XAML também cobre a legenda escondida, então `ResizeClient` deixa a janela maior que o conteúdo: o tamanho sai da diferença medida entre a janela e `XamlRoot.Size`. Posicionar pela moldura visível (`DWMWA_EXTENDED_FRAME_BOUNDS`), porque o retângulo da janela inclui bordas invisíveis de ~8 px. Tudo isso está em `WindowExtensions`.
+- Mover e redimensionar juntos (`SetVisibleBounds` → `AppWindow.MoveAndResize`). Redimensionar primeiro e mover depois faz a janela invadir por um instante o monitor vizinho, que tem outra escala, e o Windows a reescala.
+- O Windows e o WinUI impõem largura mínima (~70 px) a janelas com borda. `PreferredMinimumWidth` e `WM_GETMINMAXINFO` não bastam: a subclasse em `Win32.RemoveMinimumSize` restaura o tamanho pedido em `WM_WINDOWPOSCHANGING`. Sem isso, a aba (23 px) e a faixa (12 px) não ficam finas.
 - O conteúdo da janela fica dentro de um `Canvas`: assim ele é medido sem o tamanho atual da janela como limite e pode pedir mais altura. Sem isso, a janela nunca cresce.
-- No protótipo a aba lateral fica **fora** do container (`left: -15px`). Uma janela nativa é retangular e o Acrylic preenche tudo, então isso não sai de graça. Decidir na etapa 3 (aba dentro da janela, área transparente ou região de janela) e avisar antes de implementar.
+- Aba lateral: no protótipo ela fica **fora** do container (`left: -15px`), então é uma janela própria (`TabWindow`, 15 px visíveis + 8 px escondidos atrás do widget). O widget é "possuído" pela aba (`GWLP_HWNDPARENT`), o que o mantém sempre por cima dela; a aba tem `WS_EX_NOACTIVATE` para não tirar o foco do widget.
+- O WinUI para de mandar `PointerMoved` quando o cursor sai de uma janela, então o arrasto da aba lê `GetCursorPos` e o estado do botão a cada quadro (`CompositionTarget.Rendering`).
+- Faixa Docked: ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso; conferir a posição real do cursor antes de estreitar de novo.
 - Hotkey padrão `Ctrl+Alt+D` alterna Normal/Hidden; configurável. `RegisterHotKey` exige receber `WM_HOTKEY`: fazer subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`.
 - Instância única (`AppInstance.FindOrRegisterForKey`): abrir o `.exe` de novo traz a janela existente para o Normal.
 - Animações de transição curtas (150–250 ms).

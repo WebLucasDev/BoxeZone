@@ -25,6 +25,8 @@ namespace BoxeZone.Views
             base.OnNavigatedTo(e);
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e) => App.MainWindow?.HideWidget();
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e) => App.DockService?.Dock();
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e) => App.DockService?.Hide();
     }
 }

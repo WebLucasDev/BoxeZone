@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="BoxeZone.Views.Controls.TabHandle"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="HandleRoot" Background="{ThemeResource ContainerBackgroundBrush}">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                    <VisualState.Setters>
+                        <Setter Target="Line.Background" Value="{ThemeResource TabLinePointerOverBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Pressed">
+                    <VisualState.Setters>
+                        <Setter Target="HandleRoot.Background" Value="{StaticResource BoxeZoneAccentBrush}" />
+                        <Setter Target="Line.Background" Value="{StaticResource TabLinePressedBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.BackgroundTransition>
+            <BrushTransition Duration="0:0:0.12" />
+        </Grid.BackgroundTransition>
+
+        <!-- The visible tab is 15 px; the rest sits behind the widget. -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border
+            x:Name="Line"
+            Width="3"
+            Height="26"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="{ThemeResource TabLineBrush}"
+            CornerRadius="2" />
+    </Grid>
+</UserControl>

@@ -33,13 +33,17 @@
 
         <!-- Row background, only while the provider is on. -->
         <Border
+            x:Name="RowBackground"
             Grid.RowSpan="2"
             Background="{ThemeResource ProviderRowOnBackgroundBrush}"
             CornerRadius="6"
             Visibility="{x:Bind ViewModel.IsEnabled, Mode=OneWay}" />
 
         <!-- Provider line: icon, name + status, switch -->
-        <Grid Padding="10,8,8,8" ColumnSpacing="10">
+        <Grid
+            x:Name="ProviderLine"
+            Padding="10,8,8,8"
+            ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -118,7 +122,10 @@
                     Orientation="Horizontal"
                     Spacing="8"
                     Visibility="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
-                    <Viewbox Width="16" Height="16">
+                    <Viewbox
+                        x:Name="IdleIcon"
+                        Width="16"
+                        Height="16">
                         <Path
                             Width="16"
                             Height="16"
@@ -131,6 +138,7 @@
                             StrokeThickness="1.4" />
                     </Viewbox>
                     <TextBlock
+                        x:Name="IdleText"
                         x:Uid="DropHint"
                         VerticalAlignment="Center"
                         FontSize="12"

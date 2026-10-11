@@ -121,6 +121,12 @@
   <data name="SettingsLink.Content" xml:space="preserve">
     <value>Configurações</value>
   </data>
+  <data name="TabHandle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Arraste até a borda para recolher</value>
+  </data>
+  <data name="DockedStrip.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Expandir BoxeZone</value>
+  </data>
   <data name="TrayOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>

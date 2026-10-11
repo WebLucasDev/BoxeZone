@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using BoxeZone.Services;
 using BoxeZone.ViewModels;
 using BoxeZone.Views;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +17,8 @@ namespace BoxeZone
     public partial class App : Application
     {
         private MainWindow? _window;
+        private TabWindow? _tabWindow;
+        private WindowDockService? _dockService;
         private TaskbarIcon? _trayIcon;
 
         public App()
@@ -23,13 +26,16 @@ namespace BoxeZone
             InitializeComponent();
         }
 
-        public static MainWindow? MainWindow => ((App)Current)._window;
+        public static WindowDockService? DockService => ((App)Current)._dockService;
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow(new MainViewModel());
+            var viewModel = new MainViewModel();
+            _window = new MainWindow(viewModel);
+            _tabWindow = new TabWindow();
+            _dockService = new WindowDockService(_window, _tabWindow, viewModel);
             CreateTrayIcon();
-            _window.ShowWidget();
+            _dockService.ShowNormal();
         }
 
         private void CreateTrayIcon()
@@ -37,7 +43,7 @@ namespace BoxeZone
             var strings = new ResourceLoader();
 
             var openItem = new MenuFlyoutItem { Text = strings.GetString("TrayOpen") };
-            openItem.Click += (_, _) => _window?.ShowWidget();
+            openItem.Click += (_, _) => _dockService?.ShowNormal();
             var exitItem = new MenuFlyoutItem { Text = strings.GetString("TrayExit") };
             exitItem.Click += (_, _) => ExitApp();
 
@@ -53,7 +59,7 @@ namespace BoxeZone
                 ContextMenuMode = ContextMenuMode.PopupMenu,
                 ContextFlyout = menu,
                 NoLeftClickDelay = true,
-                LeftClickCommand = new RelayCommand(() => _window?.ShowWidget()),
+                LeftClickCommand = new RelayCommand(() => _dockService?.ShowNormal()),
             };
 
             // Efficiency Mode would throttle uploads while the window is hidden.
@@ -63,7 +69,7 @@ namespace BoxeZone
         private void ExitApp()
         {
             _trayIcon?.Dispose();
-            _window?.CloseForExit();
+            _dockService?.Shutdown();
             Exit();
         }
     }
