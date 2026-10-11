@@ -1,0 +1,31 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM64/
+AppPackages/
+BundleArtifacts/
+
+# Visual Studio / IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.rsuser
+*.userprefs
+
+# NuGet
+*.nupkg
+packages/
+
+# Credentials and tokens (never commit)
+appsettings.local.json
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
