@@ -60,6 +60,30 @@
   </resheader>
   <data name="AppTitle" xml:space="preserve">
     <value>BoxeZone</value>
-    <comment>Window title (not visible, used by Windows for accessibility).</comment>
+    <comment>Window title (not visible, used by Windows for accessibility) and tray tooltip.</comment>
+  </data>
+  <data name="HeaderTitle.Text" xml:space="preserve">
+    <value>BoxeZone</value>
+  </data>
+  <data name="MinimizeButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Minimizar</value>
+  </data>
+  <data name="MinimizeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Minimizar</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="NoProviderHint.Text" xml:space="preserve">
+    <value>Ative um destino para começar.</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Sair</value>
   </data>
 </root>

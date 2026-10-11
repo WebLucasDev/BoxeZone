@@ -123,7 +123,8 @@ Transições:
 Implementação nativa:
 - Sem barra de título: `OverlappedPresenter.SetBorderAndTitleBar(true, false)` com `IsResizable`, `IsMaximizable` e `IsMinimizable` em `false`. Isso mantém os cantos arredondados, a sombra e a borda de 1 px do Windows 11. Os botões "–" e "X" são desenhados no XAML (44×36 px; "X" fica `#C42B1C` no hover).
 - `AppWindow.IsShownInSwitchers = false` (fora da barra de tarefas e do Alt+Tab).
-- `AppWindow` trabalha em pixels físicos: multiplicar tamanhos por `XamlRoot.RasterizationScale`.
+- `AppWindow` trabalha em pixels físicos: multiplicar tamanhos pela escala (`GetDpiForWindow / 96` ou `XamlRoot.RasterizationScale`).
+- Sem barra de título, a área XAML também cobre a legenda escondida, então `ResizeClient` deixa a janela maior que o conteúdo: redimensionar pela diferença entre o tamanho desejado e `XamlRoot.Size`. Posicionar pela moldura visível (`DWMWA_EXTENDED_FRAME_BOUNDS`), porque o retângulo da janela inclui bordas invisíveis de ~8 px (ver `MainWindow.FitToContent`).
 - No protótipo a aba lateral fica **fora** do container (`left: -15px`). Uma janela nativa é retangular e o Acrylic preenche tudo, então isso não sai de graça. Decidir na etapa 3 (aba dentro da janela, área transparente ou região de janela) e avisar antes de implementar.
 - Hotkey padrão `Ctrl+Alt+D` alterna Normal/Hidden; configurável. `RegisterHotKey` exige receber `WM_HOTKEY`: fazer subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`.
 - Instância única (`AppInstance.FindOrRegisterForKey`): abrir o `.exe` de novo traz a janela existente para o Normal.

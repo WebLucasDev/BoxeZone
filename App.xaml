@@ -8,9 +8,113 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!-- Values come from docs/widget.dc.html (dark only); light uses the closest WinUI theme resources. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ContainerBackgroundBrush" Color="#B8202228" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B3BCC8" />
+                    <SolidColorBrush x:Key="CaptionButtonForegroundBrush" Color="#E3E7EC" />
+                    <SolidColorBrush x:Key="CaptionButtonBackgroundPointerOverBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="CaptionButtonBackgroundPressedBrush" Color="#0AFFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ContainerBackgroundBrush" Color="#B8F3F3F3" />
+                    <StaticResource x:Key="TextSecondaryBrush" ResourceKey="TextFillColorSecondaryBrush" />
+                    <StaticResource x:Key="CaptionButtonForegroundBrush" ResourceKey="TextFillColorPrimaryBrush" />
+                    <StaticResource x:Key="CaptionButtonBackgroundPointerOverBrush" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="CaptionButtonBackgroundPressedBrush" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <Color x:Key="BoxeZoneAccentColor">#4CC2FF</Color>
+            <SolidColorBrush x:Key="BoxeZoneAccentBrush" Color="{StaticResource BoxeZoneAccentColor}" />
+            <SolidColorBrush x:Key="OnAccentForegroundBrush" Color="#0F1216" />
+            <SolidColorBrush x:Key="CloseButtonBackgroundPointerOverBrush" Color="#C42B1C" />
+            <SolidColorBrush x:Key="CloseButtonBackgroundPressedBrush" Color="#E6C42B1C" />
+            <SolidColorBrush x:Key="CloseButtonForegroundPointerOverBrush" Color="#FFFFFF" />
+
+            <!-- Window caption buttons ("–" and "X"), 44x36 per the prototype. -->
+            <Style x:Key="CaptionButtonStyle" TargetType="Button">
+                <Setter Property="Width" Value="44" />
+                <Setter Property="Height" Value="36" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{ThemeResource CaptionButtonForegroundBrush}" />
+                <Setter Property="UseSystemFocusVisuals" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="RootGrid" Background="{TemplateBinding Background}">
+                                <Grid.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.1" />
+                                </Grid.BackgroundTransition>
+                                <ContentPresenter
+                                    x:Name="ContentPresenter"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource CaptionButtonBackgroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{ThemeResource CaptionButtonBackgroundPressedBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="CloseCaptionButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="RootGrid" Background="{TemplateBinding Background}">
+                                <Grid.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.1" />
+                                </Grid.BackgroundTransition>
+                                <ContentPresenter
+                                    x:Name="ContentPresenter"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{StaticResource CloseButtonBackgroundPointerOverBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{StaticResource CloseButtonForegroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="RootGrid.Background" Value="{StaticResource CloseButtonBackgroundPressedBrush}" />
+                                                <Setter Target="ContentPresenter.Foreground" Value="{StaticResource CloseButtonForegroundPointerOverBrush}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
