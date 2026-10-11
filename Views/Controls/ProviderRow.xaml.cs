@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using BoxeZone.ViewModels;
@@ -128,13 +129,25 @@ namespace BoxeZone.Views.Controls
             }
 
             // The drag source must stay alive until the items are read.
+            IReadOnlyList<IStorageItem> items;
             var deferral = e.GetDeferral();
-            var items = await e.DataView.GetStorageItemsAsync();
-            deferral.Complete();
+            try
+            {
+                items = await e.DataView.GetStorageItemsAsync();
+            }
+            catch (Exception)
+            {
+                // Some sources (virtual files, closed apps) cannot hand over their items; nothing to upload.
+                return;
+            }
+            finally
+            {
+                deferral.Complete();
+            }
 
             // Folders are ignored for now; only files are uploaded.
             var files = items.OfType<StorageFile>().ToList();
-            await ViewModel.SimulateUploadAsync(files);
+            await ViewModel.UploadFilesAsync(files);
         }
     }
 }

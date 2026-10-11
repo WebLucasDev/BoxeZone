@@ -109,6 +109,41 @@
     <value>Enviado · {0}</value>
     <comment>{0} = file name.</comment>
   </data>
+  <data name="StatusConnecting" xml:space="preserve">
+    <value>Conectando…</value>
+  </data>
+  <data name="StatusSignInCanceled" xml:space="preserve">
+    <value>Login cancelado</value>
+  </data>
+  <data name="UploadFailedFormat" xml:space="preserve">
+    <value>Não foi possível enviar · {0}</value>
+    <comment>{0} = file name.</comment>
+  </data>
+  <data name="RetryUploadLink.Content" xml:space="preserve">
+    <value>Tentar de novo</value>
+  </data>
+  <data name="ErrorNotConfigured" xml:space="preserve">
+    <value>Credenciais não configuradas</value>
+  </data>
+  <data name="ErrorAccessDenied" xml:space="preserve">
+    <value>Acesso negado na conta</value>
+  </data>
+  <data name="ErrorSessionExpired" xml:space="preserve">
+    <value>Sessão expirada, entre de novo</value>
+  </data>
+  <data name="ErrorOffline" xml:space="preserve">
+    <value>Sem conexão com a internet</value>
+  </data>
+  <data name="ErrorQuotaExceeded" xml:space="preserve">
+    <value>Sem espaço na conta</value>
+  </data>
+  <data name="ErrorUnknown" xml:space="preserve">
+    <value>Erro inesperado</value>
+  </data>
+  <data name="SignedInPageMessage" xml:space="preserve">
+    <value>Conta conectada ao BoxeZone. Você já pode fechar esta janela.</value>
+    <comment>Shown in the browser after the sign-in completes.</comment>
+  </data>
   <data name="OpenUploadedLink.Content" xml:space="preserve">
     <value>Abrir</value>
   </data>

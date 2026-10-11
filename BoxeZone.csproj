@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Content Include="Assets\BoxeZone.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Provider credentials (git-ignored). Read next to the .exe at startup. -->
+    <None Update="appsettings.local.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4276" />
     <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />

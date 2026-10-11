@@ -101,7 +101,7 @@
             PointerCanceled="DropZone_PointerExited"
             PointerEntered="DropZone_PointerEntered"
             PointerExited="DropZone_PointerExited"
-            Visibility="{x:Bind ViewModel.IsEnabled, Mode=OneWay}">
+            Visibility="{x:Bind ViewModel.IsDropZoneVisible, Mode=OneWay}">
             <Grid.BackgroundTransition>
                 <BrushTransition Duration="0:0:0.15" />
             </Grid.BackgroundTransition>
@@ -223,8 +223,42 @@
                         Grid.Column="2"
                         Padding="0"
                         VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.OpenUploadedCommand, Mode=OneWay}"
                         FontSize="12"
                         Foreground="{ThemeResource TextSecondaryBrush}" />
+                </Grid>
+
+                <!-- Failed: not in the prototype; same layout as Done, with the reason on a second line. -->
+                <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.IsFailed, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon
+                        Width="18"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Glyph="&#xE7BA;" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="12"
+                            Text="{x:Bind ViewModel.FailedLabel, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <HyperlinkButton
+                        x:Uid="RetryUploadLink"
+                        Grid.Column="2"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.RetryCommand, Mode=OneWay}"
+                        FontSize="12" />
                 </Grid>
             </Grid>
         </Grid>

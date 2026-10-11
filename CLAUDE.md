@@ -58,9 +58,11 @@ ViewModels/
   ProviderViewModel.cs       # estado de um provedor: ligado, conectado, upload em andamento
   SettingsViewModel.cs
 Services/
+  AppCredentials.cs          # lê appsettings.local.json
   Storage/
-    IStorageProvider.cs
+    IStorageProvider.cs      # interface + StorageProviderException
     GoogleDriveProvider.cs
+    GoogleTokenDataStore.cs  # IDataStore do Google sobre o TokenStore
     OneDriveProvider.cs
     DropboxProvider.cs
   WindowDockService.cs       # estados Normal / Docked / Hidden, snap na borda
@@ -85,12 +87,18 @@ public interface IStorageProvider
     string DisplayName { get; }
     bool IsConnected { get; }
     string? AccountEmail { get; } // exibido em Configurações ("Conectado · e-mail")
+    Task RestoreAsync(CancellationToken ct);     // reconecta pela sessão salva, sem abrir o navegador
     Task ConnectAsync(CancellationToken ct);     // fluxo OAuth no navegador
     Task DisconnectAsync();
     Task<string> UploadAsync(StorageFile file, string targetFolder,
                              IProgress<double> progress, CancellationToken ct); // retorna link do arquivo
 }
 ```
+
+- Falhas saem como `StorageProviderException` com um `StorageErrorKind` (NotConfigured, AccessDenied, SessionExpired, Offline, QuotaExceeded, Unknown). O provedor traduz as exceções do SDK; a UI só conhece o tipo e mostra a mensagem do `.resw`.
+- Ligar o switch de um provedor não conectado inicia o login (status "Conectando…", área de drop escondida, limite de 3 min). Se o login falhar ou for cancelado, o switch volta a desligar e o status mostra o motivo.
+- Envio com falha: a área de drop mostra "Não foi possível enviar · nome", o motivo numa segunda linha e "Tentar de novo", que reenvia a partir do arquivo que falhou (e reconecta antes, se a sessão expirou).
+- Na inicialização, `MainViewModel.RestoreSessionsAsync` reconecta em segundo plano os provedores com sessão salva.
 
 - Uploads são sempre `async`, com `IProgress<double>` para a barra de progresso e `CancellationToken`.
 - Arquivos grandes usam o upload em partes/retomável de cada provedor (Drive: resumable upload; Graph: upload session; Dropbox: upload session acima de 150 MB).
@@ -108,7 +116,7 @@ public interface IStorageProvider
   - Google: implementar `IDataStore` sobre o `TokenStore`; nunca usar `FileDataStore` (grava JSON em texto puro).
   - MSAL: serializar o token cache pelos callbacks `SetBeforeAccess`/`SetAfterAccess`.
 - Tokens nunca em texto puro, nunca em log.
-- Client IDs e secrets ficam em `appsettings.local.json`, que deve estar no `.gitignore`. Manter `appsettings.example.json` com os campos vazios.
+- Client IDs e secrets ficam em `appsettings.local.json` (no `.gitignore`), copiado para a pasta do `.exe` no build e lido por `AppCredentials`. Manter `appsettings.example.json` com os campos vazios.
 
 ## Janela e comportamento
 

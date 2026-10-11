@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using BoxeZone.Helpers;
 using BoxeZone.Services;
+using BoxeZone.Services.Storage;
 using BoxeZone.ViewModels;
 using BoxeZone.Views;
 using CommunityToolkit.Mvvm.Input;
@@ -43,7 +44,9 @@ namespace BoxeZone
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            var viewModel = new MainViewModel();
+            AppCredentials credentials = AppCredentials.Load();
+            var tokenStore = new TokenStore();
+            var viewModel = new MainViewModel(new GoogleDriveProvider(credentials.Google, tokenStore));
             _window = new MainWindow(viewModel);
             _tabWindow = new TabWindow();
             _dockService = new WindowDockService(_window, _tabWindow, viewModel);
@@ -55,6 +58,9 @@ namespace BoxeZone
 
             CreateTrayIcon();
             _dockService.ShowNormal();
+
+            // Saved sessions reconnect in the background; the widget is usable meanwhile.
+            _ = viewModel.RestoreSessionsAsync();
         }
 
         private void CreateTrayIcon()
