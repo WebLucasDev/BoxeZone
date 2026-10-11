@@ -172,6 +172,10 @@ namespace BoxeZone.Services
                 _main.AppWindow.Show(false);
             }
 
+            // The widget must stay above other apps in every visible state; being owned by the
+            // tab window makes Windows drop that, so it is asserted again on every show.
+            Win32.MakeTopmost(_main.GetHwnd());
+
             // Frame insets are only measurable once the window is shown.
             UpdatePlacement();
 

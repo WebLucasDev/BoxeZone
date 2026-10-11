@@ -157,8 +157,28 @@ namespace BoxeZone.Helpers
             return result;
         }
 
-        /// <summary>Makes <paramref name="owner"/> own <paramref name="owned"/>; an owned window always stays above its owner.</summary>
-        public static void SetOwner(IntPtr owned, IntPtr owner) => SetWindowLongPtr(owned, GWLP_HWNDPARENT, owner);
+        /// <summary>
+        /// Makes <paramref name="owner"/> own <paramref name="owned"/>; an owned window always stays above its owner.
+        /// Changing the owner drops the owned window's topmost style, so it is set again.
+        /// </summary>
+        public static void SetOwner(IntPtr owned, IntPtr owner)
+        {
+            SetWindowLongPtr(owned, GWLP_HWNDPARENT, owner);
+            MakeTopmost(owned);
+        }
+
+        /// <summary>Puts the window in the topmost band (above normal windows) without moving or activating it.</summary>
+        public static void MakeTopmost(IntPtr hwnd)
+        {
+            const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_NOACTIVATE = 0x0010;
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
+
+        private static readonly IntPtr HWND_TOPMOST = new(-1);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
 
         /// <summary>Clicking the window no longer activates it (or takes focus from the widget).</summary>
         public static void SetNoActivate(IntPtr hwnd)
