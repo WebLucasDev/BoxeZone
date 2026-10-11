@@ -108,8 +108,11 @@ namespace BoxeZone.Services
 
         public DockState State { get; private set; } = DockState.Hidden;
 
-        /// <summary>First show: back where the widget was last time (docked or not), or the default corner.</summary>
-        public void Start()
+        /// <summary>
+        /// First show: back where the widget was last time (docked or not), or the default corner.
+        /// <paramref name="startHidden"/> keeps it in the tray; the next show uses the restored place.
+        /// </summary>
+        public void Start(bool startHidden = false)
         {
             WindowSettings? saved = _settingsService.Settings.Window;
             if (saved is not null && saved.Width > 0 && saved.Height > 0)
@@ -120,7 +123,7 @@ namespace BoxeZone.Services
                 if (DisplayArea.GetFromRect(bounds, DisplayAreaFallback.None) is not null)
                 {
                     _normalBounds = bounds;
-                    if (saved.WasDocked)
+                    if (saved.WasDocked && !startHidden)
                     {
                         _dockCenterY = saved.DockCenterY;
                         _dockWorkArea = GetWorkArea(bounds);
@@ -130,7 +133,10 @@ namespace BoxeZone.Services
                 }
             }
 
-            SetState(DockState.Normal);
+            if (!startHidden)
+            {
+                SetState(DockState.Normal);
+            }
         }
 
         public void ShowNormal() => SetState(DockState.Normal);

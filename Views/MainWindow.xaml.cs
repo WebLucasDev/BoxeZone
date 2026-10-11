@@ -1,7 +1,10 @@
 using System;
+using System.Numerics;
 using BoxeZone.Helpers;
 using BoxeZone.ViewModels;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -38,6 +41,9 @@ namespace BoxeZone.Views
 
             Root.SizeChanged += (_, _) => ContentSizeChanged?.Invoke(this, EventArgs.Empty);
             ContentFrame.Navigate(typeof(WidgetPage), viewModel, new SuppressNavigationTransitionInfo());
+
+            // Widget <-> Settings: the window resizes at once, the new page fades in.
+            ContentFrame.Navigated += (_, _) => FadeIn(ContentFrame);
         }
 
         public event EventHandler? ContentSizeChanged;
@@ -60,6 +66,28 @@ namespace BoxeZone.Views
 
             // Measure now so the window can be resized before the next frame.
             Root.UpdateLayout();
+
+            FadeIn(mode switch
+            {
+                MainWindowMode.Widget => ContentFrame,
+                MainWindowMode.Strip => DockedStrip,
+                _ => CompactPanel,
+            });
+        }
+
+        /// <summary>
+        /// Short fade (180 ms) on the content that just appeared. Only the content fades, not
+        /// the container background, so the dark theme does not flash the lighter backdrop.
+        /// </summary>
+        private static void FadeIn(UIElement element)
+        {
+            Visual visual = ElementCompositionPreview.GetElementVisual(element);
+            Compositor compositor = visual.Compositor;
+            ScalarKeyFrameAnimation fade = compositor.CreateScalarKeyFrameAnimation();
+            fade.InsertKeyFrame(0, 0);
+            fade.InsertKeyFrame(1, 1, compositor.CreateCubicBezierEasingFunction(new Vector2(0, 0), new Vector2(0.58f, 1)));
+            fade.Duration = TimeSpan.FromMilliseconds(180);
+            visual.StartAnimation("Opacity", fade);
         }
 
         /// <summary>Opens Settings in place of the widget (the window grows to its width).</summary>

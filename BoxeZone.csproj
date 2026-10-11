@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Content Include="Assets\BoxeZone.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Notification icon (AppNotificationManager.Register takes an image file). -->
+    <Content Include="Assets\BoxeZone.png" CopyToOutputDirectory="PreserveNewest" />
     <!-- Provider credentials (git-ignored). Read next to the .exe at startup. -->
     <None Update="appsettings.local.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

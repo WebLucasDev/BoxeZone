@@ -21,6 +21,13 @@ namespace BoxeZone.ViewModels
         Failed,
     }
 
+    /// <summary>A batch of dropped files finished uploading, or stopped at the first failure.</summary>
+    public sealed record UploadFinishedEventArgs(
+        bool Succeeded,
+        IReadOnlyList<string> FileNames,
+        string? Link,
+        string? ErrorMessage);
+
     /// <summary>
     /// State of one provider: switched on/off, connected, its destination folder and the
     /// upload shown in its drop zone. Switching on a provider that is not connected starts
@@ -55,6 +62,8 @@ namespace BoxeZone.ViewModels
             FolderDraft = string.Empty;
             TargetFolder = settings.TargetFolder;
         }
+
+        public event EventHandler<UploadFinishedEventArgs>? UploadFinished;
 
         public string Id { get; }
 
@@ -198,12 +207,14 @@ namespace BoxeZone.ViewModels
                     ErrorMessage = DescribeError(ex);
                     State = UploadState.Failed;
                     RefreshConnection();
+                    UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.Name], null, ErrorMessage));
                     return;
                 }
             }
 
             _failedFiles = [];
             State = UploadState.Done;
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, files.Select(f => f.Name).ToList(), _uploadedLink, null));
         }
 
         [RelayCommand]

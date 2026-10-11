@@ -24,11 +24,13 @@ namespace BoxeZone
         private WindowDockService? _dockService;
         private HotkeyService? _hotkeyService;
         private SettingsService? _settingsService;
+        private NotificationService? _notificationService;
         private TaskbarIcon? _trayIcon;
 
         public App()
         {
             InitializeComponent();
+            UnhandledException += (_, e) => CrashLog.Write(e.Exception);
         }
 
         public static WindowDockService? DockService => ((App)Current)._dockService;
@@ -65,19 +67,52 @@ namespace BoxeZone
             settings.RegisterSavedHotkey();
 
             ApplyTheme(settings.Theme);
+            StartupService.Apply(settings.StartWithWindows);
             settings.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(SettingsViewModel.Theme))
+                switch (e.PropertyName)
                 {
-                    ApplyTheme(settings.Theme);
+                    case nameof(SettingsViewModel.Theme):
+                        ApplyTheme(settings.Theme);
+                        break;
+                    case nameof(SettingsViewModel.StartWithWindows):
+                        StartupService.Apply(settings.StartWithWindows);
+                        break;
                 }
             };
 
+            DispatcherQueue dispatcher = _window.DispatcherQueue;
+            _notificationService = new NotificationService(() => dispatcher.TryEnqueue(() => _dockService.ShowNormal()));
+            _notificationService.Register();
+            foreach (ProviderViewModel provider in viewModel.Providers)
+            {
+                provider.UploadFinished += (sender, e) => NotifyUploadFinished((ProviderViewModel)sender!, e, settings);
+            }
+
             CreateTrayIcon();
-            _dockService.Start();
+
+            // Started at sign-in ("Iniciar com o Windows"): straight to the tray.
+            _dockService.Start(startHidden: StartupService.WasLaunchedAtSignIn);
 
             // Saved sessions reconnect in the background; the widget is usable meanwhile.
             _ = viewModel.RestoreSessionsAsync();
+        }
+
+        private void NotifyUploadFinished(ProviderViewModel provider, UploadFinishedEventArgs e, SettingsViewModel settings)
+        {
+            if (!settings.NotifyOnComplete || _notificationService is null)
+            {
+                return;
+            }
+
+            if (e.Succeeded)
+            {
+                _notificationService.ShowUploaded(provider.Name, e.FileNames, e.Link);
+            }
+            else
+            {
+                _notificationService.ShowFailed(provider.Name, e.FileNames[0], e.ErrorMessage ?? string.Empty);
+            }
         }
 
         private void ApplyTheme(AppTheme theme)

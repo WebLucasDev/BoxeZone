@@ -29,7 +29,13 @@ Pacotes NuGet permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.Buil
 dotnet restore
 dotnet build -c Debug -p:Platform=x64
 dotnet run -c Debug --property:Platform=x64
+
+# versão para distribuir (self-contained, roda sem instalar nada):
+dotnet publish -c Release -p:Platform=x64
+# saída: bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\ (~300 MB, leva o .NET e o Windows App SDK)
 ```
+
+A pasta publicada inclui o `appsettings.local.json`. Em app de desktop, client ID (e o secret do Google, que o próprio Google trata como não confidencial nesse tipo de app) vão junto com o programa; tokens de usuário nunca.
 
 ## Estrutura
 
@@ -71,6 +77,9 @@ Services/
   HotkeyService.cs           # RegisterHotKey via P/Invoke
   SettingsService.cs         # preferências em JSON em %LocalAppData%\BoxeZone
   TokenStore.cs              # tokens criptografados por usuário do Windows
+  NotificationService.cs     # notificações do Windows (toast com AppUserModelID próprio)
+  StartupService.cs          # "Iniciar com o Windows" (chave Run + --startup)
+  CrashLog.cs                # exceções não tratadas em %LocalAppData%\BoxeZone\crash.log
 Helpers/
   Win32.cs                   # P/Invoke (GetCursorPos, RegisterHotKey, SetWindowSubclass etc.)
   WindowExtensions.cs        # tamanho e posição das janelas pela moldura visível
@@ -152,7 +161,7 @@ Implementação nativa:
 - Faixa Docked: ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso; conferir a posição real do cursor antes de estreitar de novo.
 - Hotkey padrão `Ctrl+Alt+D`: com o widget em Normal, esconde; em qualquer outro estado (Hidden, Docked), traz para o Normal. Configurável na etapa 7. `RegisterHotKey` exige receber `WM_HOTKEY`: o `HotkeyService` faz subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`. Se outro app já usa o atalho, o registro falha e o BoxeZone segue funcionando pela bandeja.
 - Instância única (`AppInstance.FindOrRegisterForKey` em `Program.Main`): abrir o `.exe` de novo redireciona a ativação para o que está rodando, que volta ao Normal, e a segunda cópia encerra.
-- Animações de transição curtas (150–250 ms).
+- Animações de transição curtas (150–250 ms). Trocas de modo (widget, faixa, painel compacto) e de página (widget ↔ Configurações) fazem fade de 180 ms só no conteúdo; o fundo não, para o tema escuro não piscar o Acrylic mais claro. A janela muda de tamanho na hora: animar o tamanho de uma janela nativa fica travado.
 
 ## Diretrizes visuais
 
@@ -200,13 +209,15 @@ Provedores ligados, pasta de destino por provedor (padrão `/BoxeZone`), iniciar
 - Pasta de destino: editada no próprio cartão ("Alterar" vira caixa de texto; Enter salva, Esc cancela). `\` vira `/`, espaços nas pontas saem, `<>:"|?*` e a raiz pura são recusados.
 - Atalho: "Alterar" libera o atalho atual e captura a próxima combinação (precisa de Ctrl, Alt, Shift ou Win; Esc cancela). Se outro app já usa, volta o anterior e a tela avisa. O atalho é registrado na janela da aba, que existe antes do widget.
 - Tema: aplicado no conteúdo raiz de cada janela (`Window.Content`), porque o Acrylic segue o tema desse elemento; num elemento interno, o fundo continuaria no tema do Windows.
-- "Iniciar com o Windows" e "Notificar ao concluir" já são salvos; o efeito entra na etapa 8.
+- "Iniciar com o Windows" grava (ou apaga) a entrada da chave Run na hora e de novo a cada início, para o caminho do `.exe` continuar certo se o app mudar de pasta.
+- "Notificar ao concluir": uma notificação por lote de arquivos soltos ("Enviado para o Google Drive" + nome ou "N arquivos", com "Abrir"), e uma em caso de falha, com o motivo.
 
 ## Armadilhas do modo unpackaged
 
 - `ApplicationData.Current` (e `LocalSettings`) falha sem pacote: usar arquivos em `%LocalAppData%\BoxeZone`.
 - Iniciar com o Windows: chave `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` com o argumento `--startup`, que abre direto em Hidden ("Abre direto na bandeja"). `StartupTask` só existe para apps empacotados.
-- Notificações: `AppNotificationManager` do Windows App SDK, registrado no startup.
+- Notificações: o `AppNotificationManager` do Windows App SDK **não funciona** em app self-contained sem pacote (`Register` falha com 0x8007007E). O app usa a API do Windows (`Windows.UI.Notifications`) com um AppUserModelID próprio, `BoxeZone.App`, registrado em `HKCU\Software\Classes\AppUserModelId` com nome e ícone (`Assets\BoxeZone.png`). Cliques na notificação funcionam com o app aberto; depois do "Sair", clicar numa notificação antiga não faz nada.
+- Uma exceção no `OnLaunched` derruba o app sem mensagem (só `0xC000027B` no log de eventos): o `CrashLog` grava tipo, mensagem e pilha em `%LocalAppData%\BoxeZone\crash.log`.
 - Strings: `x:Uid` no XAML e `ResourceLoader` (de `Microsoft.Windows.ApplicationModel.Resources`) no código.
 
 ## Ordem de desenvolvimento

@@ -278,6 +278,21 @@
   <data name="ThemeDark.Content" xml:space="preserve">
     <value>Escuro</value>
   </data>
+  <data name="NotificationUploadedFormat" xml:space="preserve">
+    <value>Enviado para o {0}</value>
+    <comment>{0} = provider name.</comment>
+  </data>
+  <data name="NotificationFilesFormat" xml:space="preserve">
+    <value>{0} arquivos</value>
+    <comment>{0} = number of files (2 or more).</comment>
+  </data>
+  <data name="NotificationOpen" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="NotificationFailedFormat" xml:space="preserve">
+    <value>Não foi possível enviar para o {0}</value>
+    <comment>{0} = provider name.</comment>
+  </data>
   <data name="TrayOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>
