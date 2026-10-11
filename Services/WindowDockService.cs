@@ -103,6 +103,19 @@ namespace BoxeZone.Services
 
         public void Hide() => SetState(DockState.Hidden);
 
+        /// <summary>The global shortcut: hides the widget if it is open, otherwise brings it back.</summary>
+        public void ToggleNormalHidden()
+        {
+            if (State == DockState.Normal)
+            {
+                Hide();
+            }
+            else
+            {
+                ShowNormal();
+            }
+        }
+
         /// <summary>Closes both windows for real; any other close request only hides them.</summary>
         public void Shutdown()
         {

@@ -65,7 +65,23 @@ namespace BoxeZone.Helpers
         public static extern bool SetWindowSubclass(IntPtr hwnd, SubclassProc proc, UIntPtr idSubclass, UIntPtr refData);
 
         [DllImport("comctl32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool RemoveWindowSubclass(IntPtr hwnd, SubclassProc proc, UIntPtr idSubclass);
+
+        [DllImport("comctl32.dll")]
         public static extern IntPtr DefSubclassProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint virtualKey);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool UnregisterHotKey(IntPtr hwnd, int id);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllowSetForegroundWindow(uint processId);
 
         [DllImport("dwmapi.dll")]
         private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT value, int size);

@@ -37,7 +37,8 @@ Os arquivos do projeto ficam na raiz do repositório. Namespace raiz: `BoxeZone`
 
 ```
 BoxeZone.csproj / BoxeZone.slnx
-App.xaml(.cs)                # startup: instância única, janela, ícone de bandeja, hotkey; cores em ThemeDictionaries
+Program.cs                   # Main próprio (DISABLE_XAML_GENERATED_MAIN): instância única, depois o Main gerado pelo XAML
+App.xaml(.cs)                # startup: janela, ícone de bandeja, hotkey; cores em ThemeDictionaries
 app.manifest
 appsettings.example.json     # modelo das credenciais, campos vazios (commitado)
 appsettings.local.json       # credenciais reais (no .gitignore)
@@ -139,8 +140,8 @@ Implementação nativa:
 - Aba lateral: no protótipo ela fica **fora** do container (`left: -15px`), então é uma janela própria (`TabWindow`, 15 px visíveis + 8 px escondidos atrás do widget). O widget é "possuído" pela aba (`GWLP_HWNDPARENT`), o que o mantém sempre por cima dela; a aba tem `WS_EX_NOACTIVATE` para não tirar o foco do widget.
 - O WinUI para de mandar `PointerMoved` quando o cursor sai de uma janela, então o arrasto da aba lê `GetCursorPos` e o estado do botão a cada quadro (`CompositionTarget.Rendering`).
 - Faixa Docked: ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso; conferir a posição real do cursor antes de estreitar de novo.
-- Hotkey padrão `Ctrl+Alt+D` alterna Normal/Hidden; configurável. `RegisterHotKey` exige receber `WM_HOTKEY`: fazer subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`.
-- Instância única (`AppInstance.FindOrRegisterForKey`): abrir o `.exe` de novo traz a janela existente para o Normal.
+- Hotkey padrão `Ctrl+Alt+D`: com o widget em Normal, esconde; em qualquer outro estado (Hidden, Docked), traz para o Normal. Configurável na etapa 7. `RegisterHotKey` exige receber `WM_HOTKEY`: o `HotkeyService` faz subclass da janela com `SetWindowSubclass`, porque o WinUI controla o `WndProc`. Se outro app já usa o atalho, o registro falha e o BoxeZone segue funcionando pela bandeja.
+- Instância única (`AppInstance.FindOrRegisterForKey` em `Program.Main`): abrir o `.exe` de novo redireciona a ativação para o que está rodando, que volta ao Normal, e a segunda cópia encerra.
 - Animações de transição curtas (150–250 ms).
 
 ## Diretrizes visuais

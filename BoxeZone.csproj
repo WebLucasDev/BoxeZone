@@ -16,6 +16,8 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <DefaultLanguage>pt-BR</DefaultLanguage>
     <ApplicationIcon>Assets\BoxeZone.ico</ApplicationIcon>
+    <!-- Program.cs provides Main to enforce a single instance. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
