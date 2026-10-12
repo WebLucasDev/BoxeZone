@@ -11,7 +11,8 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Em andamento
 
 - [ ] **Ícones reais dos provedores** no lugar das iniciais (branch `feat/provider-logos`, `adaa1fb`): SVGs oficiais em `Assets/Providers/`, 18 px dentro do quadrado de 28 px, no widget e nas Configurações. Falta o merge na `main`.
-- [ ] **Logo nova: luva de boxe** (branch `feat/glove-logo`) no lugar da seta de envio: `.ico` (exe e bandeja), `.png` (notificações) e cabeçalho do widget. Falta o teste do usuário.
+- [ ] **Logo nova: luva de boxe** (branch `feat/glove-logo`, `83dd378`) no lugar da seta de envio: `.ico` (exe e bandeja), `.png` (notificações) e cabeçalho do widget. Falta o merge na `main`.
+- [ ] **Polimento** (branch `feat/ui-polish`): nome "Boxe Zone" na interface; a aba só recolhe e o widget é arrastado pelo corpo; sempre no topo, sem a opção nas Configurações; aba clicável na largura toda; faixa recolhida volta a estreitar ao tirar o mouse; captura do atalho ignora cliques do mouse; "Cancelar" no login pelas Configurações e limite de 2 min. Falta o merge na `main`.
 
 ## Distribuição
 
@@ -55,6 +56,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 - Clicar numa notificação antiga depois de "Sair" não faz nada (o `AppNotificationManager` não funciona self-contained; ver `docs/arquitetura.md`).
 - O drop não funciona se o app rodar como administrador (limitação do Windows).
+- Abrir as Configurações e voltar pode mudar o widget de lugar: a tela de Configurações cresce para longe das bordas próximas e, na volta, o widget fica preso ao canto oposto do retângulo maior.
 - Ligar "Iniciar com o Windows" num build de desenvolvimento aponta para o `.exe` em `bin\x64\Debug`; o caminho é regravado a cada início com a opção ligada.
 
 ## Concluído

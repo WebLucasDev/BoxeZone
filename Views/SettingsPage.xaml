@@ -119,30 +119,6 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Uid="AlwaysOnTopTitle" FontSize="13" />
-                                <TextBlock
-                                    x:Uid="AlwaysOnTopDescription"
-                                    FontSize="11"
-                                    Foreground="{ThemeResource TextSecondaryBrush}" />
-                            </StackPanel>
-                            <ToggleSwitch
-                                x:Uid="AlwaysOnTopSwitch"
-                                Grid.Column="1"
-                                MinWidth="0"
-                                IsOn="{x:Bind ViewModel.Settings.AlwaysOnTop, Mode=TwoWay}"
-                                OffContent=""
-                                OnContent="" />
-                        </Grid>
-                        <Grid
-                            Padding="12,10"
-                            BorderBrush="{ThemeResource SettingsCardBorderBrush}"
-                            BorderThickness="0,1,0,0"
-                            ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center">
                                 <TextBlock x:Uid="CollapseTitle" FontSize="13" />
                                 <TextBlock
                                     x:Uid="CollapseDescription"

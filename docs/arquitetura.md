@@ -12,8 +12,8 @@ Detalhes de implementação que não cabem no `CLAUDE.md`. Ler a seção corresp
 3. **Hidden**: `AppWindow.Hide()`, processo segue rodando; volta pela bandeja, pela hotkey ou abrindo o `.exe` de novo.
 
 Transições:
-- "–" → Docked. "X" e Alt+F4 → Hidden (o `Closing` é cancelado). Só "Sair" na bandeja encerra.
-- Soltar a aba: centro do widget fora de todos os monitores → Hidden (volta à posição de antes do arrasto); borda direita a menos de 24 px de uma borda **real** da tela (sem monitor ao lado) → Docked; qualquer outro lugar → Normal onde foi solto, ajustado para dentro da área de trabalho.
+- "–" ou clique na aba → Docked. "X" e Alt+F4 → Hidden (o `Closing` é cancelado). Só "Sair" na bandeja encerra.
+- Arrastar o widget pelo corpo só move: fica onde foi solto, ajustado para dentro da área de trabalho do monitor sob o centro (ou do mais próximo). Não recolhe nem esconde.
 - Hotkey: em Normal esconde; em qualquer outro estado traz para o Normal.
 - "Recolher após o envio": Docked 1,5 s depois do "Enviado", se nada mais estiver enviando.
 - Hidden ou Docked sempre voltam para a `WidgetPage` (Configurações só existe no widget aberto).
@@ -36,18 +36,26 @@ Ao crescer (outra página, provedor ligado), o widget cresce para longe das bord
 - O widget é "possuído" pela aba (`GWLP_HWNDPARENT`), o que o mantém sempre por cima dela e esconde os cantos direitos da aba.
 - Trocar o dono **tira o topmost do widget**: ele some atrás de outros apps e só a aba fica visível. `Win32.SetTopmost` é reaplicado ao definir o dono e a cada show (`WindowDockService.ApplyTopmost`).
 - A aba tem `WS_EX_NOACTIVATE` para não tirar o foco do widget; precisa de um `Activate()` uma vez para o XAML carregar.
-- O WinUI para de mandar `PointerMoved` quando o cursor sai de uma janela (a aba tem 23 px), então o arrasto lê `GetCursorPos` e o estado do botão (`GetAsyncKeyState`, respeitando botões trocados) a cada quadro em `CompositionTarget.Rendering`.
+- A aba só recolhe (não arrasta). O clique age no `PointerPressed`, como a faixa: com captura do ponteiro e ação no `PointerReleased`, o clique não chegava a recolher.
+- **A borda invisível do widget cobre a aba**: os 8 px de borda de redimensionamento à esquerda da moldura visível ficam por cima dos últimos 8 px visíveis da aba (o widget está acima dela), e esses cliques iam para o widget. `HTTRANSPARENT` não resolve: o Windows entrega o clique à janela de topo da aba, não à janela filha onde o WinUI trata a entrada. A solução: `Win32.ReportInvisibleFrameClicks` faz o widget responder `HTBORDER` fora da moldura e, no `WM_NCLBUTTONDOWN`, avisar o ponto; o `WindowDockService` recolhe se ele cair na aba.
+
+### Arrastar o widget
+
+- Começa num `PointerPressed` que nenhum controle tratou: `Root.AddHandler(PointerPressedEvent, …, handledEventsToo: false)` na `MainWindow`. Botões, switches, links e caixas de texto marcam o evento como tratado e continuam funcionando; texto, cabeçalho e espaços vazios arrastam. Só com mouse e só no modo Widget (faixa e painel compacto não arrastam).
+- `WindowDrag` só começa a mover depois do limite de arrasto do sistema (`SM_CXDRAG`/`SM_CYDRAG`), para um clique não mexer a janela.
+- A janela anda sob o cursor e o WinUI deixa de mandar `PointerMoved`, então o arrasto lê `GetCursorPos` e o estado do botão (`GetAsyncKeyState`, respeitando botões trocados) a cada quadro em `CompositionTarget.Rendering`. A aba acompanha a cada passo (`PlaceTab`).
 - Durante o arrasto, `UpdatePlacement` é ignorado: atravessar para um monitor de outra escala redimensiona a janela no meio do arrasto.
 
 ### Faixa Docked
 
-- Ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso: conferir a posição real do cursor antes de estreitar.
+- Ao alargar no hover, a janela muda de tamanho sob o cursor e o WinUI manda um `PointerExited` falso, e depois dele pode não mandar nenhum quando o cursor sai de verdade (a faixa ficava larga). Quem decide é a posição real do cursor: conferida no `PointerExited` e num timer de 50 ms enquanto a faixa está larga.
+- Para testar hover com scripts: `SetCursorPos` não gera eventos de ponteiro no WinUI; usar `mouse_event`/`SendInput` com movimento.
 - O clique usa `PointerPressed`, não `Tapped` (o redimensionamento atrapalhava o toque).
-- Faixa e painel compacto ficam sempre no topo, mesmo com "Sempre no topo" desligado; cobertos por outra janela não teriam como ser alcançados.
 
 ### Sempre no topo
 
-- O `OverlappedPresenter.IsAlwaysOnTop` acompanha a preferência junto com `SetTopmost`; senão o WinUI recoloca a janela no topo ao ativar.
+- Widget, faixa e painel compacto ficam **sempre** por cima dos outros apps; não há mais preferência (o switch "Sempre no topo" saiu: desligado, o widget sumia atrás do navegador e só a aba ficava visível).
+- `ApplyTopmost` liga `OverlappedPresenter.IsAlwaysOnTop` junto com `SetTopmost`: os dois precisam concordar, senão o WinUI reaplica o valor do presenter ao ativar a janela.
 
 ### Foco
 
@@ -82,7 +90,8 @@ public interface IStorageProvider
 ```
 
 - Falhas saem como `StorageProviderException` com `StorageErrorKind` (NotConfigured, AccessDenied, SessionExpired, Offline, QuotaExceeded, Unknown). Cada provedor traduz as exceções do seu SDK; a UI só conhece o tipo e mostra a mensagem do `.resw`. `SessionExpired` também apaga a sessão local.
-- Ligar o switch de um provedor não conectado inicia o login ("Conectando…", área de drop escondida, limite de 3 min; desligar cancela). Falhou ou foi cancelado: o switch desliga e o status mostra o motivo.
+- Ligar o switch de um provedor não conectado inicia o login ("Conectando…", área de drop escondida, limite de 2 min; desligar cancela). Nas Configurações, durante o login, "Conectar" vira "Cancelar" (comando com `AllowConcurrentExecutions`, senão o próprio login que ele iniciou o deixa desabilitado). Falhou ou foi cancelado: o switch desliga e o status mostra o motivo.
+- Fechar a aba do navegador **não avisa o app**: nenhuma requisição chega ao endereço de retorno (loopback). Por isso o limite de tempo e o cancelar. Cancelar libera o endereço: Google e OneDrive usam uma porta nova a cada login; o Dropbox reusa `localhost:53682` (o `HttpListener` é parado no cancelamento). Os endereços ficam no `http.sys`, não no processo: `netsh http show servicestate view=requestq` para conferir.
 - Falha no envio: "Não foi possível enviar · nome", o motivo e "Tentar de novo", que reenvia a partir do arquivo que falhou (reconectando antes, se preciso). Um provedor com falha não afeta os outros.
 - Todo envio é em partes, para ter progresso real: Drive resumable upload (8 MB), Graph upload session (10 MiB, múltiplo de 320 KiB; arquivo vazio vai num PUT simples) e Dropbox upload session (8 MB; o envio simples não informa progresso e para em 150 MB).
 - Nome repetido não sobrescreve: Graph `conflictBehavior=rename`, Dropbox `WriteMode.Add` + `autorename`.
@@ -140,6 +149,7 @@ public interface IStorageProvider
 - Cores em `ThemeDictionaries` (Dark com os valores do protótipo, Light com os recursos equivalentes do WinUI). Sobrescritas de controles nativos com valor igual nos dois temas (como `ToggleSwitchFillOn`) vão no dicionário principal do `App.xaml`: dentro dos `ThemeDictionaries` a do `ToggleSwitch` não teve efeito.
 - Nome de `VisualState` não pode repetir nome de evento do controle (`DragOver` gerava CS0108); usar `DragTarget`.
 - `x:Bind` converte `bool` em `Visibility`, mas não o inverso: usar `BindConverters`. Função estática no próprio code-behind é chamada como de instância pelo `x:Bind` e não compila.
+- **Foco e o `ScrollViewer` raiz**: um clique em algo que não recebe foco (texto, área vazia) leva o foco ao `ScrollViewer` raiz do WinUI, **acima** da página; daí em diante o `PreviewKeyDown` da página não vê as teclas. A captura do atalho (Configurações) cancela no `LosingFocus` da página qualquer mudança de foco para fora dela enquanto captura.
 - Seletor de tema: `RadioButton` nativo com o estilo `SegmentRadioButtonStyle` (o WinUI não tem controle segmentado sem pacote extra).
 - Logo do app: luva escura no quadrado `#4CC2FF`, em duas versões. `Assets/BoxeZone.svg` é a completa (listras no cano, brilho); `Assets/BoxeZone-small.svg` é a simplificada para tamanhos minúsculos (sem listras nem brilho, vinco do polegar mais grosso), porque abaixo de ~24 px os detalhes viram um borrão cinza. O `BoxeZone.ico` usa a simplificada em 16 e 20 px e a completa em 24, 32, 40, 48, 64 (BMP de 32 bits) e 256 px (PNG); o `System.Drawing.Icon` da bandeja lê esse formato. O `BoxeZone.png` (256 px, notificações) é a completa. Os PNGs saem do Edge headless (`--default-background-color=00000000`; ele não tira print de janela minúscula, como 16 × 16, então os tamanhos vão juntos numa página e são recortados). O cabeçalho do widget redesenha a versão simplificada no XAML (`WidgetPage.xaml`): mudou o SVG, mudar lá também.
 - Logos dos provedores: SVGs oficiais em `Assets/Providers/`, carregados com `SvgImageSource` por `ms-appx:///` (funciona sem pacote, porque os arquivos são `Content` copiados ao lado do `.exe`). O `SvgImageSource` usa o SVG do Direct2D, que não desenha `<mask>`, folhas de estilo (`<style>`, `class`) nem texto: no SVG baixado, a máscara vira `<clipPath>` e os estilos viram atributos (`fill`, `fill-opacity`). O `viewBox` é recortado no contorno do logo para ele ocupar os 18 px. Diretrizes de marca: não recolorir nem distorcer os logos.

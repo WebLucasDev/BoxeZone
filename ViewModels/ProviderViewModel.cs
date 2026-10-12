@@ -35,8 +35,9 @@ namespace BoxeZone.ViewModels
     /// </summary>
     public partial class ProviderViewModel : ObservableObject
     {
-        // The browser sign-in waits for the user; give up after a while.
-        private static readonly TimeSpan SignInTimeout = TimeSpan.FromMinutes(3);
+        // The browser sign-in waits for the user, and closing the browser tab tells the app
+        // nothing (no request reaches the loopback address): give up after a while.
+        private static readonly TimeSpan SignInTimeout = TimeSpan.FromMinutes(2);
 
         private static readonly char[] InvalidFolderChars = ['<', '>', ':', '"', '|', '?', '*'];
 
@@ -79,7 +80,7 @@ namespace BoxeZone.ViewModels
         public partial bool IsEnabled { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(Status), nameof(IsDropZoneVisible), nameof(AccountStatus), nameof(AccountAction), nameof(CanChangeAccount))]
+        [NotifyPropertyChangedFor(nameof(Status), nameof(IsDropZoneVisible), nameof(AccountStatus), nameof(AccountAction))]
         public partial bool IsConnecting { get; set; }
 
         /// <summary>Mirrors <see cref="IStorageProvider.IsConnected"/>, which is not observable.</summary>
@@ -151,9 +152,9 @@ namespace BoxeZone.ViewModels
             : Provider.AccountEmail is { Length: > 0 } email ? string.Format(Strings.GetString("AccountConnectedFormat"), email)
             : Strings.GetString("AccountConnected");
 
-        public string AccountAction => Strings.GetString(IsConnected ? "AccountDisconnect" : "AccountConnect");
-
-        public bool CanChangeAccount => !IsConnecting;
+        /// <summary>Settings button: "Conectar", "Cancelar" while the browser sign-in is open, or "Desconectar".</summary>
+        public string AccountAction => Strings.GetString(
+            IsConnecting ? "AccountCancel" : IsConnected ? "AccountDisconnect" : "AccountConnect");
 
         /// <summary>
         /// At startup: reconnects from the saved session and, if that works, switches the
@@ -241,11 +242,19 @@ namespace BoxeZone.ViewModels
             }
         }
 
-        /// <summary>Settings: "Conectar" signs in; "Desconectar" signs out and switches the provider off.</summary>
-        [RelayCommand]
+        /// <summary>
+        /// Settings: "Conectar" signs in, "Cancelar" stops a sign-in in progress (like switching
+        /// off), "Desconectar" signs out and switches the provider off. Concurrent executions are
+        /// allowed so the button stays clickable while the sign-in it started is still waiting.
+        /// </summary>
+        [RelayCommand(AllowConcurrentExecutions = true)]
         private async Task ToggleAccountAsync()
         {
-            if (IsConnected)
+            if (IsConnecting)
+            {
+                _connectCts?.Cancel();
+            }
+            else if (IsConnected)
             {
                 await Provider.DisconnectAsync();
                 RefreshConnection();

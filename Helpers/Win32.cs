@@ -55,6 +55,13 @@ namespace BoxeZone.Helpers
             return (GetAsyncKeyState(key) & 0x8000) != 0;
         }
 
+        /// <summary>How far the cursor must move, in physical pixels, before a press becomes a drag.</summary>
+        public static (int X, int Y) GetDragThreshold()
+        {
+            const int SM_CXDRAG = 68, SM_CYDRAG = 69;
+            return (GetSystemMetrics(SM_CXDRAG), GetSystemMetrics(SM_CYDRAG));
+        }
+
         // Kept in a field so the GC does not collect the delegate while Windows still calls it.
         private static readonly SubclassProc MinimumSizeProc = RemoveMinimumSizeProc;
 
@@ -155,6 +162,57 @@ namespace BoxeZone.Helpers
             }
 
             return result;
+        }
+
+        // Kept in a field so the GC does not collect the delegate while Windows still calls it.
+        private static readonly SubclassProc InvisibleFrameProc = InvisibleFrameClickProc;
+
+        private static Action<POINT>? _invisibleFrameClicked;
+
+        /// <summary>
+        /// Reports presses on the invisible resize borders around the window's visible frame,
+        /// in screen pixels. The widget sits above the side tab, and its 8 px left border covers
+        /// part of the tab: clicks there reach the widget, never the tab. HTTRANSPARENT does not
+        /// help: Windows then hands the click to the tab's top-level window, not to the child
+        /// window where WinUI handles input. One window only (the widget).
+        /// </summary>
+        public static void ReportInvisibleFrameClicks(IntPtr hwnd, Action<POINT> pressed)
+        {
+            _invisibleFrameClicked = pressed;
+            SetWindowSubclass(hwnd, InvisibleFrameProc, 1, 0);
+        }
+
+        private static IntPtr InvisibleFrameClickProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam, UIntPtr idSubclass, UIntPtr refData)
+        {
+            const uint WM_NCHITTEST = 0x0084, WM_NCLBUTTONDOWN = 0x00A1;
+            const int HTBORDER = 18;
+
+            if ((msg == WM_NCHITTEST || msg == WM_NCLBUTTONDOWN) &&
+                DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out RECT visible, Marshal.SizeOf<RECT>()) == 0)
+            {
+                // Screen coordinates, signed (monitors left of or above the primary one are negative).
+                var point = new POINT
+                {
+                    X = (short)(lParam.ToInt64() & 0xFFFF),
+                    Y = (short)((lParam.ToInt64() >> 16) & 0xFFFF),
+                };
+                bool isOutside = point.X < visible.Left || point.X >= visible.Right || point.Y < visible.Top || point.Y >= visible.Bottom;
+
+                if (isOutside && msg == WM_NCHITTEST)
+                {
+                    // A plain, non-resizing border everywhere outside the frame (WinUI reports part
+                    // of it as client area), so presses there arrive as WM_NCLBUTTONDOWN.
+                    return new IntPtr(HTBORDER);
+                }
+
+                if (isOutside && msg == WM_NCLBUTTONDOWN)
+                {
+                    _invisibleFrameClicked?.Invoke(point);
+                    return IntPtr.Zero;
+                }
+            }
+
+            return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
 
         /// <summary>

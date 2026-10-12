@@ -9,12 +9,17 @@ namespace BoxeZone.Services.Storage
     /// </summary>
     internal static class SignInPage
     {
-        // The logo from docs/widget.dc.html: accent square with the upload arrow.
+        // The app logo (Assets/BoxeZone.svg): boxing glove on the accent square.
         private const string Logo =
-            "<svg width=\"40\" height=\"40\" viewBox=\"0 0 20 20\" aria-hidden=\"true\">" +
-            "<rect width=\"20\" height=\"20\" rx=\"5\" fill=\"#4CC2FF\"/>" +
-            "<g transform=\"translate(4 4) scale(.75)\" fill=\"none\" stroke=\"#0F1216\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">" +
-            "<path d=\"M8 11V3\"/><path d=\"M4.5 6.5L8 3l3.5 3.5\"/><path d=\"M3 13h10\"/></g></svg>";
+            "<svg width=\"40\" height=\"40\" viewBox=\"0 0 256 256\" aria-hidden=\"true\">" +
+            "<rect width=\"256\" height=\"256\" rx=\"56\" fill=\"#4CC2FF\"/>" +
+            "<g transform=\"translate(-6 4) rotate(40 132 128)\" fill=\"#0F1216\">" +
+            "<rect x=\"98\" y=\"180\" width=\"86\" height=\"52\" rx=\"12\"/>" +
+            "<path d=\"M120 198h42M120 214h42\" stroke=\"#4CC2FF\" stroke-width=\"7\" stroke-linecap=\"round\"/>" +
+            "<path d=\"M104 172C98 150 96 128 98 108C100 56 126 26 162 28C194 30 210 60 206 100C202 136 192 156 178 172Z\"/>" +
+            "<path d=\"M100 172C78 162 66 138 70 116C74 94 92 86 110 92C127 99 132 118 123 134C116 147 109 159 107 172Z\" stroke=\"#4CC2FF\" stroke-width=\"9\" stroke-linejoin=\"round\"/>" +
+            "<path d=\"M176 50C190 60 196 76 194 94\" fill=\"none\" stroke=\"#4CC2FF\" stroke-width=\"8\" stroke-linecap=\"round\"/>" +
+            "</g></svg>";
 
         private const string Style =
             ":root{color-scheme:light dark}" +
@@ -28,8 +33,10 @@ namespace BoxeZone.Services.Storage
 
         public static string Build()
         {
-            string message = WebUtility.HtmlEncode(new ResourceLoader().GetString("SignedInPageMessage"));
-            return "<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><title>BoxeZone</title>" +
+            var strings = new ResourceLoader();
+            string title = WebUtility.HtmlEncode(strings.GetString("AppTitle"));
+            string message = WebUtility.HtmlEncode(strings.GetString("SignedInPageMessage"));
+            return $"<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><title>{title}</title>" +
                 $"<style>{Style}</style></head><body><main>{Logo}<p>{message}</p></main></body></html>";
         }
     }

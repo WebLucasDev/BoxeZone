@@ -46,7 +46,6 @@
                     VerticalAlignment="Center"
                     Command="{x:Bind ViewModel.ToggleAccountCommand, Mode=OneWay}"
                     Content="{x:Bind ViewModel.AccountAction, Mode=OneWay}"
-                    IsEnabled="{x:Bind ViewModel.CanChangeAccount, Mode=OneWay}"
                     Style="{StaticResource AccountButtonStyle}" />
             </Grid>
 

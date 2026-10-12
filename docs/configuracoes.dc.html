@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>BoxeZone — configurações</title>
+<title>Boxe Zone — configurações</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -25,12 +25,12 @@ a{color:#e3e7ec}a:hover{color:#ffffff}
 <div aria-hidden="true" style="position: absolute; left: 600px; top: 60px; width: 280px; height: 280px; border-radius: 140px; background-color: #7a4f6a; filter: blur(40px); opacity: .55"></div>
 
 <div style="position: absolute; left: 40px; top: 40px; display: flex; flex-direction: column; gap: 10px; max-width: 300px">
-<div style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fb0c2">POC · BoxeZone</div>
+<div style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fb0c2">POC · Boxe Zone</div>
 <div style="font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif; font-size: 28px; font-weight: 600; line-height: 1.2">Configurações</div>
 <div style="font-size: 15px; line-height: 1.5; color: #c0cad6">Contas, pasta de destino de cada provedor e o comportamento da janela, num painel só.</div>
 </div>
 
-<section aria-label="Configurações do BoxeZone" style="position: absolute; right: 40px; top: 40px; width: 440px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 8px; background-color: rgba(32,34,40,.78); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3)">
+<section aria-label="Configurações do Boxe Zone" style="position: absolute; right: 40px; top: 40px; width: 440px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 8px; background-color: rgba(32,34,40,.78); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3)">
 
 <header style="display: flex; align-items: center; height: 36px">
 <a href="Main.dc.html" class="cap" aria-label="Voltar" title="Voltar" style="width: 44px; height: 36px; border-radius: 7px 0 0 0; display: flex; align-items: center; justify-content: center; text-decoration: none">
@@ -89,7 +89,7 @@ a{color:#e3e7ec}a:hover{color:#ffffff}
 <h2 style="margin: 0 0 2px 4px; font-size: 13px; font-weight: 600; color: #dfe5ec">Atalho e aparência</h2>
 <div style="display: flex; flex-direction: column; border-radius: 6px; background-color: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06)">
 <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px">
-<div style="font-size: 13px; flex-grow: 1">Abrir e fechar o BoxeZone</div>
+<div style="font-size: 13px; flex-grow: 1">Abrir e fechar o Boxe Zone</div>
 <span style="padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); font-size: 12px; color: #e8edf3">Ctrl+Alt+D</span>
 <button class="btn" style="min-height: 28px; padding: 0 10px; border-radius: 4px; border: 0; background-color: transparent; color: #9fd8ff; font-family: inherit; font-size: 12px; cursor: pointer">Alterar</button>
 </div>
@@ -114,7 +114,7 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       conn: { drive: true, onedrive: true, dropbox: false },
-      opt: { startup: true, top: true, autohide: false, notify: true },
+      opt: { startup: true, autohide: false, notify: true },
       theme: 'system'
     };
   }
@@ -142,7 +142,6 @@ class Component extends DCLogic {
     var opt = this.state.opt;
     var options = [
       { id: 'startup', title: 'Iniciar com o Windows', desc: 'Abre direto na bandeja ao ligar o computador' },
-      { id: 'top', title: 'Sempre no topo', desc: 'A janela fica por cima das outras' },
       { id: 'autohide', title: 'Recolher após o envio', desc: 'Volta para a borda quando o upload termina' },
       { id: 'notify', title: 'Notificar ao concluir', desc: 'Mostra uma notificação do Windows' }
     ].map(function (o, i) {

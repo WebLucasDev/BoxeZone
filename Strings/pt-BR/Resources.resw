@@ -59,11 +59,11 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppTitle" xml:space="preserve">
-    <value>BoxeZone</value>
+    <value>Boxe Zone</value>
     <comment>Window title (not visible, used by Windows for accessibility) and tray tooltip.</comment>
   </data>
   <data name="HeaderTitle.Text" xml:space="preserve">
-    <value>BoxeZone</value>
+    <value>Boxe Zone</value>
   </data>
   <data name="MinimizeButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Minimizar</value>
@@ -141,7 +141,7 @@
     <value>Erro inesperado</value>
   </data>
   <data name="SignedInPageMessage" xml:space="preserve">
-    <value>Conta conectada ao BoxeZone. Você já pode fechar esta janela.</value>
+    <value>Conta conectada ao Boxe Zone. Você já pode fechar esta janela.</value>
     <comment>Shown in the browser after the sign-in completes.</comment>
   </data>
   <data name="OpenUploadedLink.Content" xml:space="preserve">
@@ -154,10 +154,10 @@
     <value>Configurações</value>
   </data>
   <data name="TabHandle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Arraste até a borda para recolher</value>
+    <value>Recolher</value>
   </data>
   <data name="DockedStrip.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Expandir BoxeZone</value>
+    <value>Expandir Boxe Zone</value>
   </data>
   <data name="SettingsTitle.Text" xml:space="preserve">
     <value>Configurações</value>
@@ -193,6 +193,9 @@
   <data name="AccountDisconnect" xml:space="preserve">
     <value>Desconectar</value>
   </data>
+  <data name="AccountCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="TargetFolderLabel.Text" xml:space="preserve">
     <value>Pasta de destino</value>
   </data>
@@ -217,15 +220,6 @@
   <data name="StartupSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Iniciar com o Windows</value>
   </data>
-  <data name="AlwaysOnTopTitle.Text" xml:space="preserve">
-    <value>Sempre no topo</value>
-  </data>
-  <data name="AlwaysOnTopDescription.Text" xml:space="preserve">
-    <value>A janela fica por cima das outras</value>
-  </data>
-  <data name="AlwaysOnTopSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Sempre no topo</value>
-  </data>
   <data name="CollapseTitle.Text" xml:space="preserve">
     <value>Recolher após o envio</value>
   </data>
@@ -245,7 +239,7 @@
     <value>Notificar ao concluir</value>
   </data>
   <data name="HotkeyTitle.Text" xml:space="preserve">
-    <value>Abrir e fechar o BoxeZone</value>
+    <value>Abrir e fechar o Boxe Zone</value>
   </data>
   <data name="HotkeyChange" xml:space="preserve">
     <value>Alterar</value>

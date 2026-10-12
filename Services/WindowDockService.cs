@@ -24,14 +24,12 @@ namespace BoxeZone.Services
 
     /// <summary>
     /// Owns the widget's window state (Normal / Docked / Hidden), where the window sits,
-    /// and the side tab that drags it. All positions are physical pixels of the visible frame.
+    /// the side tab that collapses it and dragging it by its body. All positions are
+    /// physical pixels of the visible frame.
     /// </summary>
     public sealed class WindowDockService
     {
         private const int ScreenMargin = 16;
-
-        // Releasing the tab with the widget's right edge this close to the screen edge docks it.
-        private const int SnapDistance = 24;
 
         private static readonly TimeSpan UploadDoneHold = TimeSpan.FromSeconds(1.5);
         private static readonly TimeSpan CursorLeaveGrace = TimeSpan.FromMilliseconds(300);
@@ -69,26 +67,33 @@ namespace BoxeZone.Services
             _main.AppWindow.Closing += AppWindow_Closing;
             _tab.AppWindow.Closing += AppWindow_Closing;
 
-            _tab.TabHandle.DragStarted += (_, _) =>
+            _tab.TabHandle.Clicked += (_, _) => Dock();
+
+            // The widget's invisible left border covers the tab's right edge and takes those clicks.
+            _main.InvisibleFrameClicked += (_, point) =>
+            {
+                RectInt32 tab = _tab.GetVisibleBounds();
+                bool isOnTab =
+                    point.X >= tab.X && point.X < tab.X + tab.Width &&
+                    point.Y >= tab.Y && point.Y < tab.Y + tab.Height;
+                if (State == DockState.Normal && isOnTab)
+                {
+                    Dock();
+                }
+            };
+
+            _main.Drag.Started += (_, _) =>
             {
                 _isDragging = true;
                 _dragStartBounds = _main.GetVisibleBounds();
             };
-            _tab.TabHandle.DragMoved += TabHandle_DragMoved;
-            _tab.TabHandle.DragCompleted += (_, _) => OnDragCompleted();
+            _main.Drag.Moved += Drag_Moved;
+            _main.Drag.Completed += (_, _) => OnDragCompleted();
 
             foreach (ProviderViewModel provider in _viewModel.Providers)
             {
                 provider.PropertyChanged += Provider_PropertyChanged;
             }
-
-            _viewModel.Settings.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(SettingsViewModel.AlwaysOnTop))
-                {
-                    ApplyTopmost();
-                }
-            };
 
             _collapseTimer = _main.DispatcherQueue.CreateTimer();
             _collapseTimer.Interval = TimeSpan.FromMilliseconds(150);
@@ -252,22 +257,20 @@ namespace BoxeZone.Services
         }
 
         /// <summary>
-        /// "Sempre no topo" applies to the open widget. The docked strip and the compact panel
-        /// always stay on top: covered by other windows they could not be reached at all.
+        /// The widget, the docked strip and the compact panel always stay above other apps.
         /// Being owned by the tab window makes Windows drop the topmost style, so it is set on every show.
         /// </summary>
         private void ApplyTopmost()
         {
-            bool topmost = State != DockState.Normal || _viewModel.Settings.AlwaysOnTop;
             foreach (Microsoft.UI.Xaml.Window window in new Microsoft.UI.Xaml.Window[] { _main, _tab })
             {
                 // Keep the presenter in sync, or WinUI puts the window back on top when it activates.
                 if (window.AppWindow.Presenter is OverlappedPresenter presenter)
                 {
-                    presenter.IsAlwaysOnTop = topmost;
+                    presenter.IsAlwaysOnTop = true;
                 }
 
-                Win32.SetTopmost(window.GetHwnd(), topmost);
+                Win32.SetTopmost(window.GetHwnd(), true);
             }
         }
 
@@ -355,7 +358,7 @@ namespace BoxeZone.Services
                 widget.Y + ((widget.Height - tabHeight) / 2));
         }
 
-        private void TabHandle_DragMoved(object? sender, PointInt32 offset)
+        private void Drag_Moved(object? sender, PointInt32 offset)
         {
             var bounds = new RectInt32(
                 _dragStartBounds.X + offset.X,
@@ -366,36 +369,20 @@ namespace BoxeZone.Services
             PlaceTab(bounds);
         }
 
+        /// <summary>
+        /// Dragging only moves the widget: it stays where it was dropped, pulled back inside the
+        /// screen under its center (or the nearest one). Collapsing is the tab's and the "–" button's job.
+        /// </summary>
         private void OnDragCompleted()
         {
             _isDragging = false;
             RectInt32 bounds = _main.GetVisibleBounds();
             var center = new PointInt32(bounds.X + (bounds.Width / 2), bounds.Y + (bounds.Height / 2));
-            DisplayArea? display = DisplayArea.GetFromPoint(center, DisplayAreaFallback.None);
+            RectInt32 workArea = DisplayArea.GetFromPoint(center, DisplayAreaFallback.Nearest).WorkArea;
 
-            if (display is null)
-            {
-                // More than half off every screen: thrown away. It comes back where it was before the drag.
-                Hide();
-                return;
-            }
-
-            // Only a real screen edge docks; the edge between two monitors does not.
-            RectInt32 screen = display.OuterBounds;
-            bool isScreenEdge = DisplayArea.GetFromPoint(
-                new PointInt32(screen.X + screen.Width, center.Y), DisplayAreaFallback.None) is null;
-            RectInt32 workArea = display.WorkArea;
-
-            if (isScreenEdge && bounds.X + bounds.Width > workArea.X + workArea.Width - Scale(SnapDistance))
-            {
-                Dock();
-            }
-            else
-            {
-                _normalBounds = ClampToWorkArea(bounds, workArea);
-                UpdatePlacement();
-                SavePlacement();
-            }
+            _normalBounds = ClampToWorkArea(bounds, workArea);
+            UpdatePlacement();
+            SavePlacement();
         }
 
         private void CollapseIfIdle()

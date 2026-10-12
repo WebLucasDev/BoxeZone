@@ -21,7 +21,6 @@ namespace BoxeZone.ViewModels
 
             AppSettings settings = settingsService.Settings;
             StartWithWindows = settings.StartWithWindows;
-            AlwaysOnTop = settings.AlwaysOnTop;
             CollapseAfterUpload = settings.CollapseAfterUpload;
             NotifyOnComplete = settings.NotifyOnComplete;
             Theme = settings.Theme;
@@ -33,9 +32,6 @@ namespace BoxeZone.ViewModels
         /// <summary>Saved here; applied in step 8 (Run registry key).</summary>
         [ObservableProperty]
         public partial bool StartWithWindows { get; set; }
-
-        [ObservableProperty]
-        public partial bool AlwaysOnTop { get; set; }
 
         [ObservableProperty]
         public partial bool CollapseAfterUpload { get; set; }
@@ -135,7 +131,6 @@ namespace BoxeZone.ViewModels
 
         partial void OnStartWithWindowsChanged(bool value) => Persist(() => Settings.StartWithWindows = value);
 
-        partial void OnAlwaysOnTopChanged(bool value) => Persist(() => Settings.AlwaysOnTop = value);
 
         partial void OnCollapseAfterUploadChanged(bool value) => Persist(() => Settings.CollapseAfterUpload = value);
 

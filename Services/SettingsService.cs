@@ -53,8 +53,6 @@ namespace BoxeZone.Services
 
         public bool StartWithWindows { get; set; }
 
-        public bool AlwaysOnTop { get; set; } = true;
-
         public bool CollapseAfterUpload { get; set; }
 
         public bool NotifyOnComplete { get; set; } = true;

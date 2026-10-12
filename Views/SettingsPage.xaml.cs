@@ -4,6 +4,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.System;
@@ -20,6 +21,7 @@ namespace BoxeZone.Views
 
             // Same as the widget: no focus rectangle on the first control when the page opens.
             Loaded += (_, _) => Focus(FocusState.Programmatic);
+            LosingFocus += Page_LosingFocus;
         }
 
         public MainViewModel ViewModel { get; private set; } = null!;
@@ -62,6 +64,32 @@ namespace BoxeZone.Views
             {
                 Settings.BeginHotkeyCapture();
             }
+        }
+
+        /// <summary>
+        /// While capturing, focus stays inside the page. A click on anything that cannot take
+        /// focus (a label, an empty area) moves focus to WinUI's root ScrollViewer, above the
+        /// page, and the page would stop seeing the keys: only the keyboard counts, not the mouse.
+        /// </summary>
+        private void Page_LosingFocus(UIElement sender, LosingFocusEventArgs args)
+        {
+            if (Settings.IsCapturingHotkey && !IsInsidePage(args.NewFocusedElement))
+            {
+                args.TryCancel();
+            }
+        }
+
+        private bool IsInsidePage(DependencyObject? element)
+        {
+            for (DependencyObject? current = element; current is not null; current = VisualTreeHelper.GetParent(current))
+            {
+                if (current == this)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>While capturing, the next key combination becomes the global shortcut.</summary>
