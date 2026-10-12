@@ -1,4 +1,4 @@
-# BoxeZone: arquitetura e armadilhas
+# Boxe Zone: arquitetura e armadilhas
 
 Detalhes de implementação que não cabem no `CLAUDE.md`. Ler a seção correspondente antes de mexer em janelas, autenticação, upload, preferências ou notificações: quase tudo aqui veio de um bug real.
 
@@ -101,6 +101,7 @@ public interface IStorageProvider
 ### Google Drive
 
 - Credencial "Desktop app" (client ID + secret), escopo `drive.file`: o app só enxerga o que ele mesmo criou. Por isso a pasta de destino é um caminho digitado (o app cria a pasta), não um navegador do Drive.
+- O app OAuth está **"Em produção"** sem verificação: `drive.file` é escopo não sensível, então não há aviso de "app não verificado", limite de 100 usuários nem queda do login em 7 dias (isso é só do modo Teste). Pedir **qualquer** escopo sensível a mais traria tudo de volta e exigiria verificação. Sem logo no console: logo exige verificação de marca, que exige domínio próprio.
 - `GoogleWebAuthorizationBroker` + `LocalServerCodeReceiver` (loopback). E-mail via `about.get` (`fields=user`).
 - Tokens pelo `GoogleTokenDataStore` (sobre o `TokenStore`); nunca `FileDataStore`, que grava JSON em texto puro.
 - Pasta: procura cada segmento sob `root` (`mimeType = folder and name = … and 'pai' in parents`) e cria os que faltam; cache por caminho, limpo em qualquer falha.
@@ -123,7 +124,8 @@ public interface IStorageProvider
 
 - `TokenStore`: `DataProtectionProvider("LOCAL=user")` (DPAPI pelo WinRT), um arquivo por chave em `%LocalAppData%\BoxeZone\tokens`. Não usar `ProtectedData` (exige outro NuGet) nem `PasswordVault` (limite de tamanho; o cache do MSAL não cabe).
 - Tokens nunca em texto puro, nunca em log.
-- `appsettings.local.json` (git-ignored) é copiado para a pasta do `.exe` e lido por `AppCredentials` (`JsonDocument`). Provedor sem valores = `NotConfigured`.
+- `appsettings.local.json` (git-ignored) é copiado para a pasta do `.exe` e lido por `AppCredentials` (`JsonDocument`). Provedor sem valores = `NotConfigured`. Vai dentro do instalador: são credenciais de cliente público (Google desktop, MSAL, Dropbox PKCE), que os provedores não tratam como secretas. No CI vem do Secret `APPSETTINGS_LOCAL_JSON`; mudou o arquivo local, atualizar o Secret.
+- Site e política (`https://weblucasdev.github.io/BoxeZone/` e `/privacidade/`) estão cadastrados como página inicial e política nos consoles do Google (Branding), da Microsoft (Identidade visual) e do Dropbox (Branding). Mudar o endereço do site exige atualizar os três.
 - `SignInPage`: página mostrada no navegador ao fim do login dos três provedores (logo, uma frase, claro/escuro pelo navegador).
 
 ## Preferências (`SettingsService`)
