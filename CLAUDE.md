@@ -17,7 +17,7 @@ Interface em **pt-BR**. Código, nomes, comentários e commits em **inglês**.
 | `app/docs/arquitetura.md` | Antes de mexer em janelas, aba/faixa, upload, autenticação, preferências, notificações, estilos, instalador ou versões: estados, decisões e as armadilhas que já custaram bugs. |
 | `app/docs/proximos-passos.md` | Roadmap, ideias e limitações conhecidas. Atualizar ao começar ou terminar um item. |
 | `app/docs/*.dc.html` | Protótipo visual (fonte da verdade). Ver "Visual" abaixo. |
-| `app/docs/specs/`, `app/docs/plans/` | Design e plano de trabalhos grandes (ex.: instalador e primeira versão pública). |
+| `app/docs/specs/`, `app/docs/plans/` | Só durante um trabalho grande: design e plano temporários. Ao concluir, o que importa vai para `arquitetura.md`/`CLAUDE.md`/roadmap e os dois são apagados (ficam no histórico do git). |
 
 ## Stack
 
@@ -67,7 +67,7 @@ Services/
   Storage/                 # IStorageProvider + Google Drive, OneDrive, Dropbox, SignInPage
 Helpers/                   # Win32 (P/Invoke), WindowExtensions, WindowDrag, BindConverters
 installer/                 # BoxeZone.iss (Inno Setup) e build.ps1; saída em installer/output/ (git-ignored)
-docs/                      # arquitetura, roadmap, protótipos, specs e planos
+docs/                      # arquitetura, roadmap e protótipos
 ```
 
 ## Regras de arquitetura

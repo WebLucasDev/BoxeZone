@@ -1,6 +1,6 @@
 # Boxe Zone: próximos passos
 
-Lista viva do que vem depois da versão pública 1.0.0 (publicada em 12/10/2026: instaladores nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/). Ao começar um item, mover para "Em andamento"; ao terminar, para "Concluído", com o commit. Itens grandes ganham design e plano em `app/docs/specs/` e `app/docs/plans/`.
+Lista viva do que vem depois da versão pública 1.0.0 (publicada em 12/10/2026: instaladores nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/). Ao começar um item, mover para "Em andamento"; ao terminar, para "Concluído", com o commit. Itens grandes ganham design e plano temporários em `app/docs/specs/` e `app/docs/plans/`, apagados ao concluir (o design e o plano do instalador e da 1.0.0 estão no histórico do git, commit `9dc1b82`).
 
 ## Ideias
 
