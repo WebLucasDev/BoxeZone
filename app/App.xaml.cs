@@ -162,10 +162,18 @@ namespace BoxeZone
         {
             var strings = new ResourceLoader();
 
-            var openItem = new MenuFlyoutItem { Text = strings.GetString("TrayOpen") };
-            openItem.Click += (_, _) => _dockService?.ShowNormal();
-            var exitItem = new MenuFlyoutItem { Text = strings.GetString("TrayExit") };
-            exitItem.Click += (_, _) => ExitApp();
+            // PopupMenu mode turns the flyout into a native menu and runs each item's Command;
+            // the items' Click event is never raised there.
+            var openItem = new MenuFlyoutItem
+            {
+                Text = strings.GetString("TrayOpen"),
+                Command = new RelayCommand(() => _dockService?.ShowNormal()),
+            };
+            var exitItem = new MenuFlyoutItem
+            {
+                Text = strings.GetString("TrayExit"),
+                Command = new RelayCommand(ExitApp),
+            };
 
             var menu = new MenuFlyout();
             menu.Items.Add(openItem);
