@@ -1,6 +1,7 @@
 # Build output
 bin/
 obj/
+app/installer/output/
 [Dd]ebug/
 [Rr]elease/
 x64/
