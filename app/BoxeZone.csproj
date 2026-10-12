@@ -16,6 +16,15 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <DefaultLanguage>pt-BR</DefaultLanguage>
     <ApplicationIcon>Assets\BoxeZone.ico</ApplicationIcon>
+    <!-- Shown in the .exe properties and Task Manager; the release workflow overrides Version from the tag. -->
+    <Version>1.0.0</Version>
+    <Product>Boxe Zone</Product>
+    <AssemblyTitle>Boxe Zone</AssemblyTitle>
+    <Company>Lucas Venancio</Company>
+    <Authors>Lucas Venancio</Authors>
+    <Copyright>© 2026 Lucas Venancio</Copyright>
+    <!-- The UI is pt-BR only: skip the other languages' satellite assemblies. -->
+    <SatelliteResourceLanguages>pt-BR</SatelliteResourceLanguages>
     <!-- Program.cs provides Main to enforce a single instance. -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
@@ -49,7 +58,16 @@
     <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.90.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <!-- The metapackage stays: H.NotifyIcon.WinUI depends on it, and without a direct reference an
+         old 1.6 version comes in. Its AI/ML/Search/Widgets components (~40 MB of onnxruntime,
+         DirectML...) are unused, so they are referenced directly with all assets excluded;
+         versions match what Microsoft.WindowsAppSDK 2.5.1 requires. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="2.5.5" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="2.1.94" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.74" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Search" Version="2.5.5" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Widgets" Version="2.0.5" ExcludeAssets="all" />
   </ItemGroup>
 
   <!--
