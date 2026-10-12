@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de privacidade · Boxe Zone</title>
+  <meta name="description" content="Como o Boxe Zone trata os seus dados: o que acessa no Google Drive, OneDrive e Dropbox, o que fica no seu computador e como remover o acesso.">
+  <meta name="theme-color" content="#181b21">
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="bar">
+    <a class="brand" href="../" aria-label="Boxe Zone, página inicial">
+      <img src="../assets/logo.svg" alt="" width="28" height="28">
+      Boxe Zone
+    </a>
+    <nav aria-label="Páginas">
+      <a href="../">Início</a>
+    </nav>
+  </header>
+
+  <main id="conteudo" class="doc">
+    <h1>Política de privacidade</h1>
+    <p class="updated">Atualizada em 12 de outubro de 2026.</p>
+
+    <div class="summary">
+      <p>O Boxe Zone não tem servidor e não coleta dados. Os arquivos que você solta no widget vão do seu computador direto para o Google Drive, o OneDrive ou o Dropbox, na conta que você conectou. O acesso a essas contas fica guardado só no seu computador, criptografado pelo Windows.</p>
+    </div>
+
+    <h2>Quem é o responsável</h2>
+    <p>O Boxe Zone é um aplicativo gratuito para Windows desenvolvido por Lucas Venancio. Dúvidas sobre esta política ou sobre os seus dados: <a href="mailto:lucasvenanciodev@gmail.com">lucasvenanciodev@gmail.com</a>.</p>
+
+    <h2>O que o app faz</h2>
+    <p>O Boxe Zone é um widget que fica no canto da tela. Você conecta uma ou mais contas de armazenamento e, ao soltar um arquivo na área de um destino, o app envia esse arquivo para a pasta escolhida nessa conta. Ele não lê, analisa nem modifica o conteúdo dos seus arquivos: apenas os envia.</p>
+
+    <h2>Dados que o app acessa em cada serviço</h2>
+    <p>O login é feito no navegador, na página do próprio serviço. O Boxe Zone nunca vê a sua senha: ele recebe uma autorização de acesso (token) com as permissões abaixo.</p>
+
+    <h3>Google Drive</h3>
+    <ul>
+      <li>Permissão <code>drive.file</code>: acesso apenas aos arquivos e pastas que o próprio Boxe Zone criou ou enviou. O app não vê nem altera nenhum outro arquivo do seu Drive.</li>
+      <li>O e-mail da conta, para mostrar no app qual conta está conectada.</li>
+    </ul>
+
+    <h3>OneDrive (Microsoft)</h3>
+    <ul>
+      <li>Permissão <code>Files.ReadWrite</code>: usada para criar a pasta de destino e enviar os arquivos para o seu OneDrive.</li>
+      <li>Permissões padrão de login da Microsoft (<code>openid</code>, <code>profile</code> e <code>offline_access</code>), que identificam a conta e mantêm você conectado sem pedir a senha a cada envio.</li>
+      <li>O nome de usuário (e-mail) da conta, para mostrar no app qual conta está conectada.</li>
+    </ul>
+
+    <h3>Dropbox</h3>
+    <ul>
+      <li>Permissão <code>files.content.write</code>: usada para enviar os arquivos para a pasta de destino.</li>
+      <li>Permissão <code>account_info.read</code>: o e-mail da conta, para mostrar no app qual conta está conectada.</li>
+    </ul>
+
+    <h2>O que fica no seu computador</h2>
+    <p>Tudo o que o Boxe Zone guarda fica na pasta <code>%LocalAppData%\BoxeZone</code> do seu usuário do Windows:</p>
+    <ul>
+      <li><strong>Autorizações de acesso</strong> (tokens) das contas conectadas, criptografadas pelo Windows e legíveis apenas pelo seu usuário. Nunca são gravadas em texto puro nem em registros de erro.</li>
+      <li><strong>Preferências</strong>: quais destinos estão ligados, as pastas de destino, o atalho de teclado, o tema e a posição do widget.</li>
+      <li><strong>Registro de erros</strong> (<code>crash.log</code>), criado apenas se o app fechar por um erro inesperado. Ele contém o tipo e a mensagem do erro, que podem incluir o nome de um arquivo ou pasta, e nunca contém tokens nem o conteúdo de arquivos. Ele não é enviado para lugar nenhum.</li>
+    </ul>
+    <p>As notificações do Windows mostram o nome do arquivo enviado e ficam na central de notificações do seu computador, como as de qualquer outro app.</p>
+
+    <h2>O que o app não faz</h2>
+    <ul>
+      <li>Não envia dados para servidores do Boxe Zone. Não existe servidor do Boxe Zone.</li>
+      <li>Não coleta estatísticas de uso, telemetria nem dados de navegação.</li>
+      <li>Não vende, aluga nem compartilha dados com terceiros. Os únicos serviços com que o app se comunica são os que você conectou (Google, Microsoft e Dropbox), e apenas para fazer login e enviar os seus arquivos.</li>
+      <li>Não usa os seus dados para publicidade nem para treinar modelos de inteligência artificial.</li>
+    </ul>
+
+    <h2>Uso de dados das APIs do Google</h2>
+    <p>O uso e a transferência, para qualquer outro aplicativo, de informações recebidas das APIs do Google pelo Boxe Zone seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de dados do usuário dos serviços de API do Google</a>, incluindo os requisitos de Uso Limitado. Os dados do Google são usados apenas para enviar os arquivos que você escolheu e mostrar qual conta está conectada.</p>
+
+    <h2>Como remover o acesso e os dados</h2>
+    <ul>
+      <li><strong>No app</strong>: em Configurações, clique em Desconectar na conta. No Google Drive e no Dropbox, isso também revoga a autorização no serviço. No OneDrive, a sessão é apagada do seu computador; para revogar também na Microsoft, use o link abaixo.</li>
+      <li><strong>Nos serviços</strong>, a qualquer momento:
+        <ul>
+          <li>Google: <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a></li>
+          <li>Microsoft: <a href="https://account.live.com/consent/Manage">account.live.com/consent/Manage</a></li>
+          <li>Dropbox: <a href="https://www.dropbox.com/account/connected_apps">dropbox.com/account/connected_apps</a></li>
+        </ul>
+      </li>
+      <li><strong>No computador</strong>: para apagar tudo o que o Boxe Zone guardou, feche o app pelo ícone da bandeja (Sair) e apague a pasta <code>%LocalAppData%\BoxeZone</code>.</li>
+    </ul>
+    <p>Os arquivos que você já enviou continuam na sua conta do serviço, sob o seu controle, como qualquer outro arquivo seu.</p>
+
+    <h2>Seus direitos</h2>
+    <p>Como o Boxe Zone não coleta nem armazena dados pessoais fora do seu computador, não há dados seus em poder do responsável pelo app para consultar, corrigir ou excluir. Ainda assim, se tiver qualquer pedido relacionado à Lei Geral de Proteção de Dados (LGPD), escreva para <a href="mailto:lucasvenanciodev@gmail.com">lucasvenanciodev@gmail.com</a>.</p>
+
+    <h2>Mudanças nesta política</h2>
+    <p>Se o que o app acessa ou guarda mudar, esta página será atualizada antes da nova versão ser publicada, com a data de atualização no topo.</p>
+  </main>
+
+  <footer class="foot">
+    <nav aria-label="Rodapé">
+      <a href="../">Início</a>
+      <a href="mailto:lucasvenanciodev@gmail.com">Contato</a>
+    </nav>
+    <p>Google Drive, OneDrive e Dropbox são marcas de seus respectivos donos; o Boxe Zone não é afiliado, patrocinado nem endossado por eles.</p>
+  </footer>
+</body>
+</html>
