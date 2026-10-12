@@ -60,8 +60,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
-; Files of an older version that the new one no longer ships.
-Type: filesandordirs; Name: "{app}\*"
+; Files of an older version that the new one no longer ships. Only in a folder that is really
+; ours: /DIR (or winget --location) can point {app} at a folder with the user's own files.
+Type: filesandordirs; Name: "{app}\*"; Check: IsOwnAppDir
 
 [UninstallDelete]
 ; The uninstaller removes the files but left the empty program folder behind.
@@ -82,6 +83,15 @@ var
 begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM BoxeZone.exe /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Sleep(500);
+end;
+
+// The install folder is named "Boxe Zone" and already holds a previous Boxe Zone.
+function IsOwnAppDir(): Boolean;
+var
+  AppDir: String;
+begin
+  AppDir := RemoveBackslash(ExpandConstant('{app}'));
+  Result := (CompareText(ExtractFileName(AppDir), 'Boxe Zone') = 0) and FileExists(AppDir + '\BoxeZone.exe');
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
