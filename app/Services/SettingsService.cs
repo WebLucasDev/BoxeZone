@@ -64,6 +64,17 @@ namespace BoxeZone.Services
         /// <summary>Null until the widget has been placed once (first run starts in the default corner).</summary>
         public WindowSettings? Window { get; set; }
 
+        /// <summary>Last successful look at GitHub Releases (at most one a day).</summary>
+        public DateTimeOffset? LastUpdateCheck { get; set; }
+
+        /// <summary>Newest release seen ("1.2.0") and its page; null until one exists.</summary>
+        public string? LatestVersion { get; set; }
+
+        public string? LatestUrl { get; set; }
+
+        /// <summary>Version already announced by notification, so each one is announced once.</summary>
+        public string? NotifiedVersion { get; set; }
+
         public ProviderSettings GetProvider(string id)
         {
             if (!Providers.TryGetValue(id, out ProviderSettings? settings))

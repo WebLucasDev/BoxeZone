@@ -256,6 +256,35 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+                        <Grid
+                            Padding="12,10"
+                            BorderBrush="{ThemeResource SettingsCardBorderBrush}"
+                            BorderThickness="0,1,0,0"
+                            ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Uid="VersionTitle"
+                                VerticalAlignment="Center"
+                                FontSize="13" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextSecondaryBrush}"
+                                Text="{x:Bind ViewModel.Settings.VersionText}" />
+                            <HyperlinkButton
+                                Grid.Column="2"
+                                Padding="4,2"
+                                VerticalAlignment="Center"
+                                Content="{x:Bind ViewModel.Settings.UpdateText, Mode=OneWay}"
+                                FontSize="12"
+                                NavigateUri="{x:Bind ViewModel.Settings.UpdateUri, Mode=OneWay}"
+                                Visibility="{x:Bind helpers:BindConverters.VisibleWhenText(ViewModel.Settings.UpdateText), Mode=OneWay}" />
+                        </Grid>
                     </StackPanel>
                 </Border>
             </StackPanel>

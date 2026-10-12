@@ -272,6 +272,12 @@
   <data name="ThemeDark.Content" xml:space="preserve">
     <value>Escuro</value>
   </data>
+  <data name="VersionTitle.Text" xml:space="preserve">
+    <value>Versão</value>
+  </data>
+  <data name="UpdateDownloadFormat" xml:space="preserve">
+    <value>Baixar a {0}</value>
+  </data>
   <data name="NotificationUploadedFormat" xml:space="preserve">
     <value>Enviado para o {0}</value>
     <comment>{0} = provider name.</comment>

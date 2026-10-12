@@ -1,3 +1,4 @@
+using System;
 using BoxeZone.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -55,6 +56,22 @@ namespace BoxeZone.ViewModels
         public string HotkeyBadgeText => IsCapturingHotkey ? _strings.GetString("HotkeyCapturing") : HotkeyText;
 
         public string HotkeyButtonText => _strings.GetString(IsCapturingHotkey ? "HotkeyCancel" : "HotkeyChange");
+
+        /// <summary>This build, like "1.0.0".</summary>
+        public string VersionText => UpdateService.CurrentVersion.ToString(3);
+
+        /// <summary>"Baixar a 1.2.0" when a newer release exists; null otherwise.</summary>
+        [ObservableProperty]
+        public partial string? UpdateText { get; set; }
+
+        [ObservableProperty]
+        public partial Uri? UpdateUri { get; set; }
+
+        public void ShowUpdate(UpdateInfo update)
+        {
+            UpdateUri = new Uri(update.Url);
+            UpdateText = string.Format(_strings.GetString("UpdateDownloadFormat"), update.Version.ToString(3));
+        }
 
         /// <summary>Why the last shortcut could not be used (taken by another app, no modifier...).</summary>
         [ObservableProperty]

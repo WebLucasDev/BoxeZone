@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using BoxeZone.Helpers;
 using BoxeZone.Services;
 using BoxeZone.Services.Storage;
@@ -25,6 +26,7 @@ namespace BoxeZone
         private HotkeyService? _hotkeyService;
         private SettingsService? _settingsService;
         private NotificationService? _notificationService;
+        private UpdateService? _updateService;
         private TaskbarIcon? _trayIcon;
 
         public App()
@@ -44,6 +46,7 @@ namespace BoxeZone
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
+
             _settingsService = new SettingsService(DispatcherQueue.GetForCurrentThread());
             AppCredentials credentials = AppCredentials.Load();
             var tokenStore = new TokenStore();
@@ -96,6 +99,28 @@ namespace BoxeZone
 
             // Saved sessions reconnect in the background; the widget is usable meanwhile.
             _ = viewModel.RestoreSessionsAsync();
+
+            // Once a day, a new GitHub Release is announced once and listed in Settings.
+            _updateService = new UpdateService(_settingsService);
+            _ = CheckForUpdateAsync(settings);
+        }
+
+        private async Task CheckForUpdateAsync(SettingsViewModel settings)
+        {
+            UpdateInfo? update = await _updateService!.CheckAsync();
+            if (update is null)
+            {
+                return;
+            }
+
+            settings.ShowUpdate(update);
+            string version = update.Version.ToString(3);
+            if (_settingsService!.Settings.NotifiedVersion != version)
+            {
+                _notificationService?.ShowUpdateAvailable(version, update.Url);
+                _settingsService.Settings.NotifiedVersion = version;
+                _settingsService.Save();
+            }
         }
 
         private void NotifyUploadFinished(ProviderViewModel provider, UploadFinishedEventArgs e, SettingsViewModel settings)
