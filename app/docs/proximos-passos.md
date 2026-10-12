@@ -52,7 +52,6 @@ Nada no momento.
 
 ## Limitações conhecidas
 
-- Clicar numa notificação antiga depois de "Sair" não faz nada (o `AppNotificationManager` não funciona self-contained; ver `docs/arquitetura.md`).
 - O drop não funciona se o app rodar como administrador (limitação do Windows).
 - Abrir as Configurações e voltar pode mudar o widget de lugar: a tela de Configurações cresce para longe das bordas próximas e, na volta, o widget fica preso ao canto oposto do retângulo maior.
 - Ligar "Iniciar com o Windows" num build de desenvolvimento aponta para o `.exe` em `bin\x64\Debug`; o caminho é regravado a cada início com a opção ligada.

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Security;
 using Microsoft.Win32;
@@ -11,28 +10,21 @@ using Windows.UI.Notifications;
 namespace BoxeZone.Services
 {
     /// <summary>
-    /// Windows notifications ("Notificar ao concluir") through the OS toast API.
+    /// Windows notifications ("Notificar ao concluir", new version) through the OS toast API.
     /// </summary>
     /// <remarks>
-    /// AppNotificationManager (Windows App SDK) fails to register in a self-contained
-    /// unpackaged app (0x8007007E), so the app registers its own AppUserModelID under
-    /// HKCU\Software\Classes\AppUserModelId with a name and icon. Clicks are handled while the
-    /// app runs; a notification left in the Action Center after "Sair" does nothing.
+    /// AppNotificationManager (Windows App SDK) fails to register in a self-contained unpackaged
+    /// app (0x8007007E), so the app registers its own AppUserModelID under
+    /// HKCU\Software\Classes\AppUserModelId. Clicks use protocol activation: the shell opens the
+    /// URI itself, so they work with the app closed (https links open in the browser,
+    /// boxezone:open starts the app).
     /// </remarks>
     public sealed class NotificationService
     {
         private const string AppUserModelId = "BoxeZone.App";
-        private const string OpenAction = "open";
 
         private readonly ResourceLoader _strings = new();
-        private readonly Action _showWidget;
         private ToastNotifier? _notifier;
-
-        /// <param name="showWidget">Called (off the UI thread) when the notification itself is clicked.</param>
-        public NotificationService(Action showWidget)
-        {
-            _showWidget = showWidget;
-        }
 
         public void Register()
         {
@@ -57,47 +49,47 @@ namespace BoxeZone.Services
                 ? fileNames[0]
                 : string.Format(_strings.GetString("NotificationFilesFormat"), fileNames.Count);
 
-            string launch = link is null ? string.Empty : $"{OpenAction}|{link}";
-            string actions = link is null
-                ? string.Empty
-                : $"<actions><action content=\"{Escape(_strings.GetString("NotificationOpen"))}\" arguments=\"{Escape(launch)}\" activationType=\"foreground\"/></actions>";
-
-            Show(string.Format(_strings.GetString("NotificationUploadedFormat"), providerName), body, launch, actions);
+            Show(
+                string.Format(_strings.GetString("NotificationUploadedFormat"), providerName),
+                body,
+                link ?? ProtocolService.OpenWidgetUri,
+                link is null ? null : _strings.GetString("NotificationOpen"));
         }
 
         public void ShowFailed(string providerName, string fileName, string reason) =>
-            Show(string.Format(_strings.GetString("NotificationFailedFormat"), providerName), $"{fileName} · {reason}", string.Empty, string.Empty);
+            Show(
+                string.Format(_strings.GetString("NotificationFailedFormat"), providerName),
+                $"{fileName} · {reason}",
+                ProtocolService.OpenWidgetUri,
+                null);
 
-        private void Show(string title, string body, string launch, string actions)
+        public void ShowUpdateAvailable(string version, string url) =>
+            Show(
+                _strings.GetString("NotificationUpdateTitle"),
+                string.Format(_strings.GetString("NotificationUpdateFormat"), version),
+                url,
+                _strings.GetString("NotificationUpdateDownload"));
+
+        /// <param name="uri">Opened by a click on the notification (and on the button, if any).</param>
+        /// <param name="buttonText">Optional button that opens the same URI.</param>
+        private void Show(string title, string body, string uri, string? buttonText)
         {
             if (_notifier is null)
             {
                 return;
             }
 
+            string actions = buttonText is null
+                ? string.Empty
+                : $"<actions><action content=\"{Escape(buttonText)}\" arguments=\"{Escape(uri)}\" activationType=\"protocol\"/></actions>";
+
             var xml = new XmlDocument();
             xml.LoadXml(
-                $"<toast launch=\"{Escape(launch)}\"><visual><binding template=\"ToastGeneric\">" +
+                $"<toast activationType=\"protocol\" launch=\"{Escape(uri)}\"><visual><binding template=\"ToastGeneric\">" +
                 $"<text>{Escape(title)}</text><text>{Escape(body)}</text>" +
                 $"</binding></visual>{actions}</toast>");
 
-            var toast = new ToastNotification(xml);
-            toast.Activated += (_, args) => HandleActivation((args as ToastActivatedEventArgs)?.Arguments);
-            _notifier.Show(toast);
-        }
-
-        private void HandleActivation(string? arguments)
-        {
-            // "open|<url>" from the notification body or the "Abrir" button.
-            if (arguments is not null && arguments.StartsWith(OpenAction + "|", StringComparison.Ordinal))
-            {
-                string link = arguments[(OpenAction.Length + 1)..];
-                Process.Start(new ProcessStartInfo(link) { UseShellExecute = true });
-            }
-            else
-            {
-                _showWidget();
-            }
+            _notifier.Show(new ToastNotification(xml));
         }
 
         private static string Escape(string value) => SecurityElement.Escape(value) ?? string.Empty;

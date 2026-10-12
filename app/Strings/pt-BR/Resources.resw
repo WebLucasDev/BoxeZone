@@ -283,6 +283,15 @@
   <data name="NotificationOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>
+  <data name="NotificationUpdateTitle" xml:space="preserve">
+    <value>Versão nova do Boxe Zone</value>
+  </data>
+  <data name="NotificationUpdateFormat" xml:space="preserve">
+    <value>A versão {0} está disponível.</value>
+  </data>
+  <data name="NotificationUpdateDownload" xml:space="preserve">
+    <value>Baixar</value>
+  </data>
   <data name="NotificationFailedFormat" xml:space="preserve">
     <value>Não foi possível enviar para o {0}</value>
     <comment>{0} = provider name.</comment>

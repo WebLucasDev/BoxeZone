@@ -81,8 +81,8 @@ namespace BoxeZone
                 }
             };
 
-            DispatcherQueue dispatcher = _window.DispatcherQueue;
-            _notificationService = new NotificationService(() => dispatcher.TryEnqueue(() => _dockService.ShowNormal()));
+            ProtocolService.Register();
+            _notificationService = new NotificationService();
             _notificationService.Register();
             foreach (ProviderViewModel provider in viewModel.Providers)
             {
