@@ -27,6 +27,7 @@ namespace BoxeZone
         private SettingsService? _settingsService;
         private NotificationService? _notificationService;
         private UpdateService? _updateService;
+        private DispatcherQueueTimer? _updateTimer;
         private TaskbarIcon? _trayIcon;
 
         public App()
@@ -100,9 +101,14 @@ namespace BoxeZone
             // Saved sessions reconnect in the background; the widget is usable meanwhile.
             _ = viewModel.RestoreSessionsAsync();
 
-            // Once a day, a new GitHub Release is announced once and listed in Settings.
+            // Once a day, a new GitHub Release is announced once and listed in Settings. Checked at
+            // start and again while the app keeps running (offline at sign-in, days in the tray).
             _updateService = new UpdateService(_settingsService);
             _ = CheckForUpdateAsync(settings);
+            _updateTimer = _window.DispatcherQueue.CreateTimer();
+            _updateTimer.Interval = UpdateService.PollInterval;
+            _updateTimer.Tick += (_, _) => _ = CheckForUpdateAsync(settings);
+            _updateTimer.Start();
         }
 
         private async Task CheckForUpdateAsync(SettingsViewModel settings)

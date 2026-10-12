@@ -16,6 +16,13 @@ namespace BoxeZone.Services
         private const string LatestReleaseUrl = "https://api.github.com/repos/WebLucasDev/BoxeZone/releases/latest";
 
         private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
+
+        /// <summary>
+        /// How often a running app calls <see cref="CheckAsync"/>. The app lives in the tray for
+        /// days, and the check at sign-in often runs before the network is up; requests still
+        /// happen at most once a day.
+        /// </summary>
+        public static TimeSpan PollInterval { get; } = TimeSpan.FromHours(1);
         private static readonly HttpClient Http = CreateClient();
 
         private readonly SettingsService _settingsService;
