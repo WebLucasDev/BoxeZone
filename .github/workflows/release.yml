@@ -1,0 +1,52 @@
+# Builds both installers and publishes a GitHub Release when a version tag is pushed:
+#   git tag v1.2.0 && git push origin v1.2.0
+# Tags with a suffix (v1.2.0-rc.1) become pre-releases, which "latest" ignores.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Provider credentials
+        shell: pwsh
+        env:
+          APPSETTINGS: ${{ secrets.APPSETTINGS_LOCAL_JSON }}
+        run: |
+          if (-not $env:APPSETTINGS) { throw "Secret APPSETTINGS_LOCAL_JSON is missing (Settings > Secrets and variables > Actions)." }
+          [IO.File]::WriteAllText("$PWD/app/appsettings.local.json", $env:APPSETTINGS)
+
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --no-progress -y }
+
+      - name: Build installers
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          ./app/installer/build.ps1 -Arch x64 -Version $version
+          ./app/installer/build.ps1 -Arch arm64 -Version $version
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $files = (Get-ChildItem app/installer/output/*.exe).FullName
+          $ghArgs = @($tag) + $files + @('--title', "Boxe Zone $($tag.TrimStart('v'))", '--generate-notes')
+          if ($tag -match '-') { $ghArgs += '--prerelease' }
+          gh release create @ghArgs
