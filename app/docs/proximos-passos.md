@@ -83,3 +83,5 @@ Depois da versão 1:
 | Aviso de versão nova (GitHub Releases) e linha "Versão" nas Configurações | `b1d2a66` |
 | Instalador Inno Setup x64 e ARM64 (61,5 e 56,6 MB), sem administrador, desinstalação limpa | `3f3a796` |
 | Releases pelo GitHub Actions a partir de tags `v*` | `9e8acdf` |
+| Menu da bandeja ("Abrir" e "Sair") funcionando | `2f76e1c` |
+| **Versão 1.0.0 publicada** (instaladores x64 e ARM64 nas Releases do GitHub, botão de download no site) | tag `v1.0.0` |
