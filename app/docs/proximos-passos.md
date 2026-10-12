@@ -14,11 +14,10 @@ Nada no momento.
 
 ## Distribuição
 
-- [ ] **Diminuir a versão publicada.** Hoje: ~297 MB em 539 arquivos (`dotnet publish -c Release -p:Platform=x64`). Caminhos: `SatelliteResourceLanguages` só com os idiomas usados; avaliar ReadyToRun (abre mais rápido, ocupa mais); testar `PublishSingleFile` com WinUI.
-- [ ] **Instalador** (Inno Setup, WiX ou similar) que instale em `Program Files` e crie atalho no Menu Iniciar com o AppUserModelID `BoxeZone.App`. Com isso dá para registrar um ativador COM e fazer o clique em notificações funcionar com o app fechado.
-- [ ] **Desinstalação limpa**: remover a entrada `Run`, a chave `HKCU\Software\Classes\AppUserModelId\BoxeZone.App` e, opcionalmente, `%LocalAppData%\BoxeZone`.
-- [ ] **Versão e metadados do `.exe`** (versão, nome do produto, empresa) e assinatura de código, para o SmartScreen não bloquear.
-- [ ] **Atualização automática** ou ao menos aviso de versão nova.
+- [ ] **Assinatura de código**, para o SmartScreen não avisar ao instalar. Gratuita pela SignPath Foundation, que exige uma licença de código aberto no repositório; a alternativa paga é um certificado (Azure Trusted Signing ou tradicional).
+- [ ] **Imagem do assistente do instalador** com a luva (hoje é a imagem genérica do Inno Setup).
+- [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima).
+- [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
 ## Contas e provedores
 
@@ -79,3 +78,8 @@ Depois da versão 1:
 | Ícones oficiais dos provedores (SVG em `Assets/Providers/`) no lugar das iniciais | `adaa1fb` |
 | Logo nova: luva de boxe (`.ico`, `.png` e cabeçalho) | `83dd378` |
 | Polimento: nome "Boxe Zone", aba só recolhe e arrasto pelo corpo, sempre no topo, aba clicável na largura toda, faixa volta a estreitar, captura do atalho ignora o mouse, "Cancelar" no login e limite de 2 min | `8ea6048` |
+| Pacote menor (297 → 239 MB, 542 → 477 arquivos) e versão/autor no `.exe` | `3b30f4f` |
+| Clique na notificação com o app fechado (protocolo `boxezone:`) | `f4a4652` |
+| Aviso de versão nova (GitHub Releases) e linha "Versão" nas Configurações | `b1d2a66` |
+| Instalador Inno Setup x64 e ARM64 (61,5 e 56,6 MB), sem administrador, desinstalação limpa | `3f3a796` |
+| Releases pelo GitHub Actions a partir de tags `v*` | `9e8acdf` |

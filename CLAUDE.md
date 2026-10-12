@@ -32,8 +32,11 @@ Da raiz do repositório (`app/` tem o `.csproj` e o `.slnx`, então o projeto va
 ```powershell
 dotnet build app/BoxeZone.csproj -c Debug -p:Platform=x64
 dotnet run --project app/BoxeZone.csproj -c Debug --property:Platform=x64
-dotnet publish app/BoxeZone.csproj -c Release -p:Platform=x64   # app\bin\Release\...\win-x64\publish\ (~300 MB)
+dotnet publish app/BoxeZone.csproj -c Release -p:Platform=x64   # app\bin\Release\...\win-x64\publish\ (~240 MB)
+.\app\installer\build.ps1 -Arch x64 -Version 1.0.0              # app\installer\output\BoxeZone-Setup-x64.exe (Inno Setup 6)
 ```
+
+Publicar uma versão: `git tag vX.Y.Z` na `main` e `git push origin vX.Y.Z`; o workflow `release.yml` gera os instaladores e a Release (tag com sufixo, como `-rc.1`, vira pré-lançamento).
 
 Um BoxeZone aberto trava o `.exe` e o build falha ao copiá-lo: fechar pelo "Sair" da bandeja (ou encerrar o processo) antes de compilar.
 

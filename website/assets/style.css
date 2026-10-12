@@ -180,6 +180,21 @@ img {
   font-size: 14px;
 }
 
+.get small a {
+  color: var(--muted);
+}
+
+.get small a:hover {
+  color: var(--text);
+}
+
+.smartscreen {
+  max-width: 34em;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 /* The widget, rebuilt from the app's own measures (docs/widget.dc.html). */
 
 .desk-glow {
