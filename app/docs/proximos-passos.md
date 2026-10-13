@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável (feito, v1.2.0); 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; em andamento, design em `app/docs/specs/2026-10-13-pastas-e-retomar-design.md`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
