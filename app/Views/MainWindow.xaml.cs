@@ -38,6 +38,10 @@ namespace BoxeZone.Views
             ViewModel = viewModel;
             InitializeComponent();
 
+            // A Window's x:Bind waits for Activated, and started docked the strip shows without
+            // activating: the compact panel kept "Ative um destino" and no drop zones.
+            Bindings.Update();
+
             _stripHoverTimer = DispatcherQueue.CreateTimer();
             _stripHoverTimer.Interval = TimeSpan.FromMilliseconds(50);
             _stripHoverTimer.Tick += (_, _) => NarrowStripIfCursorLeft();

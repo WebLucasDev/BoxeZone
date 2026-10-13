@@ -92,6 +92,7 @@ docs/                      # arquitetura, roadmap e protótipos
 - **Notificações**: `AppNotificationManager` não funciona self-contained; usar `Windows.UI.Notifications` com o AUMID `BoxeZone.App` e ativação por protocolo (o clique funciona com o app fechado).
 - **Menu da bandeja**: no modo `PopupMenu` o H.NotifyIcon só executa o `Command` dos itens; `Click` nunca dispara.
 - **Foco**: clicar em área sem controle manda o foco ao `ScrollViewer` raiz, acima da página.
+- **`x:Bind` numa `Window`** só liga quando ela é ativada: `Bindings.Update()` no construtor (a faixa aparece sem ativar).
 - **Tema** se aplica no `Window.Content`, senão o Acrylic não acompanha.
 - **Lightweight styling** com o mesmo valor nos dois temas vai no dicionário principal do `App.xaml`, não nos `ThemeDictionaries`.
 - Exceção no `OnLaunched` derruba o app em silêncio: ver `%LocalAppData%\BoxeZone\crash.log`.
