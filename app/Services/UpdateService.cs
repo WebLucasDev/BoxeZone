@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace BoxeZone.Services
 {
@@ -14,6 +15,8 @@ namespace BoxeZone.Services
     public sealed class UpdateService
     {
         private const string LatestReleaseUrl = "https://api.github.com/repos/WebLucasDev/BoxeZone/releases/latest";
+        private const string InstallerKeyPath = @"Software\BoxeZone";
+        private const string DisableUpdateCheckValue = "DisableUpdateCheck";
 
         private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
 
@@ -36,10 +39,42 @@ namespace BoxeZone.Services
         public static Version CurrentVersion { get; } =
             Normalize(typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0));
 
-        /// <summary>The newest release if it is newer than this build; otherwise null.</summary>
+        /// <summary>
+        /// The installer's "Verificar versões novas" box, left unchecked, leaves a one-time flag
+        /// (HKCU\Software\BoxeZone\DisableUpdateCheck = 1). It becomes the saved preference on the
+        /// next start and is removed, so the Settings switch stays the only control afterwards.
+        /// </summary>
+        public static void ApplyInstallerChoice(SettingsService settingsService)
+        {
+            try
+            {
+                using RegistryKey? key = Registry.CurrentUser.OpenSubKey(InstallerKeyPath, writable: true);
+                if (key?.GetValue(DisableUpdateCheckValue) is int flag)
+                {
+                    if (flag == 1)
+                    {
+                        settingsService.Settings.CheckForUpdates = false;
+                        settingsService.SaveNow();
+                    }
+
+                    key.DeleteValue(DisableUpdateCheckValue, throwOnMissingValue: false);
+                }
+            }
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or System.IO.IOException)
+            {
+                // The switch in Settings still works.
+            }
+        }
+
+        /// <summary>The newest release if it is newer than this build; otherwise null (also when checking is off).</summary>
         public async Task<UpdateInfo?> CheckAsync()
         {
             AppSettings settings = _settingsService.Settings;
+            if (!settings.CheckForUpdates)
+            {
+                return null;
+            }
+
             bool isDue = settings.LastUpdateCheck is not { } last || DateTimeOffset.UtcNow - last >= CheckInterval;
             if (isDue)
             {

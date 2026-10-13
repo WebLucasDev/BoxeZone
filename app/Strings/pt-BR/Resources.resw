@@ -238,6 +238,15 @@
   <data name="NotifySwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Notificar ao concluir</value>
   </data>
+  <data name="UpdateCheckTitle.Text" xml:space="preserve">
+    <value>Verificar versões novas</value>
+  </data>
+  <data name="UpdateCheckDescription.Text" xml:space="preserve">
+    <value>Consulta o GitHub uma vez por dia</value>
+  </data>
+  <data name="UpdateCheckSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Verificar versões novas</value>
+  </data>
   <data name="HotkeyTitle.Text" xml:space="preserve">
     <value>Abrir e fechar o Boxe Zone</value>
   </data>

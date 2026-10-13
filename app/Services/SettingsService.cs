@@ -64,6 +64,9 @@ namespace BoxeZone.Services
         /// <summary>Null until the widget has been placed once (first run starts in the default corner).</summary>
         public WindowSettings? Window { get; set; }
 
+        /// <summary>"Verificar versões novas": the daily look at GitHub Releases. Off, the app contacts nothing but the user's providers.</summary>
+        public bool CheckForUpdates { get; set; } = true;
+
         /// <summary>Last successful look at GitHub Releases (at most one a day).</summary>
         public DateTimeOffset? LastUpdateCheck { get; set; }
 

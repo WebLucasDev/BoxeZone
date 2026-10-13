@@ -49,6 +49,7 @@ namespace BoxeZone
         {
 
             _settingsService = new SettingsService(DispatcherQueue.GetForCurrentThread());
+            UpdateService.ApplyInstallerChoice(_settingsService);
             AppCredentials credentials = AppCredentials.Load();
             var tokenStore = new TokenStore();
 

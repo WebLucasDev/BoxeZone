@@ -119,7 +119,7 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       conn: { drive: true, onedrive: true, dropbox: false },
-      opt: { startup: true, autohide: false, notify: true },
+      opt: { startup: true, autohide: false, notify: true, updates: true },
       theme: 'system'
     };
   }
@@ -148,7 +148,8 @@ class Component extends DCLogic {
     var options = [
       { id: 'startup', title: 'Iniciar com o Windows', desc: 'Abre direto na bandeja ao ligar o computador' },
       { id: 'autohide', title: 'Recolher após o envio', desc: 'Volta para a borda quando o upload termina' },
-      { id: 'notify', title: 'Notificar ao concluir', desc: 'Mostra uma notificação do Windows' }
+      { id: 'notify', title: 'Notificar ao concluir', desc: 'Mostra uma notificação do Windows' },
+      { id: 'updates', title: 'Verificar versões novas', desc: 'Consulta o GitHub uma vez por dia' }
     ].map(function (o, i) {
       var on = !!opt[o.id];
       return {

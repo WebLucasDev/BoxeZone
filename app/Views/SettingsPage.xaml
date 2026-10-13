@@ -157,6 +157,30 @@
                                 OffContent=""
                                 OnContent="" />
                         </Grid>
+                        <Grid
+                            Padding="12,10"
+                            BorderBrush="{ThemeResource SettingsCardBorderBrush}"
+                            BorderThickness="0,1,0,0"
+                            ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Uid="UpdateCheckTitle" FontSize="13" />
+                                <TextBlock
+                                    x:Uid="UpdateCheckDescription"
+                                    FontSize="11"
+                                    Foreground="{ThemeResource TextSecondaryBrush}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Uid="UpdateCheckSwitch"
+                                Grid.Column="1"
+                                MinWidth="0"
+                                IsOn="{x:Bind ViewModel.Settings.CheckForUpdates, Mode=TwoWay}"
+                                OffContent=""
+                                OnContent="" />
+                        </Grid>
                     </StackPanel>
                 </Border>
             </StackPanel>

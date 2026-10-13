@@ -37,6 +37,12 @@ UninstallDisplayName=Boxe Zone
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; Privacy summary shown before installing (SignPath Foundation condition: the app contacts a
+; system the user did not choose, GitHub, for the update check).
+InfoBeforeFile=privacidade.txt
+; Tasks start from their defaults on every run instead of the previous install's choices
+; (the update-check choice lives in the app's Settings after the first start).
+UsePreviousTasks=no
 ; The app lives in the tray and cancels window closes, so it is ended before files are replaced.
 CloseApplications=no
 #if Arch == "arm64"
@@ -52,9 +58,17 @@ Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [CustomMessages]
 ptbr.DeleteUserData=Apagar também as preferências e as contas conectadas do Boxe Zone neste computador?
+ptbr.UpdateCheckGroup=Atualizações:
+ptbr.UpdateCheckTask=Verificar versões novas (consulta o GitHub uma vez por dia)
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Checked on every install (UsePreviousTasks=no): an upgrade must not undo a choice made later in Settings.
+Name: "updatecheck"; Description: "{cm:UpdateCheckTask}"; GroupDescription: "{cm:UpdateCheckGroup}"
+
+[Registry]
+; Unchecked: a one-time flag the app turns into its saved preference on the next start, then deletes.
+Root: HKCU; Subkey: "Software\BoxeZone"; ValueType: dword; ValueName: "DisableUpdateCheck"; ValueData: 1; Tasks: not updatecheck
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -111,6 +125,8 @@ begin
     RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'BoxeZone');
     RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\AppUserModelId\BoxeZone.App');
     RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\boxezone');
+    // Written by this installer (update-check choice); normally already consumed by the app.
+    RegDeleteKeyIncludingSubkeys(HKCU, 'Software\BoxeZone');
 
     if (not UninstallSilent) and
        (MsgBox(CustomMessage('DeleteUserData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES) then

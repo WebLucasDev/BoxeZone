@@ -79,7 +79,8 @@ docs/                      # arquitetura, roadmap e protótipos
 - Escopos mínimos: no Google só `drive.file` (não sensível; é o que deixa o app "Em produção" sem verificação). Escopo novo em qualquer provedor: atualizar a política de privacidade.
 - Preferências em `%LocalAppData%\BoxeZone\settings.json` (`ApplicationData.Current` não funciona sem pacote). Campos novos em `AppSettings` precisam de valor padrão (arquivos antigos não os têm).
 - Strings de UI em `Strings/pt-BR/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas.
-- Registro do Windows que o app grava (`Run\BoxeZone`, `Classes\AppUserModelId\BoxeZone.App`, `Classes\boxezone`): o desinstalador apaga cada um; chave nova também precisa entrar no `BoxeZone.iss`.
+- Registro do Windows que o app grava (`Run\BoxeZone`, `Classes\AppUserModelId\BoxeZone.App`, `Classes\boxezone`) e que o instalador grava (`Software\BoxeZone`): o desinstalador apaga cada um; chave nova também precisa entrar no `BoxeZone.iss`.
+- Código aberto (MIT) e assinatura pela SignPath Foundation: o app só pode falar com sistemas que o usuário não escolheu se isso estiver na política, aparecer na instalação e puder ser desligado (hoje só a verificação de versão, com a opção "Verificar versões novas"). Mudou isso, atualizar a política, o `app/installer/privacidade.txt` e a seção "Code signing policy" do site.
 
 ## Armadilhas (detalhes em `app/docs/arquitetura.md`)
 

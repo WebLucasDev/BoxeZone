@@ -24,6 +24,7 @@ namespace BoxeZone.ViewModels
             StartWithWindows = settings.StartWithWindows;
             CollapseAfterUpload = settings.CollapseAfterUpload;
             NotifyOnComplete = settings.NotifyOnComplete;
+            CheckForUpdates = settings.CheckForUpdates;
             Theme = settings.Theme;
             HotkeyText = HotkeyService.Format(settings.Hotkey.Modifiers, settings.Hotkey.Key);
         }
@@ -40,6 +41,10 @@ namespace BoxeZone.ViewModels
         /// <summary>Saved here; applied in step 8 (Windows notifications).</summary>
         [ObservableProperty]
         public partial bool NotifyOnComplete { get; set; }
+
+        /// <summary>"Verificar versões novas": the daily look at GitHub Releases (UpdateService).</summary>
+        [ObservableProperty]
+        public partial bool CheckForUpdates { get; set; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsSystemTheme), nameof(IsLightTheme), nameof(IsDarkTheme))]
@@ -152,6 +157,8 @@ namespace BoxeZone.ViewModels
         partial void OnCollapseAfterUploadChanged(bool value) => Persist(() => Settings.CollapseAfterUpload = value);
 
         partial void OnNotifyOnCompleteChanged(bool value) => Persist(() => Settings.NotifyOnComplete = value);
+
+        partial void OnCheckForUpdatesChanged(bool value) => Persist(() => Settings.CheckForUpdates = value);
 
         partial void OnThemeChanged(AppTheme value) => Persist(() => Settings.Theme = value);
 

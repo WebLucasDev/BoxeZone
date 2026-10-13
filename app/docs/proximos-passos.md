@@ -10,11 +10,11 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-Nada no momento.
+- [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). Falta: o usuário ativar 2FA no GitHub, enviar o pedido em signpath.org e, aprovado, criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
 
 ## Distribuição
 
-- [ ] **Assinatura de código**, para o SmartScreen não avisar ao instalar. Gratuita pela SignPath Foundation, que exige uma licença de código aberto no repositório; a alternativa paga é um certificado (Azure Trusted Signing ou tradicional).
+- [ ] **Assinatura de código**: em andamento (ver acima).
 - [ ] **Imagem do assistente do instalador** com a luva (hoje é a imagem genérica do Inno Setup).
 - [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima).
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.

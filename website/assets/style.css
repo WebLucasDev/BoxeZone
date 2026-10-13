@@ -718,6 +718,22 @@ img {
   color: var(--muted);
 }
 
+/* Code signing policy */
+
+.policy > p {
+  max-width: var(--measure);
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.policy > .note-strong {
+  color: var(--text);
+}
+
+.policy .facts {
+  margin-top: 28px;
+}
+
 /* Footer */
 
 .foot {
