@@ -30,7 +30,6 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Envio
 
 - [ ] **Enviar pastas** (hoje pastas soltas são ignoradas): recriar a estrutura no destino.
-- [ ] **Fila de vários arquivos** com progresso total ("3 de 10") em vez de um arquivo por vez.
 - [ ] **Copiar link compartilhável** depois do envio (Dropbox precisa da permissão `sharing.write`; Drive e OneDrive têm APIs de compartilhamento).
 - [ ] **Escolher a pasta de destino navegando** (possível no OneDrive e no Dropbox; no Drive o escopo `drive.file` só enxerga pastas criadas pelo app).
 - [ ] **Retomar envios grandes** depois de queda de rede ou de fechar o app (as sessões de upload dos três provedores permitem).
@@ -96,3 +95,5 @@ Depois da versão 1:
 | **Versão 1.0.0 publicada** (instaladores x64 e ARM64 nas Releases do GitHub, botão de download no site) | tag `v1.0.0` |
 | Código aberto (MIT), README, "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" | `e572c02`, tag `v1.0.1` |
 | "Cancelar" um envio em andamento (para o arquivo atual e o resto do lote, sem notificação) | `aa5872c` |
+| Leva de vários arquivos com progresso total ("3 de 10", barra pelo tamanho; soltar durante um envio entra na leva) | `e11573d` |
+| Painel compacto vazio ("Ative um destino") quando o app abre recolhido | `0d8116a` |
