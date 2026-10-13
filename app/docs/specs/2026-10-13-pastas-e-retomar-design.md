@@ -40,6 +40,7 @@ Rodada 1 de 3 das funções decididas em 13/10/2026 (ver `app/docs/proximos-pass
 |---|---|
 | `UploadWaitingForNetwork` | Aguardando conexão… |
 | `UploadResuming` | Retomando… |
+| `ErrorFileMissing` (motivo da falha quando o arquivo sumiu) | Arquivo não encontrado |
 
 ## Como funciona
 
