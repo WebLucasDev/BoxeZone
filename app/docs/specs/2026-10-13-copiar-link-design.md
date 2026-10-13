@@ -36,7 +36,7 @@ Decisões do usuário (13/10/2026):
 
 | Chave | Texto |
 |---|---|
-| `CopyLinkLink.Content` (estado inicial do link) | Copiar link |
+| `CopyLink` (estado inicial do link; o texto muda, então vem do ViewModel, não de `x:Uid`) | Copiar link |
 | `CopyLinkCopying` | Copiando… |
 | `CopyLinkCopied` | Link copiado |
 | `CopyLinkFailed` | Não foi possível criar o link |
@@ -91,7 +91,7 @@ Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);
 
 - Guarda os `UploadedItem` da leva enviada (`_uploadedItems`); "Abrir" usa o `WebUrl` do último, como hoje.
 - `CopyLinkCommand` (assíncrono): chama `ShareLinkService.CopyAsync` e controla `CopyLinkLabel` ("Copiar link" / "Copiando…" / "Link copiado") e uma mensagem temporária `DoneMessage` que substitui o `DoneLabel` nas falhas. Os tempos (2 s, 3 s, 5 s) usam um `DispatcherQueueTimer`.
-- Nova leva começando ou mudança de estado: cancela a cópia em andamento e limpa a mensagem.
+- Nova leva começando ou mudança de estado: limpa a mensagem e o "Link copiado"; uma cópia que ainda estava em andamento termina normalmente (os links vão para a área de transferência), mas o resultado dela não aparece na linha, que já mostra a leva nova.
 - `UploadFinishedEventArgs` ganha `BatchId` (registrado no `ShareLinkService` ao terminar com sucesso).
 
 ### Notificação e ativação
