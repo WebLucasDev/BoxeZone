@@ -137,6 +137,9 @@
   <data name="ErrorQuotaExceeded" xml:space="preserve">
     <value>Sem espaço na conta</value>
   </data>
+  <data name="UploadWaitingForNetwork" xml:space="preserve">
+    <value>Aguardando conexão…</value>
+  </data>
   <data name="UploadResuming" xml:space="preserve">
     <value>Retomando…</value>
   </data>

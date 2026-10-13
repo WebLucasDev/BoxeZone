@@ -186,7 +186,15 @@ namespace BoxeZone.ViewModels
         [NotifyPropertyChangedFor(nameof(ProgressLabel))]
         public partial bool IsResuming { get; set; }
 
-        public string ProgressLabel => IsResuming ? Strings.GetString("UploadResuming") : $"{Progress:0}%";
+        /// <summary>No network mid-upload: the upload waits and goes on when it is back.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ProgressLabel))]
+        public partial bool IsWaitingForNetwork { get; set; }
+
+        public string ProgressLabel =>
+            IsWaitingForNetwork ? Strings.GetString("UploadWaitingForNetwork")
+            : IsResuming ? Strings.GetString("UploadResuming")
+            : $"{Progress:0}%";
 
         /// <summary>Two or more files: the drop zone shows "3 de 10".</summary>
         public bool IsBatch => FileCount > 1;
@@ -390,13 +398,21 @@ namespace BoxeZone.ViewModels
                     {
                         if (FileIndex == index && IsUploading && ReferenceEquals(_queue, queue))
                         {
+                            // Bytes are moving again: the network is back.
                             IsResuming = false;
+                            IsWaitingForNetwork = false;
                             Progress = 100.0 * (sentBefore + weight * value / 100) / TotalWeight(queue);
                         }
                     });
 
-                    var job = new UploadJob(file.LocalPath, file.FileName, target, file.Size, file.LastWriteTime, file.ResumeState);
-                    file.Uploaded = await Provider.UploadAsync(job, progress, state => OnResumeState(queue, file, state), cts.Token);
+                    // Each try takes the latest resume point: after a network drop, it goes on from there.
+                    file.Uploaded = await WhileOfflineAsync(
+                        () => Provider.UploadAsync(
+                            new UploadJob(file.LocalPath, file.FileName, target, file.Size, file.LastWriteTime, file.ResumeState),
+                            progress,
+                            state => OnResumeState(queue, file, state),
+                            cts.Token),
+                        cts.Token);
                     file.Status = QueuedFileStatus.Done;
                     file.ResumeState = null;
                     IsResuming = false;
@@ -438,7 +454,7 @@ namespace BoxeZone.ViewModels
             QueuedFolder folder = queue.Folders[file.FolderIndex];
             if (folder.Created is null)
             {
-                folder.Created = await Provider.CreateFolderAsync(queue.TargetFolder, folder.Name, ct);
+                folder.Created = await WhileOfflineAsync(() => Provider.CreateFolderAsync(queue.TargetFolder, folder.Name, ct), ct);
                 await SaveQueueAsync();
             }
 
@@ -529,6 +545,26 @@ namespace BoxeZone.ViewModels
             UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, names, _openTarget?.WebUrl, null, batchId));
         }
 
+        /// <summary>Retries while the provider reports no network ("Aguardando conexão…"), without limit.</summary>
+        private async Task<T> WhileOfflineAsync<T>(Func<Task<T>> action, CancellationToken ct)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    T result = await action();
+                    IsWaitingForNetwork = false;
+                    return result;
+                }
+                catch (StorageProviderException ex) when (ex.Kind == StorageErrorKind.Offline && !ct.IsCancellationRequested)
+                {
+                    IsWaitingForNetwork = true;
+                    await SaveQueueAsync();
+                    await NetworkWaiter.WaitAsync(attempt, ct);
+                }
+            }
+        }
+
         private static long Weight(QueuedFile file) => Math.Max(file.Size, 1);
 
         private static double TotalWeight(UploadQueueState queue) =>
@@ -607,7 +643,15 @@ namespace BoxeZone.ViewModels
             RefreshConnection();
         }
 
-        partial void OnStateChanged(UploadState value) => ResetLinkFeedback();
+        partial void OnStateChanged(UploadState value)
+        {
+            ResetLinkFeedback();
+            if (value != UploadState.Uploading)
+            {
+                IsWaitingForNetwork = false;
+                IsResuming = false;
+            }
+        }
 
         private void ShowLinkFeedbackFor(TimeSpan duration)
         {
