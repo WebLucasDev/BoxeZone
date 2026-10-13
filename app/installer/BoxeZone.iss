@@ -91,6 +91,8 @@ Type: filesandordirs; Name: "{app}\*"; Check: IsOwnAppDir
 [UninstallDelete]
 ; The uninstaller removes the files but left the empty program folder behind.
 Type: dirifempty; Name: "{app}"
+; An installer the automatic update downloaded (~60 MB), whatever the answer about user data.
+Type: filesandordirs; Name: "{localappdata}\BoxeZone\updates"
 
 [Icons]
 ; Same AppUserModelID as the app's notifications.
@@ -99,10 +101,17 @@ Name: "{autodesktop}\Boxe Zone"; Filename: "{app}\BoxeZone.exe"; Tasks: desktopi
 
 [Run]
 Filename: "{app}\BoxeZone.exe"; Description: "{cm:LaunchProgram,Boxe Zone}"; Flags: nowait postinstall skipifsilent
-; The app's automatic update runs this installer silently: open the app again afterwards.
-Filename: "{app}\BoxeZone.exe"; Flags: nowait; Check: WizardSilent
+; The app's automatic update runs this installer silently with /RELAUNCH=1: open the app again
+; afterwards (not for other silent installs, like winget's).
+Filename: "{app}\BoxeZone.exe"; Flags: nowait; Check: ShouldRelaunch
 
 [Code]
+// The app's own update passes /RELAUNCH=1 so the new version opens when the install ends.
+function ShouldRelaunch(): Boolean;
+begin
+  Result := WizardSilent() and (ExpandConstant('{param:RELAUNCH|0}') = '1');
+end;
+
 procedure CloseBoxeZone();
 var
   ResultCode: Integer;

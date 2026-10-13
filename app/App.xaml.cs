@@ -184,18 +184,20 @@ namespace BoxeZone
             _readyUpdate = await _updateService.PrepareAsync(update);
             settings.ShowUpdate(update, _readyUpdate is not null);
             string version = update.Version.ToString(3);
-            if (_settingsService!.Settings.NotifiedVersion != version)
+            // One notice per version when it is found, and one more when it is ready to install
+            // (a failed first download must not leave only the "Baixar" notice).
+            AppSettings saved = _settingsService!.Settings;
+            if (_readyUpdate is not null && saved.NotifiedReadyVersion != version)
             {
-                if (_readyUpdate is not null)
-                {
-                    _notificationService?.ShowUpdateReady(version);
-                }
-                else
-                {
-                    _notificationService?.ShowUpdateAvailable(version, update.Url);
-                }
-
-                _settingsService.Settings.NotifiedVersion = version;
+                _notificationService?.ShowUpdateReady(version);
+                saved.NotifiedReadyVersion = version;
+                saved.NotifiedVersion = version;
+                _settingsService.Save();
+            }
+            else if (_readyUpdate is null && saved.NotifiedVersion != version)
+            {
+                _notificationService?.ShowUpdateAvailable(version, update.Url);
+                saved.NotifiedVersion = version;
                 _settingsService.Save();
             }
         }
@@ -270,17 +272,20 @@ namespace BoxeZone
         /// closes; the installer opens the new version. Uploads in progress continue after it
         /// (the saved queue). Nothing downloaded yet: shows the widget.
         /// </summary>
-        public static void InstallUpdate()
+        public static async void InstallUpdate()
         {
             var app = (App)Current;
-            if (app._readyUpdate is { } installer && File.Exists(installer))
+            if (app._readyUpdate is { } installer && app._updateService is { } updates && await updates.InstallAsync(installer))
             {
-                UpdateService.Install(installer);
                 app.ExitApp();
+                return;
             }
-            else
+
+            // Missing, changed or blocked (an antivirus): the release page, to download it by hand.
+            app._readyUpdate = null;
+            if (app._settingsService?.Settings.LatestUrl is { } page)
             {
-                app._dockService?.ShowNormal();
+                Process.Start(new ProcessStartInfo(page) { UseShellExecute = true });
             }
         }
 

@@ -202,6 +202,7 @@
                         <Button
                             x:Uid="BrowseUseButton"
                             Command="{x:Bind ViewModel.UseBrowsedFolderCommand, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanBrowseUp, Mode=OneWay}"
                             Style="{StaticResource LinkActionButtonStyle}" />
                     </StackPanel>
                 </StackPanel>

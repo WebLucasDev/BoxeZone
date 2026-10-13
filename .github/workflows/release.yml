@@ -62,7 +62,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           $tag = $env:TAG
-          $files = (Get-ChildItem app/installer/output/*.exe).FullName
+          $files = @((Get-ChildItem app/installer/output/*.exe).FullName)
 
           # The app's automatic update checks the downloaded installer against this file.
           $sums = Join-Path $env:RUNNER_TEMP 'SHA256SUMS.txt'

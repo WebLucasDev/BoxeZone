@@ -89,6 +89,19 @@ namespace BoxeZone.Services
         /// <summary>The release's tag ("v1.4.0"): where its installer and SHA256SUMS.txt are downloaded from.</summary>
         public string? LatestTag { get; set; }
 
+        /// <summary>The new version whose installer is downloaded and verified, and its SHA256 (checked again before running it).</summary>
+        public string? ReadyUpdateVersion { get; set; }
+
+        public string? ReadyUpdateHash { get; set; }
+
+        /// <summary>Last download attempt of a version that is not ready yet: at most one a day, like the check itself.</summary>
+        public string? LastPrepareVersion { get; set; }
+
+        public DateTimeOffset? LastPrepareAttempt { get; set; }
+
+        /// <summary>Version already announced as ready to install (the "Baixar" notice may have come first).</summary>
+        public string? NotifiedReadyVersion { get; set; }
+
         /// <summary>Version already announced by notification, so each one is announced once.</summary>
         public string? NotifiedVersion { get; set; }
 

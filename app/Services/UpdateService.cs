@@ -38,6 +38,9 @@ namespace BoxeZone.Services
 
         private readonly SettingsService _settingsService;
 
+        // A slow download must not be started again by the next hourly check.
+        private bool _preparing;
+
         public UpdateService(SettingsService settingsService)
         {
             _settingsService = settingsService;
@@ -133,7 +136,8 @@ namespace BoxeZone.Services
         /// </summary>
         public async Task<string?> PrepareAsync(UpdateInfo update)
         {
-            if (!_settingsService.Settings.CheckForUpdates)
+            AppSettings settings = _settingsService.Settings;
+            if (!settings.CheckForUpdates || _preparing)
             {
                 return null;
             }
@@ -141,11 +145,32 @@ namespace BoxeZone.Services
             string version = update.Version.ToString(3);
             string arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
             string assetName = $"BoxeZone-Setup-{arch}.exe";
-            string tag = _settingsService.Settings.LatestTag ?? $"v{version}";
-            string releaseBase = $"https://github.com/WebLucasDev/BoxeZone/releases/download/{tag}/";
             string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BoxeZone", "updates");
             string path = Path.Combine(folder, $"BoxeZone-Setup-{version}-{arch}.exe");
 
+            // Already downloaded and verified: no network (it is checked again before it runs).
+            if (settings.ReadyUpdateVersion == version && settings.ReadyUpdateHash is not null && File.Exists(path))
+            {
+                return path;
+            }
+
+            // A failed attempt is retried the next day, like the check itself (privacy policy:
+            // GitHub at most once a day), never every hour.
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            if (settings.LastPrepareVersion == version && settings.LastPrepareAttempt is { } last && last <= now && now - last < CheckInterval)
+            {
+                return null;
+            }
+
+            settings.LastPrepareVersion = version;
+            settings.LastPrepareAttempt = now;
+            settings.ReadyUpdateVersion = null;
+            settings.ReadyUpdateHash = null;
+            _settingsService.Save();
+
+            string tag = Uri.EscapeDataString(settings.LatestTag ?? $"v{version}");
+            string releaseBase = $"https://github.com/WebLucasDev/BoxeZone/releases/download/{tag}/";
+            _preparing = true;
             try
             {
                 string sums = await Downloads.GetStringAsync(releaseBase + "SHA256SUMS.txt");
@@ -155,11 +180,6 @@ namespace BoxeZone.Services
                 if (expected is null)
                 {
                     return null;
-                }
-
-                if (File.Exists(path) && await HashOfAsync(path) == expected)
-                {
-                    return path;
                 }
 
                 Directory.CreateDirectory(folder);
@@ -184,6 +204,9 @@ namespace BoxeZone.Services
                 }
 
                 File.Move(partial, path, overwrite: true);
+                settings.ReadyUpdateVersion = version;
+                settings.ReadyUpdateHash = expected;
+                _settingsService.Save();
                 return path;
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException)
@@ -191,14 +214,40 @@ namespace BoxeZone.Services
                 // Offline or no checksums in this release: the "Baixar" link still works.
                 return null;
             }
+            finally
+            {
+                _preparing = false;
+            }
         }
 
         /// <summary>
-        /// Runs the downloaded installer silently. It closes BoxeZone itself (taskkill), installs
-        /// over it and opens it again (the [Run] entry for silent installs).
+        /// Runs the downloaded installer silently, after checking it once more against the hash
+        /// it was verified with. It closes BoxeZone (taskkill), installs over it and opens it again
+        /// (/RELAUNCH=1: the [Run] entry for the app's own updates). False when it did not start
+        /// (changed or removed since, or blocked by an antivirus): the caller offers the release page.
         /// </summary>
-        public static void Install(string installerPath) =>
-            Process.Start(new ProcessStartInfo(installerPath, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-") { UseShellExecute = false });
+        public async Task<bool> InstallAsync(string installerPath)
+        {
+            AppSettings settings = _settingsService.Settings;
+            try
+            {
+                if (settings.ReadyUpdateHash is not { } expected || !File.Exists(installerPath) || await HashOfAsync(installerPath) != expected)
+                {
+                    settings.ReadyUpdateVersion = null;
+                    settings.ReadyUpdateHash = null;
+                    _settingsService.Save();
+                    return false;
+                }
+
+                Process.Start(new ProcessStartInfo(installerPath, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /RELAUNCH=1") { UseShellExecute = false });
+                return true;
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException or UnauthorizedAccessException)
+            {
+                CrashLog.Write(ex);
+                return false;
+            }
+        }
 
         private static async Task<string> HashOfAsync(string path)
         {

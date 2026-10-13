@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -120,10 +120,11 @@ namespace BoxeZone.ViewModels
             get
             {
                 DateTime when = _entry.When.LocalDateTime;
-                string time = when.ToString("HH:mm");
+                // Windows' own short time and date (the regional settings), in either language.
+                string time = when.ToShortTimeString();
                 return when.Date == DateTime.Today ? string.Format(Strings.GetString("HistoryTodayFormat"), time)
                     : when.Date == DateTime.Today.AddDays(-1) ? string.Format(Strings.GetString("HistoryYesterdayFormat"), time)
-                    : string.Format(Strings.GetString("HistoryDateFormat"), when, time);
+                    : string.Format(Strings.GetString("HistoryDateFormat"), when.ToShortDateString(), time);
             }
         }
 

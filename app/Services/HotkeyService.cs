@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using BoxeZone.Helpers;
 
 namespace BoxeZone.Services
@@ -57,7 +57,7 @@ namespace BoxeZone.Services
             >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)virtualKey).ToString(), // 0-9, A-Z
             >= 0x70 and <= 0x87 => $"F{virtualKey - 0x6F}",                                 // F1-F24
             >= 0x60 and <= 0x69 => $"Num {virtualKey - 0x60}",
-            0x20 => "Espaço",
+            0x20 => new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader().GetString("KeySpace"),
             0x0D => "Enter",
             0x09 => "Tab",
             0x08 => "Backspace",
