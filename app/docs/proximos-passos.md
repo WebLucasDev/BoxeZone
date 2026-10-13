@@ -11,11 +11,11 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Em andamento
 
 - [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). 2FA ativado no GitHub e pedido enviado em signpath.org (13/10/2026); aguardando a resposta por e-mail. Aprovado: criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
+- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável; 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (depois da assinatura, para conferir a assinatura do instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
 - [ ] **Assinatura de código**: em andamento (ver acima).
-- [ ] **Imagem do assistente do instalador** com a luva (hoje é a imagem genérica do Inno Setup).
 - [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima).
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
@@ -44,13 +44,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Qualidade
 
 - [ ] **Testes automatizados**: unidade para os ViewModels, `UpdateService.TryParseTag` e provedores (com `IStorageProvider` falso) e um teste de fumaça com UI Automation (ver `app/docs/arquitetura.md`, seção de testes). Exige aprovar um pacote de testes (xUnit ou similar).
-- [ ] **`.gitattributes`** para padronizar fim de linha (hoje o git converte LF/CRLF e avisa a cada commit).
 - [ ] **Log de diagnóstico opcional** (sem tokens nem nomes de arquivo), além do `crash.log`.
-- [ ] **Ajustes apontados na revisão da 1.0.0** (nenhum afeta o uso):
-  - `release.yml`: passar `github.ref_name` por variável de ambiente em vez de colar direto nos comandos (reforço; só quem tem acesso de escrita cria tags) e fixar a versão do Inno Setup no runner.
-  - `build.ps1`: apagar a pasta `publish` antes de publicar (um build local pode levar arquivos velhos; o CI começa limpo).
-  - `UpdateService`: tratar `lastUpdateCheck` no futuro (relógio corrigido) como consulta devida; corrigir a seta corrompida no comentário de `TryParseTag`.
-  - `App.OnLaunched`: linha em branco sobrando no início.
 
 ## Limitações conhecidas
 

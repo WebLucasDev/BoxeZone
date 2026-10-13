@@ -47,7 +47,6 @@ namespace BoxeZone
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-
             _settingsService = new SettingsService(DispatcherQueue.GetForCurrentThread());
             UpdateService.ApplyInstallerChoice(_settingsService);
             AppCredentials credentials = AppCredentials.Load();

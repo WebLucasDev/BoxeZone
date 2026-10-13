@@ -75,7 +75,9 @@ namespace BoxeZone.Services
                 return null;
             }
 
-            bool isDue = settings.LastUpdateCheck is not { } last || DateTimeOffset.UtcNow - last >= CheckInterval;
+            // A last check in the future (the clock was corrected backwards) counts as due.
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            bool isDue = settings.LastUpdateCheck is not { } last || last > now || now - last >= CheckInterval;
             if (isDue)
             {
                 try
@@ -114,7 +116,7 @@ namespace BoxeZone.Services
                 : null;
         }
 
-        /// <summary>"v1.2.0", "1.2" or "v1.2.0-rc.1" â†’ 1.2.0. False for anything else.</summary>
+        /// <summary>"v1.2.0", "1.2" or "v1.2.0-rc.1" -> 1.2.0. False for anything else.</summary>
         public static bool TryParseTag(string? tag, out Version version)
         {
             version = new Version(0, 0, 0);

@@ -37,6 +37,10 @@ UninstallDisplayName=Boxe Zone
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; The glove instead of Inno Setup's default images, one file per DPI size (Setup picks the
+; closest). Regenerated from Assets\BoxeZone.svg; sizes in app\docs\arquitetura.md.
+WizardImageFile=images\wizard-large-202.png,images\wizard-large-269.png,images\wizard-large-336.png,images\wizard-large-403.png,images\wizard-large-430.png,images\wizard-large-498.png,images\wizard-large-534.png
+WizardSmallImageFile=images\wizard-small-58.png,images\wizard-small-77.png,images\wizard-small-97.png,images\wizard-small-116.png,images\wizard-small-124.png,images\wizard-small-143.png,images\wizard-small-159.png
 ; Privacy summary shown before installing (SignPath Foundation condition: the app contacts a
 ; system the user did not choose, GitHub, for the update check).
 InfoBeforeFile=privacidade.txt

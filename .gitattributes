@@ -1,0 +1,6 @@
+# Text files are stored with LF and checked out with CRLF on every machine (and on CI),
+# whatever core.autocrlf says. Images and icons are never converted.
+* text=auto eol=crlf
+*.ico binary
+*.png binary
+*.bmp binary

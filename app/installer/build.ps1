@@ -20,14 +20,20 @@ if (-not (Test-Path (Join-Path $appDir 'appsettings.local.json'))) {
     throw 'app\appsettings.local.json not found: an installer without provider credentials could not sign in to anything.'
 }
 
+# Start clean: files left by an older local publish would end up in the installer.
+$publishDir = Join-Path $appDir "bin\Release\net10.0-windows10.0.19041.0\win-$Arch\publish"
+if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
+
 dotnet publish (Join-Path $appDir 'BoxeZone.csproj') -c Release -p:Platform=$platform -p:Version=$numericVersion -p:InformationalVersion=$Version
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($LASTEXITCODE)" }
 
+# $env:ISCC wins: the release workflow sets it to its pinned Inno Setup.
 $iscc = @(
+    $env:ISCC,
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
     "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup 6 (ISCC.exe) not found. Install it: winget install JRSoftware.InnoSetup' }
 
 & $iscc "/DAppVersion=$Version" "/DNumericVersion=$numericVersion" "/DArch=$Arch" (Join-Path $PSScriptRoot 'BoxeZone.iss')

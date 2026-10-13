@@ -28,15 +28,28 @@ jobs:
           if (-not $env:APPSETTINGS) { throw "Secret APPSETTINGS_LOCAL_JSON is missing (Settings > Secrets and variables > Actions)." }
           [IO.File]::WriteAllText("$PWD/app/appsettings.local.json", $env:APPSETTINGS)
 
+      # Pinned to the version used locally, so CI and local installers match. Upgrade: change
+      # both values (winget show JRSoftware.InnoSetup --version X.Y.Z lists the URL and hash).
       - name: Inno Setup
         shell: pwsh
+        env:
+          INNO_URL: https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe
+          INNO_SHA256: 9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732
         run: |
-          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --no-progress -y }
+          $setup = Join-Path $env:RUNNER_TEMP 'innosetup.exe'
+          Invoke-WebRequest $env:INNO_URL -OutFile $setup
+          if ((Get-FileHash $setup -Algorithm SHA256).Hash -ne $env:INNO_SHA256) { throw 'Inno Setup download does not match the pinned SHA256.' }
+          $dir = Join-Path $env:RUNNER_TEMP 'inno'
+          Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/CURRENTUSER', "/DIR=$dir" -Wait
+          "ISCC=$dir\ISCC.exe" >> $env:GITHUB_ENV
 
+      # The tag goes through env, never pasted into the script.
       - name: Build installers
         shell: pwsh
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
+          $version = $env:TAG.TrimStart('v')
           ./app/installer/build.ps1 -Arch x64 -Version $version
           ./app/installer/build.ps1 -Arch arm64 -Version $version
 
@@ -44,8 +57,9 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
         run: |
-          $tag = "${{ github.ref_name }}"
+          $tag = $env:TAG
           $files = (Get-ChildItem app/installer/output/*.exe).FullName
           $ghArgs = @($tag) + $files + @('--title', "Boxe Zone $($tag.TrimStart('v'))", '--generate-notes')
           if ($tag -match '-') { $ghArgs += '--prerelease' }
