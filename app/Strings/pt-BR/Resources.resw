@@ -137,6 +137,50 @@
   <data name="ErrorQuotaExceeded" xml:space="preserve">
     <value>Sem espaço na conta</value>
   </data>
+  <data name="HistoryLink.Content" xml:space="preserve">
+    <value>Histórico</value>
+  </data>
+  <data name="HistoryTitle.Text" xml:space="preserve">
+    <value>Histórico</value>
+  </data>
+  <data name="HistoryEmpty.Text" xml:space="preserve">
+    <value>Nenhum envio ainda.</value>
+  </data>
+  <data name="ClearHistoryButton.Content" xml:space="preserve">
+    <value>Limpar histórico</value>
+  </data>
+  <data name="HistoryTodayFormat" xml:space="preserve">
+    <value>Hoje, {0}</value>
+    <comment>{0} = time, like 14:32.</comment>
+  </data>
+  <data name="HistoryYesterdayFormat" xml:space="preserve">
+    <value>Ontem, {0}</value>
+    <comment>{0} = time, like 14:32.</comment>
+  </data>
+  <data name="BrowseFolderButton.Content" xml:space="preserve">
+    <value>Procurar…</value>
+  </data>
+  <data name="BrowseUpButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pasta acima</value>
+  </data>
+  <data name="BrowseUpButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pasta acima</value>
+  </data>
+  <data name="BrowseCancelButton.Content" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="BrowseUseButton.Content" xml:space="preserve">
+    <value>Usar esta pasta</value>
+  </data>
+  <data name="BrowseGoogleNote.Text" xml:space="preserve">
+    <value>No Google Drive aparecem só as pastas criadas pelo Boxe Zone.</value>
+  </data>
+  <data name="BrowseLoading" xml:space="preserve">
+    <value>Carregando…</value>
+  </data>
+  <data name="BrowseEmpty" xml:space="preserve">
+    <value>Nenhuma pasta aqui</value>
+  </data>
   <data name="UploadWaitingForNetwork" xml:space="preserve">
     <value>Aguardando conexão…</value>
   </data>

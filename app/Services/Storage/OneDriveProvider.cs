@@ -247,6 +247,42 @@ namespace BoxeZone.Services.Storage
             }
         }
 
+        public async Task<IReadOnlyList<string>> ListFoldersAsync(string folder, CancellationToken ct)
+        {
+            try
+            {
+                var names = new List<string>();
+                string? url = ChildrenUrl(folder.Split('/', StringSplitOptions.RemoveEmptyEntries)) + "?$select=name,folder&$top=999";
+                while (url is not null)
+                {
+                    using HttpRequestMessage request = await CreateGraphRequestAsync(HttpMethod.Get, url, ct);
+                    using JsonDocument page = JsonDocument.Parse(await SendAsync(request, ct));
+                    foreach (JsonElement item in page.RootElement.GetProperty("value").EnumerateArray())
+                    {
+                        if (item.TryGetProperty("folder", out _) && item.GetProperty("name").GetString() is { } name)
+                        {
+                            names.Add(name);
+                        }
+                    }
+
+                    // The next page comes as an absolute URL: keep only what follows the Graph root.
+                    url = page.RootElement.TryGetProperty("@odata.nextLink", out JsonElement next) && next.GetString() is { } link
+                        ? link[GraphRoot.Length..]
+                        : null;
+                }
+
+                return names.OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
+            }
+            catch (GraphHttpException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                return [];
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
         private static string ChildrenUrl(string[] folderSegments) =>
             folderSegments.Length == 0
                 ? "/me/drive/root/children"

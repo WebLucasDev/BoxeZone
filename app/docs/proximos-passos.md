@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando; feito); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
@@ -28,14 +28,12 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Envio
 
-- [ ] **Escolher a pasta de destino navegando** (possível no OneDrive e no Dropbox; no Drive o escopo `drive.file` só enxerga pastas criadas pelo app).
 
 ## Interface
 
 - [ ] **Brilho na faixa recolhida**, como no protótipo (`box-shadow` azul); a janela nativa hoje só tem a sombra padrão.
 - [ ] **Dicas (tooltips)** na aba e na faixa, sem cortar dentro de janelas tão finas.
 - [ ] **Inglês** (`Strings/en-US/Resources.resw`) e seleção de idioma.
-- [ ] **Histórico de envios** recentes, com "Abrir" e "Copiar link".
 
 ## Qualidade
 

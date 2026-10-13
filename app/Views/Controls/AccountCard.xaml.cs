@@ -38,6 +38,18 @@ namespace BoxeZone.Views.Controls
             });
         }
 
+        /// <summary>"Procurar…" and "Alterar" step aside while the folder is typed or browsed.</summary>
+        private Visibility FolderActionsVisibility(bool editing, bool browsing) =>
+            editing || browsing ? Visibility.Collapsed : Visibility.Visible;
+
+        private void BrowseFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { Tag: string name })
+            {
+                ViewModel?.OpenBrowseFolderCommand.Execute(name);
+            }
+        }
+
         private void FolderBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Enter)

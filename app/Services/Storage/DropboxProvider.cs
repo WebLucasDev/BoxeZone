@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -214,6 +215,38 @@ namespace BoxeZone.Services.Storage
                 CreateFolderResult result = await client.Files.CreateFolderV2Async($"{ToDropboxPath(parentFolder).TrimEnd('/')}/{name}", autorename: true);
                 FolderMetadata folder = result.Metadata;
                 return new UploadedItem(folder.Id, folder.Name, "https://www.dropbox.com/home" + EscapePath(folder.PathDisplay));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
+        public async Task<IReadOnlyList<string>> ListFoldersAsync(string folder, CancellationToken ct)
+        {
+            DropboxClient client = _client
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Dropbox.");
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                // The root is "" in list_folder, not "/".
+                string path = ToDropboxPath(folder);
+                ListFolderResult page = await client.Files.ListFolderAsync(path == "/" ? string.Empty : path);
+                var names = page.Entries.Where(e => e.IsFolder).Select(e => e.Name).ToList();
+                while (page.HasMore)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    page = await client.Files.ListFolderContinueAsync(page.Cursor);
+                    names.AddRange(page.Entries.Where(e => e.IsFolder).Select(e => e.Name));
+                }
+
+                return names.OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
+            }
+            catch (ApiException<ListFolderError> ex) when (ex.ErrorResponse.IsPath && ex.ErrorResponse.AsPath.Value.IsNotFound)
+            {
+                return [];
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {

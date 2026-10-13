@@ -55,15 +55,18 @@ appsettings.example.json   # modelo; as credenciais reais ficam em appsettings.l
 Views/
   MainWindow               # janela do widget: Frame (WidgetPage/SettingsPage), faixa e painel compacto
   TabWindow                # aba lateral, numa janela própria
-  WidgetPage, SettingsPage
+  WidgetPage, SettingsPage, HistoryPage
   Controls/                # ProviderRow, AccountCard, TabHandle
-ViewModels/                # MainViewModel, ProviderViewModel, SettingsViewModel
+ViewModels/                # MainViewModel, ProviderViewModel, SettingsViewModel, HistoryViewModel
 Services/
   WindowDockService        # estados Normal/Docked/Hidden e posição das janelas
   NotificationService      # notificações (AUMID BoxeZone.App, ativação por protocolo)
   ProtocolService          # registra o protocolo boxezone: no HKCU
   UpdateService            # versão nova pelas Releases do GitHub
   HotkeyService, SettingsService, TokenStore, StartupService, CrashLog, AppCredentials
+  ShareLinkService         # "Copiar link" (área de transferência, últimas levas)
+  HistoryService           # history.json (últimos 50 envios)
+  Upload/                  # fila de envio salva (UploadQueueStore), FolderScanner, NetworkWaiter
   Storage/                 # IStorageProvider + Google Drive, OneDrive, Dropbox, SignInPage
 Helpers/                   # Win32 (P/Invoke), WindowExtensions, WindowDrag, BindConverters
 installer/                 # BoxeZone.iss (Inno Setup) e build.ps1; saída em installer/output/ (git-ignored)
@@ -105,7 +108,8 @@ O protótipo em `app/docs/` é a **fonte da verdade visual**: antes de criar ou 
 | Arquivo | Tela |
 |---|---|
 | `app/docs/widget.dc.html` | Widget: cabeçalho, aba, linhas de provedor, áreas de drop, upload, rodapé |
-| `app/docs/configuracoes.dc.html` | Configurações |
+| `app/docs/configuracoes.dc.html` | Configurações (com o "Procurar…" da pasta de destino) |
+| `app/docs/historico.dc.html` | Histórico |
 | `app/docs/estados-janela.dc.html` | Normal, Docked, Hidden e o painel compacto (esboço; nos detalhes do widget vale o `widget.dc.html`) |
 
 - São HTML de protótipo (dependem de um `support.js` ausente): ler como texto. Valores exatos nos `style="…"` e no `<style>` do `<helmet>`; `<sc-for>`/`<sc-if>`/`{{…}}` equivalem a `ItemsRepeater`, `Visibility` e `x:Bind`; o `<script>` final mostra estados e lógica. O que fica fora do widget é cenário.

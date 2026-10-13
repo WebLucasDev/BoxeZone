@@ -274,6 +274,49 @@ namespace BoxeZone.Services.Storage
             return parentId;
         }
 
+        public async Task<IReadOnlyList<string>> ListFoldersAsync(string folder, CancellationToken ct)
+        {
+            DriveService drive = _drive
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Google Drive.");
+
+            try
+            {
+                // Walk the path without creating anything: a missing folder simply has no subfolders.
+                string parentId = "root";
+                foreach (string name in folder.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (await FindFolderAsync(drive, parentId, name, ct) is not { } id)
+                    {
+                        return [];
+                    }
+
+                    parentId = id;
+                }
+
+                var names = new List<string>();
+                string? pageToken = null;
+                do
+                {
+                    FilesResource.ListRequest list = drive.Files.List();
+                    list.Q = $"mimeType = '{FolderMimeType}' and '{parentId}' in parents and trashed = false";
+                    list.Fields = "nextPageToken, files(name)";
+                    list.Spaces = "drive";
+                    list.PageSize = 1000;
+                    list.PageToken = pageToken;
+                    var page = await list.ExecuteAsync(ct);
+                    names.AddRange(page.Files.Select(f => f.Name));
+                    pageToken = page.NextPageToken;
+                }
+                while (pageToken is not null);
+
+                return names.Distinct().OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw await ToStorageExceptionAsync(ex);
+            }
+        }
+
         /// <summary>The ID of a folder the app can see with this name under the parent, or null.</summary>
         private static async Task<string?> FindFolderAsync(DriveService drive, string parentId, string name, CancellationToken ct)
         {

@@ -134,13 +134,22 @@
                     FontSize="11"
                     Foreground="{ThemeResource TextSecondaryBrush}" />
             </StackPanel>
-            <HyperlinkButton
-                x:Uid="SettingsLink"
-                Padding="0"
+            <StackPanel
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Click="SettingsLink_Click"
-                FontSize="11" />
+                Orientation="Horizontal"
+                Spacing="12">
+                <HyperlinkButton
+                    x:Uid="HistoryLink"
+                    Padding="0"
+                    Click="HistoryLink_Click"
+                    FontSize="11" />
+                <HyperlinkButton
+                    x:Uid="SettingsLink"
+                    Padding="0"
+                    Click="SettingsLink_Click"
+                    FontSize="11" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Page>

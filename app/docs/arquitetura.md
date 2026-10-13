@@ -145,6 +145,11 @@ public interface IStorageProvider
 - Site e política (`https://weblucasdev.github.io/BoxeZone/` e `/privacidade/`) estão cadastrados como página inicial e política nos consoles do Google (Branding), da Microsoft (Identidade visual) e do Dropbox (Branding). Mudar o endereço do site exige atualizar os três.
 - `SignInPage`: página mostrada no navegador ao fim do login dos três provedores (logo, uma frase, claro/escuro pelo navegador).
 
+### Histórico e escolher a pasta
+
+- **Histórico** (`HistoryService`, `HistoryViewModel`, `HistoryPage`): cada leva concluída entra no topo de `%LocalAppData%\BoxeZone\history.json` (máximo 50; título = pasta, arquivo ou "N arquivos", serviço, data, link do "Abrir" e os `UploadedItem` que o "Copiar link" compartilha). Gravado à parte e trocado, como o `TokenStore`. O "Copiar link" de lá usa o `ShareLinkService` com a conta conectada agora (outra conta não acha os itens). Página de 440 px como as Configurações; a lista rola a partir de 440 px de altura.
+- **Procurar…** (cartão de cada conta nas Configurações): `ListFoldersAsync(pasta)` lista um nível de cada vez, sem criar nada (pasta que não existe = lista vazia). Google: só as pastas que o app criou (`drive.file`), com aviso na tela; OneDrive: `…/children?$select=name,folder` seguindo o `@odata.nextLink`; Dropbox: `ListFolderAsync` (raiz = "") + `ListFolderContinueAsync`. A raiz não pode ser destino. Os botões das pastas têm `AutomationProperties.Name` (sem ele, leitores de tela e scripts de UI Automation não os acham: o conteúdo é ícone + texto).
+
 ## Preferências (`SettingsService`)
 
 - `%LocalAppData%\BoxeZone\settings.json` (System.Text.Json, camelCase, enums como texto). Grava 500 ms depois da última mudança, via arquivo temporário; "Sair" grava na hora. Arquivo ilegível volta aos padrões. `ApplicationData.Current` não funciona sem pacote.

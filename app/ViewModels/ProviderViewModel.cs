@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -25,14 +26,17 @@ namespace BoxeZone.ViewModels
 
     /// <summary>
     /// A batch of dropped files finished uploading, or stopped at the first failure.
-    /// BatchId: for the notification's "Copiar link"; null on failure.
+    /// BatchId: for the notification's "Copiar link"; null on failure. Summary: the folder or
+    /// file name, or "N arquivos" (the history's title). Items: what "Copiar link" shares.
     /// </summary>
     public sealed record UploadFinishedEventArgs(
         bool Succeeded,
         IReadOnlyList<string> FileNames,
         string? Link,
         string? ErrorMessage,
-        string? BatchId);
+        string? BatchId,
+        string Summary = "",
+        IReadOnlyList<UploadedItem>? Items = null);
 
     /// <summary>
     /// State of one provider: switched on/off, connected, its destination folder and the
@@ -87,6 +91,7 @@ namespace BoxeZone.ViewModels
             FileName = string.Empty;
             ErrorMessage = string.Empty;
             FolderDraft = string.Empty;
+            BrowsePath = "/";
             TargetFolder = settings.TargetFolder;
             CopyLinkLabel = Strings.GetString("CopyLink");
 
@@ -619,7 +624,8 @@ namespace BoxeZone.ViewModels
             string batchId = _shareLinks.Register(Provider, _uploadedItems);
             State = UploadState.Done;
             IReadOnlyList<string> names = singleFolder ? [_doneTitle!] : sent.Select(f => f.FileName).ToList();
-            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, names, _openTarget?.WebUrl, null, batchId));
+            string summary = _doneTitle ?? (sent.Count == 1 ? sent[0].FileName : string.Format(Strings.GetString("UploadFilesFormat"), sent.Count));
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, names, _openTarget?.WebUrl, null, batchId, summary, _uploadedItems));
         }
 
         /// <summary>Retries while the provider reports no network ("Aguardando conexão…"), without limit.</summary>
@@ -777,6 +783,7 @@ namespace BoxeZone.ViewModels
         [RelayCommand]
         private void EditFolder()
         {
+            IsBrowsingFolders = false;
             FolderDraft = TargetFolder;
             FolderError = null;
             IsEditingFolder = true;
@@ -808,6 +815,116 @@ namespace BoxeZone.ViewModels
         {
             FolderError = null;
             IsEditingFolder = false;
+            IsBrowsingFolders = false;
+        }
+
+        /// <summary>Settings: browsing the provider's folders to pick the destination ("Procurar…").</summary>
+        [ObservableProperty]
+        public partial bool IsBrowsingFolders { get; set; }
+
+        /// <summary>The folder being shown while browsing, like "/BoxeZone/Fotos" ("/" is the root).</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanBrowseUp))]
+        public partial string BrowsePath { get; set; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BrowseMessage), nameof(HasBrowseMessage))]
+        public partial bool IsBrowseLoading { get; set; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BrowseMessage), nameof(HasBrowseMessage))]
+        public partial string? BrowseError { get; set; }
+
+        public ObservableCollection<string> BrowseFolders { get; } = [];
+
+        public bool CanBrowseUp => BrowsePath != "/";
+
+        /// <summary>"Carregando…", the reason it failed, or "Nenhuma pasta aqui".</summary>
+        public string? BrowseMessage =>
+            IsBrowseLoading ? Strings.GetString("BrowseLoading")
+            : BrowseError ?? (BrowseFolders.Count == 0 ? Strings.GetString("BrowseEmpty") : null);
+
+        public bool HasBrowseMessage => BrowseMessage is not null;
+
+        /// <summary>Google Drive only shows the folders the app created (drive.file).</summary>
+        public bool ShowsOnlyAppFolders => Id == "gdrive";
+
+        // A newer listing replaces an older one still in flight.
+        private int _browseVersion;
+
+        [RelayCommand]
+        private async Task BrowseFoldersAsync()
+        {
+            IsEditingFolder = false;
+            FolderError = null;
+            IsBrowsingFolders = true;
+            await ShowFolderAsync(TargetFolder);
+        }
+
+        [RelayCommand]
+        private Task OpenBrowseFolderAsync(string name) => ShowFolderAsync(BrowsePath.TrimEnd('/') + "/" + name);
+
+        [RelayCommand]
+        private Task BrowseUpAsync()
+        {
+            int slash = BrowsePath.TrimEnd('/').LastIndexOf('/');
+            return ShowFolderAsync(slash <= 0 ? "/" : BrowsePath[..slash]);
+        }
+
+        [RelayCommand]
+        private void UseBrowsedFolder()
+        {
+            if (BrowsePath == "/")
+            {
+                // The destination must be a folder, not the root (same rule as typing it).
+                FolderError = Strings.GetString("FolderInvalid");
+                return;
+            }
+
+            TargetFolder = BrowsePath;
+            _settings.TargetFolder = TargetFolder;
+            _save();
+            FolderError = null;
+            IsBrowsingFolders = false;
+        }
+
+        private async Task ShowFolderAsync(string path)
+        {
+            int version = ++_browseVersion;
+            BrowsePath = "/" + string.Join('/', path.Split('/', StringSplitOptions.RemoveEmptyEntries));
+            BrowseFolders.Clear();
+            BrowseError = null;
+            IsBrowseLoading = true;
+            try
+            {
+                IReadOnlyList<string> folders = await Provider.ListFoldersAsync(BrowsePath, CancellationToken.None);
+                if (version != _browseVersion)
+                {
+                    return;
+                }
+
+                foreach (string folder in folders)
+                {
+                    BrowseFolders.Add(folder);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (version == _browseVersion)
+                {
+                    BrowseError = DescribeError(ex);
+                    RefreshConnection();
+                }
+            }
+            finally
+            {
+                if (version == _browseVersion)
+                {
+                    IsBrowseLoading = false;
+                    OnPropertyChanged(nameof(BrowseMessage));
+                    OnPropertyChanged(nameof(HasBrowseMessage));
+                }
+            }
         }
 
         partial void OnIsEnabledChanged(bool value)

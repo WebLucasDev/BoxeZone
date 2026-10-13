@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,6 +40,12 @@ namespace BoxeZone.Services.Storage
         /// The item carries the real name; Id and WebUrl point to the folder.
         /// </summary>
         Task<UploadedItem> CreateFolderAsync(string parentFolder, string name, CancellationToken ct);
+
+        /// <summary>
+        /// Names of the folders directly inside <paramref name="folder"/> ("/" is the root), sorted.
+        /// A folder that does not exist has none. Google lists only folders the app created (drive.file).
+        /// </summary>
+        Task<IReadOnlyList<string>> ListFoldersAsync(string folder, CancellationToken ct);
 
         /// <summary>Makes the file readable by anyone with the link and returns that link.</summary>
         Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);

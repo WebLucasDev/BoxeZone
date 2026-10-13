@@ -36,9 +36,14 @@ namespace BoxeZone.ViewModels
             {
                 provider.PropertyChanged += Provider_PropertyChanged;
             }
+
+            History = new HistoryViewModel(new HistoryService(), shareLinks, Providers);
         }
 
         public SettingsViewModel Settings { get; }
+
+        /// <summary>The "Histórico" page.</summary>
+        public HistoryViewModel History { get; }
 
         public IReadOnlyList<ProviderViewModel> Providers { get; }
 

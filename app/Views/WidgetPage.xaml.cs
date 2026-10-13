@@ -30,6 +30,9 @@ namespace BoxeZone.Views
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => App.DockService?.Hide();
 
+        private void HistoryLink_Click(object sender, RoutedEventArgs e) =>
+            Frame.Navigate(typeof(HistoryPage), ViewModel, new SuppressNavigationTransitionInfo());
+
         private void SettingsLink_Click(object sender, RoutedEventArgs e) =>
             Frame.Navigate(typeof(SettingsPage), ViewModel, new SuppressNavigationTransitionInfo());
     }
