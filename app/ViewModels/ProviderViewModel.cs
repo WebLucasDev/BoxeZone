@@ -47,6 +47,14 @@ namespace BoxeZone.ViewModels
         private readonly Action _save;
         private CancellationTokenSource? _connectCts;
         private CancellationTokenSource? _uploadCts;
+
+        // The batch being sent; files dropped while uploading join it. Each file weighs its
+        // size (at least 1, so empty files still count) in the total progress.
+        private readonly List<StorageFile> _batch = [];
+        private readonly List<ulong> _weights = [];
+        private ulong _totalWeight;
+        private ulong _sentWeight;
+
         private List<StorageFile> _failedFiles = [];
         private string? _uploadedLink;
         private bool _isRestoring;
@@ -98,10 +106,19 @@ namespace BoxeZone.ViewModels
         [NotifyPropertyChangedFor(nameof(Status), nameof(IsIdle), nameof(IsUploading), nameof(IsDone), nameof(IsFailed))]
         public partial UploadState State { get; set; }
 
-        /// <summary>Upload progress, 0 to 100.</summary>
+        /// <summary>Progress of the whole batch, 0 to 100.</summary>
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ProgressLabel))]
         public partial double Progress { get; set; }
+
+        /// <summary>Position of the file being sent in the batch, from 1.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CountLabel))]
+        public partial int FileIndex { get; set; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CountLabel), nameof(IsBatch), nameof(DoneLabel))]
+        public partial int FileCount { get; set; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(DoneLabel), nameof(FailedLabel))]
@@ -136,7 +153,14 @@ namespace BoxeZone.ViewModels
 
         public string ProgressLabel => $"{Progress:0}%";
 
-        public string DoneLabel => string.Format(Strings.GetString("UploadDoneFormat"), FileName);
+        /// <summary>Two or more files: the drop zone shows "3 de 10".</summary>
+        public bool IsBatch => FileCount > 1;
+
+        public string CountLabel => string.Format(Strings.GetString("UploadCountFormat"), FileIndex, FileCount);
+
+        public string DoneLabel => string.Format(
+            Strings.GetString("UploadDoneFormat"),
+            IsBatch ? string.Format(Strings.GetString("UploadFilesFormat"), FileCount) : FileName);
 
         public string FailedLabel => string.Format(Strings.GetString("UploadFailedFormat"), FileName);
 
@@ -182,27 +206,61 @@ namespace BoxeZone.ViewModels
             }
         }
 
+        /// <summary>
+        /// Sends the files one at a time. While a batch is uploading, new files join it
+        /// ("3 de 10" grows to "3 de 12") instead of starting another one.
+        /// </summary>
         public async Task UploadFilesAsync(IReadOnlyList<StorageFile> files)
         {
-            if (IsUploading || files.Count == 0)
+            if (files.Count == 0)
             {
                 return;
             }
 
+            // Sizes first: from here on nothing awaits until the files are queued, so a batch
+            // finishing in the meantime cannot leave them behind.
+            ulong[] sizes = await GetSizesAsync(files);
+            if (IsUploading)
+            {
+                AddToBatch(files, sizes);
+                return;
+            }
+
+            _batch.Clear();
+            _weights.Clear();
+            _totalWeight = 0;
+            _sentWeight = 0;
+            AddToBatch(files, sizes);
+
             using var cts = new CancellationTokenSource();
             _uploadCts = cts;
-            for (int i = 0; i < files.Count; i++)
+
+            // _batch can grow while a file is uploading: Count is read again on every pass.
+            for (int i = 0; i < _batch.Count; i++)
             {
-                StorageFile file = files[i];
+                StorageFile file = _batch[i];
+                int index = i + 1;
+                ulong weight = _weights[i];
+                ulong sentBefore = _sentWeight;
+                FileIndex = index;
                 FileName = file.Name;
-                Progress = 0;
+                Progress = 100.0 * sentBefore / _totalWeight;
                 State = UploadState.Uploading;
 
                 try
                 {
-                    // Progress<T> reports on the UI thread (it captures the DispatcherQueue context).
-                    var progress = new Progress<double>(value => Progress = value);
+                    // Progress<T> reports on the UI thread (it captures the DispatcherQueue context),
+                    // but posted: a file's last report can arrive after the next file started.
+                    // _totalWeight is read on each report, as files can still join the batch.
+                    var progress = new Progress<double>(value =>
+                    {
+                        if (FileIndex == index && IsUploading)
+                        {
+                            Progress = 100.0 * (sentBefore + weight * value / 100) / _totalWeight;
+                        }
+                    });
                     _uploadedLink = await Provider.UploadAsync(file, TargetFolder, progress, cts.Token);
+                    _sentWeight += weight;
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
                 {
@@ -219,7 +277,7 @@ namespace BoxeZone.ViewModels
                 {
                     _uploadCts = null;
                     // A failed upload only affects this provider's drop zone.
-                    _failedFiles = files.Skip(i).ToList();
+                    _failedFiles = _batch.Skip(i).ToList();
                     ErrorMessage = DescribeError(ex);
                     State = UploadState.Failed;
                     RefreshConnection();
@@ -231,8 +289,35 @@ namespace BoxeZone.ViewModels
             _uploadCts = null;
             _failedFiles = [];
             State = UploadState.Done;
-            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, files.Select(f => f.Name).ToList(), _uploadedLink, null));
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, _batch.Select(f => f.Name).ToList(), _uploadedLink, null));
         }
+
+        private void AddToBatch(IReadOnlyList<StorageFile> files, ulong[] sizes)
+        {
+            for (int i = 0; i < files.Count; i++)
+            {
+                ulong weight = Math.Max(sizes[i], 1);
+                _batch.Add(files[i]);
+                _weights.Add(weight);
+                _totalWeight += weight;
+            }
+
+            FileCount = _batch.Count;
+        }
+
+        private static Task<ulong[]> GetSizesAsync(IReadOnlyList<StorageFile> files) =>
+            Task.WhenAll(files.Select(async file =>
+            {
+                try
+                {
+                    return (await file.GetBasicPropertiesAsync()).Size;
+                }
+                catch (Exception)
+                {
+                    // Unreadable now: it weighs like an empty file, and its upload reports the real error.
+                    return 0UL;
+                }
+            }));
 
         [RelayCommand]
         private async Task RetryAsync()

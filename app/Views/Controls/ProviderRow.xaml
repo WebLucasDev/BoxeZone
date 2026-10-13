@@ -151,8 +151,10 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Viewbox
+                            x:Name="UploadIcon"
                             Width="14"
                             Height="14"
                             VerticalAlignment="Center">
@@ -168,16 +170,25 @@
                             Grid.Column="1"
                             FontSize="12"
                             Text="{x:Bind ViewModel.FileName, Mode=OneWay}"
-                            TextTrimming="CharacterEllipsis" />
+                            TextTrimming="CharacterEllipsis"
+                            Visibility="{x:Bind FileNameVisibility(IsCompact, ViewModel.IsBatch), Mode=OneWay}" />
                         <TextBlock
+                            x:Name="UploadCount"
                             Grid.Column="2"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            Text="{x:Bind ViewModel.CountLabel, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.IsBatch, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="3"
                             VerticalAlignment="Center"
                             FontSize="12"
                             Foreground="{ThemeResource TextSecondaryBrush}"
                             Text="{x:Bind ViewModel.ProgressLabel, Mode=OneWay}" />
                         <HyperlinkButton
                             x:Uid="CancelUploadLink"
-                            Grid.Column="3"
+                            Grid.Column="4"
                             Padding="0"
                             VerticalAlignment="Center"
                             Command="{x:Bind ViewModel.CancelUploadCommand, Mode=OneWay}"

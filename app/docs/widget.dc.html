@@ -96,6 +96,9 @@ a{color:#9fd8ff}a:hover{color:#cfeaff}
 <div style="display: flex; align-items: center; gap: 8px; font-size: 12px">
 <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 1.5h5l3 3v10H4z"></path><path d="M9 1.5v3h3"></path></svg>
 <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{p.fileName}}</span>
+<sc-if value="{{p.batch}}" hint-placeholder-val="{{ false }}">
+<span style="color: #b3bcc8">{{p.countLabel}}</span>
+</sc-if>
 <span style="color: #b3bcc8">{{p.pctLabel}}</span>
 <span style="color: #b3bcc8">Cancelar</span>
 </div>
@@ -151,8 +154,10 @@ class Component extends DCLogic {
     var cur = this.state.up[id];
     if (cur && cur.pct < 100) return;
     var files = { drive: 'apresentacao-q3.pptx', onedrive: 'planilha-custos.xlsx', dropbox: 'fotos-evento.zip' };
+    // Dropbox simulates a batch of 3 files: "x de 3", one bar for the whole batch, "Enviado · 3 arquivos".
+    var counts = { drive: 1, onedrive: 1, dropbox: 3 };
     var up = Object.assign({}, this.state.up);
-    up[id] = { pct: 0, file: files[id] };
+    up[id] = { pct: 0, file: files[id], count: counts[id] };
     this.setState({ up: up });
     clearInterval(this._timers[id]);
     this._timers[id] = setInterval(function () {
@@ -160,7 +165,7 @@ class Component extends DCLogic {
       if (!u) { clearInterval(self._timers[id]); return; }
       var next = Math.min(100, u.pct + 4 + Math.round(Math.random() * 6));
       var nu = Object.assign({}, self.state.up);
-      nu[id] = { pct: next, file: u.file };
+      nu[id] = { pct: next, file: u.file, count: u.count };
       self.setState({ up: nu });
       if (next >= 100) clearInterval(self._timers[id]);
     }, 90);
@@ -183,7 +188,9 @@ class Component extends DCLogic {
       return {
         id: p.id, name: p.name, initial: p.initial, on: isOn,
         idle: !u, uploading: uploading, done: done,
-        fileName: u ? u.file : '',
+        fileName: u ? (done && u.count > 1 ? u.count + ' arquivos' : u.file) : '',
+        batch: !!(u && u.count > 1),
+        countLabel: u ? Math.min(u.count, 1 + Math.floor(u.pct * u.count / 100)) + ' de ' + u.count : '',
         pctLabel: u ? u.pct + '%' : '',
         pctWidth: u ? u.pct + '%' : '0%',
         status: !isOn ? 'Desligado' : (uploading ? 'Enviando…' : 'Pronto'),

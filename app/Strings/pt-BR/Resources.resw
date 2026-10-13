@@ -150,6 +150,14 @@
   <data name="CancelUploadLink.Content" xml:space="preserve">
     <value>Cancelar</value>
   </data>
+  <data name="UploadCountFormat" xml:space="preserve">
+    <value>{0} de {1}</value>
+    <comment>{0} = file being sent, {1} = files in the batch (2 or more).</comment>
+  </data>
+  <data name="UploadFilesFormat" xml:space="preserve">
+    <value>{0} arquivos</value>
+    <comment>{0} = number of files sent (2 or more).</comment>
+  </data>
   <data name="FooterHotkeyHint.Text" xml:space="preserve">
     <value>abre e fecha</value>
   </data>

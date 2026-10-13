@@ -68,9 +68,17 @@ namespace BoxeZone.Views.Controls
             DropZone.Margin = compact ? new Thickness(0) : new Thickness(8, 0, 8, 8);
             DropZone.MinHeight = compact ? 56 : 64;
             IdleIcon.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+            // 200 px wide: no room for the file icon, and in a batch "3 de 10" takes the
+            // file name's place (see FileNameVisibility).
+            UploadIcon.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+            Grid.SetColumn(UploadCount, compact ? 1 : 2);
             IdleText.FontSize = compact ? 11 : 12;
             IdleText.Text = compact ? ViewModel?.Name ?? string.Empty : _dropHint;
         }
+
+        /// <summary>The compact panel shows either the file name or, in a batch, "3 de 10".</summary>
+        private Visibility FileNameVisibility(bool compact, bool batch) =>
+            compact && batch ? Visibility.Collapsed : Visibility.Visible;
 
         /// <summary>Fade in and slide down 4 px when the zone appears (prototype "dzIn", 180 ms ease-out).</summary>
         private void SetDropZoneShowAnimation()
