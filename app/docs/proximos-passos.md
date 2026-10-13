@@ -10,13 +10,12 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). 2FA ativado no GitHub e pedido enviado em signpath.org (13/10/2026); aguardando a resposta por e-mail. Aprovado: criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
-- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável (feito, v1.2.0); 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (depois da assinatura, para conferir a assinatura do instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável (feito, v1.2.0); 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
-- [ ] **Assinatura de código**: em andamento (ver acima).
-- [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima).
+- [ ] **Assinatura de código**: o programa gratuito da SignPath Foundation **recusou** o pedido em 13/10/2026 (o projeto ainda não tem sinais públicos suficientes: estrelas, forks, menções, artigos); dá para pedir de novo quando o projeto ganhar visibilidade. Decisão do usuário: seguir sem assinatura por enquanto. Alternativas pagas, se um dia valer a pena: certificado de código aberto da Certum (barato, pessoa física), SignPath paga ou certificado comercial (caros). Nenhum tira o aviso do SmartScreen na hora: a reputação vem com os downloads, mas com certificado ela passa de uma versão para a outra. O que ficou da candidatura (licença MIT, opção "Verificar versões novas", resumo de privacidade no instalador) continua valendo.
+- [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima). Sem assinatura, a conferência do instalador baixado é pelo SHA256 publicado na Release.
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
 ## Contas e provedores

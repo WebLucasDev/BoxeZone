@@ -18,13 +18,13 @@ Widget gratuito para Windows 10 e 11: arraste arquivos para o canto da tela e el
 
 O app não coleta dados. O acesso às contas fica só no seu computador, criptografado pelo Windows. Detalhes na [política de privacidade](https://weblucasdev.github.io/BoxeZone/privacidade/).
 
-## Code signing policy
+## Instalador
 
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Ver a [política de assinatura](https://weblucasdev.github.io/BoxeZone/#code-signing-policy) no site.
+O instalador ainda não tem assinatura digital: na primeira vez, o Windows mostra "O Windows protegeu o computador" (clique em Mais informações e depois em Executar assim mesmo). Cada versão é compilada pelo GitHub Actions a partir deste repositório e publicada nas [Releases](https://github.com/WebLucasDev/BoxeZone/releases).
 
 ## Compilar
 
-Requisitos: Windows 10/11, .NET 10 SDK e, para o instalador, Inno Setup 6.3+.
+Requisitos: Windows 10/11, .NET 10 SDK e, para o instalador, Inno Setup 6.5.2+.
 
 ```powershell
 dotnet build app/BoxeZone.csproj -c Debug -p:Platform=x64

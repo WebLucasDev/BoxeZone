@@ -718,7 +718,7 @@ img {
   color: var(--muted);
 }
 
-/* Code signing policy */
+/* About the installer */
 
 .policy > p {
   max-width: var(--measure);
