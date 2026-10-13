@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; em andamento, design em `app/docs/specs/2026-10-13-pastas-e-retomar-design.md`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
@@ -28,9 +28,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Envio
 
-- [ ] **Enviar pastas** (hoje pastas soltas são ignoradas): recriar a estrutura no destino.
 - [ ] **Escolher a pasta de destino navegando** (possível no OneDrive e no Dropbox; no Drive o escopo `drive.file` só enxerga pastas criadas pelo app).
-- [ ] **Retomar envios grandes** depois de queda de rede ou de fechar o app (as sessões de upload dos três provedores permitem).
 
 ## Interface
 
@@ -93,3 +91,4 @@ Depois da versão 1:
 | Arrumação: imagens do instalador com a luva, Inno Setup fixo no CI, `publish` limpo, `.gitattributes`, ajustes da revisão da 1.0.0 | `58c5b7f` |
 | "Copiar link": link "qualquer um com o link" no clique, um por linha numa leva, na área de drop e na notificação (design e plano no histórico do git, commit `749749e`) | `0cbe542`, `646df8f`, `5171528`, `e55cff6` |
 | **Versão 1.2.0 publicada** (arrumação + "Copiar link"; testada antes como `v1.2.0-rc.1`, a primeira com o Inno Setup fixo no CI) | tag `v1.2.0` |
+| Enviar pastas (pasta inteira, "(1)" se o nome existir, ocultos de fora) e retomar envios (depois de fechar o app e sem internet, "Aguardando conexão…") | `64dce3e`, `c2e692b`, `345df36` |

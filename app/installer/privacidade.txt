@@ -3,7 +3,7 @@
 O Boxe Zone não tem servidor e não coleta dados.
 
 - Os arquivos que você solta no widget vão do seu computador direto para o Google Drive, o OneDrive ou o Dropbox, na conta que você conectar.
-- O acesso a essas contas fica guardado só neste computador, criptografado pelo Windows.
+- O acesso a essas contas e o andamento de envios não terminados ficam guardados só neste computador, criptografados pelo Windows.
 - Uma vez por dia, o app consulta a página pública de versões do projeto no GitHub para saber se há versão nova. Nenhum dado seu é enviado: o GitHub recebe só o que qualquer acesso a um site recebe, como o endereço IP. Você pode desligar essa consulta na próxima tela ou depois, em Configurações > Verificar versões novas.
 
 Política completa: https://weblucasdev.github.io/BoxeZone/privacidade/
