@@ -1,6 +1,7 @@
 using System;
 using BoxeZone.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace BoxeZone.ViewModels
@@ -26,6 +27,8 @@ namespace BoxeZone.ViewModels
             NotifyOnComplete = settings.NotifyOnComplete;
             CheckForUpdates = settings.CheckForUpdates;
             Theme = settings.Theme;
+            Language = settings.Language;
+            _languageAtStart = settings.Language;
             HotkeyText = HotkeyService.Format(settings.Hotkey.Modifiers, settings.Hotkey.Key);
         }
 
@@ -50,6 +53,33 @@ namespace BoxeZone.ViewModels
         [NotifyPropertyChangedFor(nameof(IsSystemTheme), nameof(IsLightTheme), nameof(IsDarkTheme))]
         public partial AppTheme Theme { get; set; }
 
+        /// <summary>Saved at once; the interface only changes after a restart ("Reiniciar").</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsSystemLanguage), nameof(IsPortugueseLanguage), nameof(IsEnglishLanguage), nameof(LanguageNeedsRestart))]
+        public partial AppLanguage Language { get; set; }
+
+        private readonly AppLanguage _languageAtStart;
+
+        public bool LanguageNeedsRestart => Language != _languageAtStart;
+
+        public bool IsSystemLanguage
+        {
+            get => Language == AppLanguage.System;
+            set { if (value) Language = AppLanguage.System; }
+        }
+
+        public bool IsPortugueseLanguage
+        {
+            get => Language == AppLanguage.Portuguese;
+            set { if (value) Language = AppLanguage.Portuguese; }
+        }
+
+        public bool IsEnglishLanguage
+        {
+            get => Language == AppLanguage.English;
+            set { if (value) Language = AppLanguage.English; }
+        }
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HotkeyBadgeText))]
         public partial string HotkeyText { get; set; }
@@ -72,10 +102,27 @@ namespace BoxeZone.ViewModels
         [ObservableProperty]
         public partial Uri? UpdateUri { get; set; }
 
-        public void ShowUpdate(UpdateInfo update)
+        private bool _updateReady;
+
+        /// <summary>"Atualizar para a 1.4.0" once the installer is downloaded and checked; "Baixar a 1.4.0" (the release page) otherwise.</summary>
+        public void ShowUpdate(UpdateInfo update, bool ready)
         {
+            _updateReady = ready;
             UpdateUri = new Uri(update.Url);
-            UpdateText = string.Format(_strings.GetString("UpdateDownloadFormat"), update.Version.ToString(3));
+            UpdateText = string.Format(_strings.GetString(ready ? "UpdateInstallFormat" : "UpdateDownloadFormat"), update.Version.ToString(3));
+        }
+
+        [RelayCommand]
+        private void Update()
+        {
+            if (_updateReady)
+            {
+                App.InstallUpdate();
+            }
+            else if (UpdateUri is not null)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(UpdateUri.AbsoluteUri) { UseShellExecute = true });
+            }
         }
 
         /// <summary>Why the last shortcut could not be used (taken by another app, no modifier...).</summary>
@@ -161,6 +208,11 @@ namespace BoxeZone.ViewModels
         partial void OnCheckForUpdatesChanged(bool value) => Persist(() => Settings.CheckForUpdates = value);
 
         partial void OnThemeChanged(AppTheme value) => Persist(() => Settings.Theme = value);
+
+        partial void OnLanguageChanged(AppLanguage value) => Persist(() => Settings.Language = value);
+
+        [RelayCommand]
+        private void RestartForLanguage() => App.Restart();
 
         private void Persist(System.Action apply)
         {

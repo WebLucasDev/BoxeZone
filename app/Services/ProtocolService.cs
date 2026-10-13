@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using Microsoft.Windows.AppLifecycle;
@@ -16,6 +16,9 @@ namespace BoxeZone.Services
     {
         public const string Scheme = "boxezone";
         public const string OpenWidgetUri = Scheme + ":open";
+
+        /// <summary>The update notification's "Atualizar": installs the downloaded version.</summary>
+        public const string UpdateUri = Scheme + ":update";
 
         private static readonly Regex CopyLinkPattern = new(@"boxezone:copy-link\?batch=([0-9a-fA-F]{32})");
 

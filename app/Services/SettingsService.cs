@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -12,6 +12,14 @@ namespace BoxeZone.Services
         System,
         Light,
         Dark,
+    }
+
+    /// <summary>System: Portuguese when Windows is in Portuguese, English otherwise.</summary>
+    public enum AppLanguage
+    {
+        System,
+        Portuguese,
+        English,
     }
 
     public sealed class ProviderSettings
@@ -61,6 +69,9 @@ namespace BoxeZone.Services
 
         public AppTheme Theme { get; set; } = AppTheme.System;
 
+        /// <summary>Applied at start (LanguageService); a change waits for a restart.</summary>
+        public AppLanguage Language { get; set; } = AppLanguage.System;
+
         /// <summary>Null until the widget has been placed once (first run starts in the default corner).</summary>
         public WindowSettings? Window { get; set; }
 
@@ -74,6 +85,9 @@ namespace BoxeZone.Services
         public string? LatestVersion { get; set; }
 
         public string? LatestUrl { get; set; }
+
+        /// <summary>The release's tag ("v1.4.0"): where its installer and SHA256SUMS.txt are downloaded from.</summary>
+        public string? LatestTag { get; set; }
 
         /// <summary>Version already announced by notification, so each one is announced once.</summary>
         public string? NotifiedVersion { get; set; }

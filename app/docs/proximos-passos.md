@@ -10,12 +10,11 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando; feito); **3. acabamento** (inglês e seleção de idioma + atualização automática, que confere o SHA256 publicado junto da versão antes de rodar o instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando; feito); **3. acabamento** (inglês e seleção de idioma + atualização automática; feito). As três rodadas saem juntas, testadas numa versão de teste só. Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
 - [ ] **Assinatura de código**: o programa gratuito da SignPath Foundation **recusou** o pedido em 13/10/2026 (o projeto ainda não tem sinais públicos suficientes: estrelas, forks, menções, artigos); dá para pedir de novo quando o projeto ganhar visibilidade. Decisão do usuário: seguir sem assinatura por enquanto. Alternativas pagas, se um dia valer a pena: certificado de código aberto da Certum (barato, pessoa física), SignPath paga ou certificado comercial (caros). Nenhum tira o aviso do SmartScreen na hora: a reputação vem com os downloads, mas com certificado ela passa de uma versão para a outra. O que ficou da candidatura (licença MIT, opção "Verificar versões novas", resumo de privacidade no instalador) continua valendo.
-- [ ] **Atualização automática** (hoje o app só avisa a versão nova; instalar é baixar e rodar o instalador por cima). Sem assinatura, a conferência do instalador baixado é pelo SHA256 publicado na Release.
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
 ## Contas e provedores
@@ -33,7 +32,6 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 - [ ] **Brilho na faixa recolhida**, como no protótipo (`box-shadow` azul); a janela nativa hoje só tem a sombra padrão.
 - [ ] **Dicas (tooltips)** na aba e na faixa, sem cortar dentro de janelas tão finas.
-- [ ] **Inglês** (`Strings/en-US/Resources.resw`) e seleção de idioma.
 
 ## Qualidade
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -136,6 +136,31 @@
   </data>
   <data name="ErrorQuotaExceeded" xml:space="preserve">
     <value>Sem espaço na conta</value>
+  </data>
+  <data name="LanguageTitle.Text" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="LanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="LanguageSystem.Content" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="LanguagePortuguese.Content" xml:space="preserve">
+    <value>Português</value>
+  </data>
+  <data name="LanguageEnglish.Content" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageRestartHint.Text" xml:space="preserve">
+    <value>Reinicie o Boxe Zone para mudar o idioma.</value>
+  </data>
+  <data name="LanguageRestartButton.Content" xml:space="preserve">
+    <value>Reiniciar</value>
+  </data>
+  <data name="HistoryDateFormat" xml:space="preserve">
+    <value>{0:dd/MM}, {1}</value>
+    <comment>{0} = date, {1} = time. Older than yesterday.</comment>
   </data>
   <data name="HistoryLink.Content" xml:space="preserve">
     <value>Histórico</value>
@@ -405,5 +430,14 @@
   </data>
   <data name="TrayExit" xml:space="preserve">
     <value>Sair</value>
+  </data>
+  <data name="UpdateInstallFormat" xml:space="preserve">
+    <value>Atualizar para a {0}</value>
+  </data>
+  <data name="NotificationUpdateReadyFormat" xml:space="preserve">
+    <value>A versão {0} está pronta para instalar.</value>
+  </data>
+  <data name="NotificationUpdateInstall" xml:space="preserve">
+    <value>Atualizar</value>
   </data>
 </root>

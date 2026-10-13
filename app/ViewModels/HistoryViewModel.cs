@@ -123,7 +123,7 @@ namespace BoxeZone.ViewModels
                 string time = when.ToString("HH:mm");
                 return when.Date == DateTime.Today ? string.Format(Strings.GetString("HistoryTodayFormat"), time)
                     : when.Date == DateTime.Today.AddDays(-1) ? string.Format(Strings.GetString("HistoryYesterdayFormat"), time)
-                    : $"{when:dd/MM}, {time}";
+                    : string.Format(Strings.GetString("HistoryDateFormat"), when, time);
             }
         }
 

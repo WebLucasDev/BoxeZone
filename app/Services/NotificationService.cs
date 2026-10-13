@@ -78,6 +78,14 @@ namespace BoxeZone.Services
                 url,
                 [(_strings.GetString("NotificationUpdateDownload"), url)]);
 
+        /// <summary>The new version is downloaded and checked: "Atualizar" installs it (boxezone:update).</summary>
+        public void ShowUpdateReady(string version) =>
+            Show(
+                _strings.GetString("NotificationUpdateTitle"),
+                string.Format(_strings.GetString("NotificationUpdateReadyFormat"), version),
+                ProtocolService.OpenWidgetUri,
+                [(_strings.GetString("NotificationUpdateInstall"), ProtocolService.UpdateUri)]);
+
         /// <summary>Feedback for the notification's "Copiar link": silent and short-lived.</summary>
         public void ShowLinkCopied(IReadOnlyList<string> fileNames) =>
             Show(_strings.GetString("NotificationLinkCopied"), Summarize(fileNames), ProtocolService.OpenWidgetUri, [], silent: true, lifetime: TimeSpan.FromMinutes(1));

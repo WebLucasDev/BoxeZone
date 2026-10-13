@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Win32;
@@ -27,6 +32,9 @@ namespace BoxeZone.Services
         /// </summary>
         public static TimeSpan PollInterval { get; } = TimeSpan.FromHours(1);
         private static readonly HttpClient Http = CreateClient();
+
+        // The installer is ~60 MB: the 10 s limit of the API client is far too short for it.
+        private static readonly HttpClient Downloads = CreateDownloadClient();
 
         private readonly SettingsService _settingsService;
 
@@ -94,6 +102,7 @@ namespace BoxeZone.Services
                         {
                             settings.LatestVersion = version.ToString(3);
                             settings.LatestUrl = url;
+                            settings.LatestTag = tag;
                         }
                     }
 
@@ -114,6 +123,98 @@ namespace BoxeZone.Services
                 && settings.LatestUrl is not null
                 ? new UpdateInfo(Normalize(latest), settings.LatestUrl)
                 : null;
+        }
+
+        /// <summary>
+        /// Downloads the new version's installer for this machine (x64 or ARM64) into
+        /// %LocalAppData%\BoxeZone\updates and checks it against the SHA256SUMS.txt published in
+        /// the same release. Returns its path when it is ready to run; null when it cannot be
+        /// verified (no checksums in that release, download failed, hash differs).
+        /// </summary>
+        public async Task<string?> PrepareAsync(UpdateInfo update)
+        {
+            if (!_settingsService.Settings.CheckForUpdates)
+            {
+                return null;
+            }
+
+            string version = update.Version.ToString(3);
+            string arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
+            string assetName = $"BoxeZone-Setup-{arch}.exe";
+            string tag = _settingsService.Settings.LatestTag ?? $"v{version}";
+            string releaseBase = $"https://github.com/WebLucasDev/BoxeZone/releases/download/{tag}/";
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BoxeZone", "updates");
+            string path = Path.Combine(folder, $"BoxeZone-Setup-{version}-{arch}.exe");
+
+            try
+            {
+                string sums = await Downloads.GetStringAsync(releaseBase + "SHA256SUMS.txt");
+                string? expected = sums.Split('\n')
+                    .Select(line => line.Trim().Split("  "))
+                    .FirstOrDefault(parts => parts.Length == 2 && parts[1] == assetName)?[0];
+                if (expected is null)
+                {
+                    return null;
+                }
+
+                if (File.Exists(path) && await HashOfAsync(path) == expected)
+                {
+                    return path;
+                }
+
+                Directory.CreateDirectory(folder);
+                foreach (string old in Directory.EnumerateFiles(folder))
+                {
+                    TryDelete(old);
+                }
+
+                string partial = path + ".part";
+                using (HttpResponseMessage response = await Downloads.GetAsync(releaseBase + assetName, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+                    await using FileStream file = File.Create(partial);
+                    await response.Content.CopyToAsync(file);
+                }
+
+                if (await HashOfAsync(partial) != expected)
+                {
+                    // Corrupted or not the published file: never run it.
+                    TryDelete(partial);
+                    return null;
+                }
+
+                File.Move(partial, path, overwrite: true);
+                return path;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException)
+            {
+                // Offline or no checksums in this release: the "Baixar" link still works.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Runs the downloaded installer silently. It closes BoxeZone itself (taskkill), installs
+        /// over it and opens it again (the [Run] entry for silent installs).
+        /// </summary>
+        public static void Install(string installerPath) =>
+            Process.Start(new ProcessStartInfo(installerPath, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-") { UseShellExecute = false });
+
+        private static async Task<string> HashOfAsync(string path)
+        {
+            await using FileStream file = File.OpenRead(path);
+            return Convert.ToHexStringLower(await SHA256.HashDataAsync(file));
+        }
+
+        private static void TryDelete(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
         }
 
         /// <summary>"v1.2.0", "1.2" or "v1.2.0-rc.1" -> 1.2.0. False for anything else.</summary>
@@ -143,6 +244,13 @@ namespace BoxeZone.Services
             var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("BoxeZone");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            return client;
+        }
+
+        private static HttpClient CreateDownloadClient()
+        {
+            var client = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("BoxeZone");
             return client;
         }
     }

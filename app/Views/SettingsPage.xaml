@@ -288,6 +288,68 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Uid="LanguageTitle"
+                                VerticalAlignment="Center"
+                                FontSize="13" />
+                            <Border
+                                Grid.Column="1"
+                                Padding="2"
+                                Background="{ThemeResource SegmentTrackBrush}"
+                                CornerRadius="6">
+                                <StackPanel
+                                    x:Uid="LanguageSelector"
+                                    Orientation="Horizontal"
+                                    Spacing="2">
+                                    <RadioButton
+                                        x:Uid="LanguageSystem"
+                                        GroupName="Language"
+                                        IsChecked="{x:Bind ViewModel.Settings.IsSystemLanguage, Mode=TwoWay}"
+                                        Style="{StaticResource SegmentRadioButtonStyle}" />
+                                    <RadioButton
+                                        x:Uid="LanguagePortuguese"
+                                        GroupName="Language"
+                                        IsChecked="{x:Bind ViewModel.Settings.IsPortugueseLanguage, Mode=TwoWay}"
+                                        Style="{StaticResource SegmentRadioButtonStyle}" />
+                                    <RadioButton
+                                        x:Uid="LanguageEnglish"
+                                        GroupName="Language"
+                                        IsChecked="{x:Bind ViewModel.Settings.IsEnglishLanguage, Mode=TwoWay}"
+                                        Style="{StaticResource SegmentRadioButtonStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <!-- The language applies at start: offer the restart right here. -->
+                        <Grid
+                            Padding="12,0,12,10"
+                            ColumnSpacing="12"
+                            Visibility="{x:Bind ViewModel.Settings.LanguageNeedsRestart, Mode=OneWay}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Uid="LanguageRestartHint"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                x:Uid="LanguageRestartButton"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.Settings.RestartForLanguageCommand}"
+                                Style="{StaticResource AccountButtonStyle}" />
+                        </Grid>
+                        <Grid
+                            Padding="12,10"
+                            BorderBrush="{ThemeResource SettingsCardBorderBrush}"
+                            BorderThickness="0,1,0,0"
+                            ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
@@ -304,9 +366,9 @@
                                 Grid.Column="2"
                                 Padding="4,2"
                                 VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.Settings.UpdateCommand}"
                                 Content="{x:Bind ViewModel.Settings.UpdateText, Mode=OneWay}"
                                 FontSize="12"
-                                NavigateUri="{x:Bind ViewModel.Settings.UpdateUri, Mode=OneWay}"
                                 Visibility="{x:Bind helpers:BindConverters.VisibleWhenText(ViewModel.Settings.UpdateText), Mode=OneWay}" />
                         </Grid>
                     </StackPanel>

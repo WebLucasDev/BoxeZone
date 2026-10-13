@@ -4,7 +4,7 @@ App nativo para Windows 10/11: uma janelinha flutuante no canto da tela onde o u
 
 **Publicado e gratuito** (1.0.0 em 12/10/2026): instaladores x64 e ARM64 nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/. Nome visível "Boxe Zone"; nome interno (`.exe`, namespace, pastas, registro) `BoxeZone`.
 
-Interface em **pt-BR**. Código, nomes, comentários e commits em **inglês**.
+Interface em **pt-BR e inglês** (escolha em Configurações > Idioma; "Sistema" = português se o Windows estiver em português, senão inglês). Código, nomes, comentários e commits em **inglês**.
 
 | Pasta | O que é |
 |---|---|
@@ -49,7 +49,7 @@ Projeto em `app/`, namespace `BoxeZone`.
 ```
 Program.cs                 # Main próprio: instância única, depois o Main do XAML
 App.xaml(.cs)              # monta serviços, janelas e bandeja; cores (ThemeDictionaries) e estilos
-Strings/pt-BR/Resources.resw
+Strings/pt-BR/Resources.resw e Strings/en-US/Resources.resw (mesmas chaves)
 Assets/                    # BoxeZone.ico/.png/.svg (+ -small.svg), Providers/*.svg (logos oficiais)
 appsettings.example.json   # modelo; as credenciais reais ficam em appsettings.local.json (git-ignored)
 Views/
@@ -81,7 +81,7 @@ docs/                      # arquitetura, roadmap e protótipos
 - OAuth de app desktop (navegador do sistema + loopback) nos três provedores. Tokens só no `TokenStore` (criptografados por usuário do Windows): nunca em texto puro, nunca em log.
 - Escopos mínimos: no Google só `drive.file` (não sensível; é o que deixa o app "Em produção" sem verificação). Escopo novo em qualquer provedor: atualizar a política de privacidade.
 - Preferências em `%LocalAppData%\BoxeZone\settings.json` (`ApplicationData.Current` não funciona sem pacote). Campos novos em `AppSettings` precisam de valor padrão (arquivos antigos não os têm).
-- Strings de UI em `Strings/pt-BR/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas.
+- Strings de UI em `Strings/pt-BR/Resources.resw` **e** `Strings/en-US/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas: texto novo entra nos dois. O idioma é aplicado uma vez no início (`LanguageService`, antes de qualquer texto); trocar pede reiniciar.
 - Registro do Windows que o app grava (`Run\BoxeZone`, `Classes\AppUserModelId\BoxeZone.App`, `Classes\boxezone`) e que o instalador grava (`Software\BoxeZone`): o desinstalador apaga cada um; chave nova também precisa entrar no `BoxeZone.iss`.
 - Código aberto (MIT). O app só pode falar com sistemas que o usuário não escolheu se isso estiver na política, aparecer na instalação e puder ser desligado (hoje só a verificação de versão, com a opção "Verificar versões novas"). Mudou isso, atualizar a política e o `app/installer/privacidade.txt`.
 - Instalador **sem assinatura digital** (a SignPath Foundation recusou em 13/10/2026 por falta de visibilidade do projeto; ver roadmap). Não dizer em lugar nenhum que ele é assinado.

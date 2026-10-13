@@ -63,6 +63,11 @@ jobs:
         run: |
           $tag = $env:TAG
           $files = (Get-ChildItem app/installer/output/*.exe).FullName
+
+          # The app's automatic update checks the downloaded installer against this file.
+          $sums = Join-Path $env:RUNNER_TEMP 'SHA256SUMS.txt'
+          Get-ChildItem app/installer/output/*.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)" } | Set-Content $sums -Encoding ascii
+          $files += $sums
           $ghArgs = @($tag) + $files + @('--title', "Boxe Zone $($tag.TrimStart('v'))", '--generate-notes')
           if ($tag -match '-') { $ghArgs += '--prerelease' }
           gh release create @ghArgs

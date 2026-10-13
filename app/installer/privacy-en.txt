@@ -1,0 +1,9 @@
+﻿Boxe Zone privacy (summary)
+
+Boxe Zone has no server and collects no data.
+
+- The files you drop on the widget go from your computer straight to Google Drive, OneDrive or Dropbox, to the account you connect.
+- Access to those accounts and the progress of unfinished uploads are kept only on this computer, encrypted by Windows.
+- Once a day, the app looks at the project's public releases page on GitHub to find out whether there is a new version and, if there is, downloads the installer from there to update when you click Update. None of your data is sent: GitHub only receives what any visit to a website does, such as the IP address. You can turn this off on the next page or later, in Settings > Check for new versions.
+
+Full policy (in Portuguese): https://weblucasdev.github.io/BoxeZone/privacidade/

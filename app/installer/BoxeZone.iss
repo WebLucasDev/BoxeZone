@@ -41,9 +41,9 @@ WizardStyle=modern
 ; closest). Regenerated from Assets\BoxeZone.svg; sizes in app\docs\arquitetura.md.
 WizardImageFile=images\wizard-large-202.png,images\wizard-large-269.png,images\wizard-large-336.png,images\wizard-large-403.png,images\wizard-large-430.png,images\wizard-large-498.png,images\wizard-large-534.png
 WizardSmallImageFile=images\wizard-small-58.png,images\wizard-small-77.png,images\wizard-small-97.png,images\wizard-small-116.png,images\wizard-small-124.png,images\wizard-small-143.png,images\wizard-small-159.png
-; Privacy summary shown before installing (project rule: the app contacts a
-; system the user did not choose, GitHub, for the update check).
-InfoBeforeFile=privacidade.txt
+; Privacy summary shown before installing (project rule: the app contacts a system the user
+; did not choose, GitHub, for the update check): per language, in [Languages].
+ShowLanguageDialog=no
 ; Tasks start from their defaults on every run instead of the previous install's choices
 ; (the update-check choice lives in the app's Settings after the first start).
 UsePreviousTasks=no
@@ -58,9 +58,15 @@ ArchitecturesInstallIn64BitMode=x64compatible
 #endif
 
 [Languages]
-Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+; Picked from the Windows display language (no dialog); any language other than Portuguese
+; gets English, the first entry.
+Name: "en"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "privacy-en.txt"
+Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"; InfoBeforeFile: "privacidade.txt"
 
 [CustomMessages]
+en.DeleteUserData=Also delete Boxe Zone's preferences and connected accounts on this computer?
+en.UpdateCheckGroup=Updates:
+en.UpdateCheckTask=Check for new versions (asks GitHub once a day)
 ptbr.DeleteUserData=Apagar também as preferências e as contas conectadas do Boxe Zone neste computador?
 ptbr.UpdateCheckGroup=Atualizações:
 ptbr.UpdateCheckTask=Verificar versões novas (consulta o GitHub uma vez por dia)
@@ -93,6 +99,8 @@ Name: "{autodesktop}\Boxe Zone"; Filename: "{app}\BoxeZone.exe"; Tasks: desktopi
 
 [Run]
 Filename: "{app}\BoxeZone.exe"; Description: "{cm:LaunchProgram,Boxe Zone}"; Flags: nowait postinstall skipifsilent
+; The app's automatic update runs this installer silently: open the app again afterwards.
+Filename: "{app}\BoxeZone.exe"; Flags: nowait; Check: WizardSilent
 
 [Code]
 procedure CloseBoxeZone();

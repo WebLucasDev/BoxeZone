@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ namespace BoxeZone
         private SettingsService? _settingsService;
         private NotificationService? _notificationService;
         private ShareLinkService? _shareLinks;
+        private string? _readyUpdate;
         private UpdateService? _updateService;
         private DispatcherQueueTimer? _updateTimer;
         private TaskbarIcon? _trayIcon;
@@ -50,9 +52,17 @@ namespace BoxeZone
         public static void OnActivatedByAnotherLaunch(AppActivationArguments args)
         {
             var app = (App)Current;
-            string? batchId = ProtocolService.FindCopyLinkBatch(ProtocolService.GetArguments(args));
+            string? arguments = ProtocolService.GetArguments(args);
+            string? batchId = ProtocolService.FindCopyLinkBatch(arguments);
+            bool update = arguments?.Contains(ProtocolService.UpdateUri, StringComparison.OrdinalIgnoreCase) == true;
             app._window?.DispatcherQueue.TryEnqueue(async () =>
             {
+                if (update)
+                {
+                    InstallUpdate();
+                    return;
+                }
+
                 try
                 {
                     if (batchId is not null && await app.CopyBatchLinksAsync(batchId))
@@ -91,6 +101,9 @@ namespace BoxeZone
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             _settingsService = new SettingsService(DispatcherQueue.GetForCurrentThread());
+
+            // Before any text loads: x:Uid and every ResourceLoader read the language once.
+            LanguageService.Apply(_settingsService.Settings.Language);
             UpdateService.ApplyInstallerChoice(_settingsService);
             AppCredentials credentials = AppCredentials.Load();
             var tokenStore = new TokenStore();
@@ -167,11 +180,21 @@ namespace BoxeZone
                 return;
             }
 
-            settings.ShowUpdate(update);
+            // Downloaded and checked in the background; installed only on "Atualizar".
+            _readyUpdate = await _updateService.PrepareAsync(update);
+            settings.ShowUpdate(update, _readyUpdate is not null);
             string version = update.Version.ToString(3);
             if (_settingsService!.Settings.NotifiedVersion != version)
             {
-                _notificationService?.ShowUpdateAvailable(version, update.Url);
+                if (_readyUpdate is not null)
+                {
+                    _notificationService?.ShowUpdateReady(version);
+                }
+                else
+                {
+                    _notificationService?.ShowUpdateAvailable(version, update.Url);
+                }
+
                 _settingsService.Settings.NotifiedVersion = version;
                 _settingsService.Save();
             }
@@ -240,6 +263,35 @@ namespace BoxeZone
 
             // Efficiency Mode would throttle uploads while the window is hidden.
             _trayIcon.ForceCreate(enablesEfficiencyMode: false);
+        }
+
+        /// <summary>
+        /// "Atualizar" (Settings or the notification): runs the downloaded installer silently and
+        /// closes; the installer opens the new version. Uploads in progress continue after it
+        /// (the saved queue). Nothing downloaded yet: shows the widget.
+        /// </summary>
+        public static void InstallUpdate()
+        {
+            var app = (App)Current;
+            if (app._readyUpdate is { } installer && File.Exists(installer))
+            {
+                UpdateService.Install(installer);
+                app.ExitApp();
+            }
+            else
+            {
+                app._dockService?.ShowNormal();
+            }
+        }
+
+        /// <summary>Starts a new BoxeZone that waits for this one to close, then closes this one (language change).</summary>
+        public static void Restart()
+        {
+            Process.Start(new ProcessStartInfo(Environment.ProcessPath!, $"{Program.RestartArgument} {Environment.ProcessId}")
+            {
+                UseShellExecute = false,
+            });
+            ((App)Current).ExitApp();
         }
 
         private void ExitApp()
