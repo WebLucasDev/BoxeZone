@@ -40,6 +40,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Qualidade
 
 - [ ] **Testes automatizados**: unidade para os ViewModels, `UpdateService.TryParseTag` e provedores (com `IStorageProvider` falso) e um teste de fumaça com UI Automation (ver `app/docs/arquitetura.md`, seção de testes). Exige aprovar um pacote de testes (xUnit ou similar).
+- [ ] **Ajustes apontados na revisão da rodada 1** (nenhum impede o uso): mudar a pasta de destino no meio de uma leva não vale para os arquivos que entram depois nela; "nome (1)" duplicado possível se a resposta da última parte se perder (OneDrive/Dropbox); fila salva não amarrada à conta (sessão expirada e login com outra conta); OneDrive com `nextExpectedRanges` vazio dá "Erro inesperado"; OneDrive pode levar até 10 min para perceber que caiu a internet; nenhum aviso enquanto uma pasta enorme é percorrida.
 - [ ] **Log de diagnóstico opcional** (sem tokens nem nomes de arquivo), além do `crash.log`.
 
 ## Limitações conhecidas
@@ -91,4 +92,4 @@ Depois da versão 1:
 | Arrumação: imagens do instalador com a luva, Inno Setup fixo no CI, `publish` limpo, `.gitattributes`, ajustes da revisão da 1.0.0 | `58c5b7f` |
 | "Copiar link": link "qualquer um com o link" no clique, um por linha numa leva, na área de drop e na notificação (design e plano no histórico do git, commit `749749e`) | `0cbe542`, `646df8f`, `5171528`, `e55cff6` |
 | **Versão 1.2.0 publicada** (arrumação + "Copiar link"; testada antes como `v1.2.0-rc.1`, a primeira com o Inno Setup fixo no CI) | tag `v1.2.0` |
-| Enviar pastas (pasta inteira, "(1)" se o nome existir, ocultos de fora) e retomar envios (depois de fechar o app e sem internet, "Aguardando conexão…") | `64dce3e`, `c2e692b`, `345df36` |
+| Enviar pastas (pasta inteira, "(1)" se o nome existir, ocultos de fora) e retomar envios (depois de fechar o app e sem internet, "Aguardando conexão…") | `64dce3e`, `c2e692b`, `345df36`, `4f4dafa` |
