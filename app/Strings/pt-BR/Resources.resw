@@ -325,6 +325,15 @@
   <data name="NotificationOpen" xml:space="preserve">
     <value>Abrir</value>
   </data>
+  <data name="NotificationCopyLink" xml:space="preserve">
+    <value>Copiar link</value>
+  </data>
+  <data name="NotificationLinkCopied" xml:space="preserve">
+    <value>Link copiado</value>
+  </data>
+  <data name="NotificationLinkFailed" xml:space="preserve">
+    <value>Não foi possível criar o link</value>
+  </data>
   <data name="NotificationUpdateTitle" xml:space="preserve">
     <value>Versão nova do Boxe Zone</value>
   </data>

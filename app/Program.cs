@@ -28,7 +28,7 @@ namespace BoxeZone
                 return;
             }
 
-            instance.Activated += (_, _) => App.OnActivatedByAnotherLaunch();
+            instance.Activated += (_, e) => App.OnActivatedByAnotherLaunch(e);
             XamlGeneratedProgram.XamlGeneratedMain();
         }
     }

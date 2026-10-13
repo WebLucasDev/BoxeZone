@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security;
 using Microsoft.Win32;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -43,17 +44,24 @@ namespace BoxeZone.Services
             }
         }
 
-        public void ShowUploaded(string providerName, IReadOnlyList<string> fileNames, string? link)
+        public void ShowUploaded(string providerName, IReadOnlyList<string> fileNames, string? link, string? batchId)
         {
-            string body = fileNames.Count == 1
-                ? fileNames[0]
-                : string.Format(_strings.GetString("NotificationFilesFormat"), fileNames.Count);
+            var actions = new List<(string Text, string Uri)>();
+            if (link is not null)
+            {
+                actions.Add((_strings.GetString("NotificationOpen"), link));
+            }
+
+            if (batchId is not null)
+            {
+                actions.Add((_strings.GetString("NotificationCopyLink"), ProtocolService.CopyLinkUri(batchId)));
+            }
 
             Show(
                 string.Format(_strings.GetString("NotificationUploadedFormat"), providerName),
-                body,
+                Summarize(fileNames),
                 link ?? ProtocolService.OpenWidgetUri,
-                link is null ? null : _strings.GetString("NotificationOpen"));
+                actions);
         }
 
         public void ShowFailed(string providerName, string fileName, string reason) =>
@@ -61,35 +69,54 @@ namespace BoxeZone.Services
                 string.Format(_strings.GetString("NotificationFailedFormat"), providerName),
                 $"{fileName} · {reason}",
                 ProtocolService.OpenWidgetUri,
-                null);
+                []);
 
         public void ShowUpdateAvailable(string version, string url) =>
             Show(
                 _strings.GetString("NotificationUpdateTitle"),
                 string.Format(_strings.GetString("NotificationUpdateFormat"), version),
                 url,
-                _strings.GetString("NotificationUpdateDownload"));
+                [(_strings.GetString("NotificationUpdateDownload"), url)]);
 
-        /// <param name="uri">Opened by a click on the notification (and on the button, if any).</param>
-        /// <param name="buttonText">Optional button that opens the same URI.</param>
-        private void Show(string title, string body, string uri, string? buttonText)
+        /// <summary>Feedback for the notification's "Copiar link": silent and short-lived.</summary>
+        public void ShowLinkCopied(IReadOnlyList<string> fileNames) =>
+            Show(_strings.GetString("NotificationLinkCopied"), Summarize(fileNames), ProtocolService.OpenWidgetUri, [], silent: true, lifetime: TimeSpan.FromMinutes(1));
+
+        public void ShowLinkFailed(string reason) =>
+            Show(_strings.GetString("NotificationLinkFailed"), reason, ProtocolService.OpenWidgetUri, [], silent: true, lifetime: TimeSpan.FromMinutes(1));
+
+        private string Summarize(IReadOnlyList<string> fileNames) =>
+            fileNames.Count == 1 ? fileNames[0] : string.Format(_strings.GetString("NotificationFilesFormat"), fileNames.Count);
+
+        /// <param name="uri">Opened by a click on the notification itself.</param>
+        /// <param name="actions">Buttons, each opening its own URI.</param>
+        /// <param name="lifetime">Removed from the notification center after this long.</param>
+        private void Show(string title, string body, string uri, IReadOnlyList<(string Text, string Uri)> actions, bool silent = false, TimeSpan? lifetime = null)
         {
             if (_notifier is null)
             {
                 return;
             }
 
-            string actions = buttonText is null
+            string buttons = actions.Count == 0
                 ? string.Empty
-                : $"<actions><action content=\"{Escape(buttonText)}\" arguments=\"{Escape(uri)}\" activationType=\"protocol\"/></actions>";
+                : "<actions>" + string.Concat(actions.Select(a =>
+                    $"<action content=\"{Escape(a.Text)}\" arguments=\"{Escape(a.Uri)}\" activationType=\"protocol\"/>")) + "</actions>";
+            string audio = silent ? "<audio silent=\"true\"/>" : string.Empty;
 
             var xml = new XmlDocument();
             xml.LoadXml(
                 $"<toast activationType=\"protocol\" launch=\"{Escape(uri)}\"><visual><binding template=\"ToastGeneric\">" +
                 $"<text>{Escape(title)}</text><text>{Escape(body)}</text>" +
-                $"</binding></visual>{actions}</toast>");
+                $"</binding></visual>{buttons}{audio}</toast>");
 
-            _notifier.Show(new ToastNotification(xml));
+            var toast = new ToastNotification(xml);
+            if (lifetime is { } span)
+            {
+                toast.ExpirationTime = DateTimeOffset.Now + span;
+            }
+
+            _notifier.Show(toast);
         }
 
         private static string Escape(string value) => SecurityElement.Escape(value) ?? string.Empty;

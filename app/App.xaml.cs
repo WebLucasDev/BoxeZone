@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using BoxeZone.Helpers;
 using BoxeZone.Services;
@@ -12,6 +13,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.ApplicationModel.Resources;
+using Microsoft.Windows.AppLifecycle;
 
 namespace BoxeZone
 {
@@ -39,11 +41,50 @@ namespace BoxeZone
 
         public static WindowDockService? DockService => ((App)Current)._dockService;
 
-        /// <summary>Another launch of BoxeZone was redirected here (Program.Main). Called off the UI thread.</summary>
-        public static void OnActivatedByAnotherLaunch()
+        /// <summary>
+        /// Another launch of BoxeZone was redirected here (Program.Main). Called off the UI thread.
+        /// "boxezone:copy-link?batch=…" (notification button) copies that batch's links without
+        /// showing the widget; anything else, or a batch no longer remembered, shows the widget.
+        /// </summary>
+        public static void OnActivatedByAnotherLaunch(AppActivationArguments args)
         {
             var app = (App)Current;
-            app._window?.DispatcherQueue.TryEnqueue(() => app._dockService?.ShowNormal());
+            string? batchId = ProtocolService.FindCopyLinkBatch(ProtocolService.GetArguments(args));
+            app._window?.DispatcherQueue.TryEnqueue(async () =>
+            {
+                try
+                {
+                    if (batchId is not null && await app.CopyBatchLinksAsync(batchId))
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    CrashLog.Write(ex);
+                }
+
+                app._dockService?.ShowNormal();
+            });
+        }
+
+        private async Task<bool> CopyBatchLinksAsync(string batchId)
+        {
+            if (_shareLinks is null || await _shareLinks.CopyBatchAsync(batchId) is not { } copy)
+            {
+                return false;
+            }
+
+            if (copy.Result.Succeeded)
+            {
+                _notificationService?.ShowLinkCopied(copy.Batch.Items.Select(i => i.Name).ToList());
+            }
+            else
+            {
+                _notificationService?.ShowLinkFailed(ShareLinkService.DescribeFailure(copy.Result.Error!.Value, copy.Batch.Provider.DisplayName));
+            }
+
+            return true;
         }
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -143,7 +184,7 @@ namespace BoxeZone
 
             if (e.Succeeded)
             {
-                _notificationService.ShowUploaded(provider.Name, e.FileNames, e.Link);
+                _notificationService.ShowUploaded(provider.Name, e.FileNames, e.Link, e.BatchId);
             }
             else
             {
