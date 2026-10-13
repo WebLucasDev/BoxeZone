@@ -80,9 +80,13 @@ namespace BoxeZone.Views.Controls
         private Visibility FileNameVisibility(bool compact, bool batch) =>
             compact && batch ? Visibility.Collapsed : Visibility.Visible;
 
-        /// <summary>The compact panel has no room for "Enviado · nome" next to two links; failure messages still show.</summary>
-        private Visibility DoneTextVisibility(bool compact, bool hasMessage) =>
-            compact && !hasMessage ? Visibility.Collapsed : Visibility.Visible;
+        /// <summary>"Enviado · nome": not in the compact panel (no room next to two links), nor while a failure message shows.</summary>
+        private Visibility DoneLabelVisibility(bool compact, bool hasMessage) =>
+            compact || hasMessage ? Visibility.Collapsed : Visibility.Visible;
+
+        /// <summary>"Abrir" and "Copiar link" step aside while a failure message takes the row.</summary>
+        private Visibility LinksVisibility(bool hasMessage) =>
+            hasMessage ? Visibility.Collapsed : Visibility.Visible;
 
         /// <summary>Fade in and slide down 4 px when the zone appears (prototype "dzIn", 180 ms ease-out).</summary>
         private void SetDropZoneShowAnimation()

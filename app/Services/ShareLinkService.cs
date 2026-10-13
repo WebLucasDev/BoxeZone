@@ -89,9 +89,20 @@ namespace BoxeZone.Services
             return new BatchCopy(batch, await CopyAsync(batch.Provider, batch.Items, CancellationToken.None));
         }
 
+        /// <summary>Drop zone, in place of "Enviado · nome": what failed.</summary>
         public static string DescribeFailure(StorageErrorKind kind, string providerName) =>
             kind == StorageErrorKind.MissingPermission
                 ? string.Format(Strings.GetString("CopyLinkReconnectFormat"), providerName)
                 : Strings.GetString("CopyLinkFailed");
+
+        /// <summary>Notification body, under the "Não foi possível criar o link" title: why.</summary>
+        public static string DescribeReason(StorageErrorKind kind, string providerName) => kind switch
+        {
+            StorageErrorKind.MissingPermission => string.Format(Strings.GetString("CopyLinkReconnectFormat"), providerName),
+            StorageErrorKind.Offline => Strings.GetString("ErrorOffline"),
+            StorageErrorKind.SessionExpired => Strings.GetString("ErrorSessionExpired"),
+            StorageErrorKind.AccessDenied => Strings.GetString("ErrorAccessDenied"),
+            _ => Strings.GetString("ErrorUnknown"),
+        };
     }
 }

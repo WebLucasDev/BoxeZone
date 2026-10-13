@@ -81,7 +81,7 @@ namespace BoxeZone
             }
             else
             {
-                _notificationService?.ShowLinkFailed(ShareLinkService.DescribeFailure(copy.Result.Error!.Value, copy.Batch.Provider.DisplayName));
+                _notificationService?.ShowLinkFailed(ShareLinkService.DescribeReason(copy.Result.Error!.Value, copy.Batch.Provider.DisplayName));
             }
 
             return true;

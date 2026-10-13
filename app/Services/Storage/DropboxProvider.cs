@@ -163,6 +163,13 @@ namespace BoxeZone.Services.Storage
                 }
                 catch (ApiException<CreateSharedLinkWithSettingsError> ex) when (ex.ErrorResponse.IsSharedLinkAlreadyExists)
                 {
+                    // Second click: the error carries the existing link. Listing links needs
+                    // sharing.read, which the app does not ask for; it is only a last resort.
+                    if (ex.ErrorResponse.AsSharedLinkAlreadyExists.Value?.AsMetadata?.Value?.Url is { } url)
+                    {
+                        return url;
+                    }
+
                     ListSharedLinksResult existing = await client.Sharing.ListSharedLinksAsync(item.Id, directOnly: true);
                     return existing.Links.FirstOrDefault()?.Url
                         ?? throw new InvalidDataException("Dropbox reported an existing link but listed none.");

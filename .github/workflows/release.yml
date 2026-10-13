@@ -40,7 +40,9 @@ jobs:
           Invoke-WebRequest $env:INNO_URL -OutFile $setup
           if ((Get-FileHash $setup -Algorithm SHA256).Hash -ne $env:INNO_SHA256) { throw 'Inno Setup download does not match the pinned SHA256.' }
           $dir = Join-Path $env:RUNNER_TEMP 'inno'
-          Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/CURRENTUSER', "/DIR=$dir" -Wait
+          $install = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/CURRENTUSER', "/DIR=$dir" -Wait -PassThru
+          # Without this check a failed install would fall back to whatever ISCC the runner has.
+          if ($install.ExitCode -ne 0 -or -not (Test-Path "$dir\ISCC.exe")) { throw "Inno Setup install failed (exit code $($install.ExitCode))." }
           "ISCC=$dir\ISCC.exe" >> $env:GITHUB_ENV
 
       # The tag goes through env, never pasted into the script.

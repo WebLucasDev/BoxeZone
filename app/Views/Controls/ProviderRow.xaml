@@ -236,9 +236,9 @@
                         Grid.Column="1"
                         VerticalAlignment="Center"
                         FontSize="12"
-                        Text="{x:Bind ViewModel.DoneText, Mode=OneWay}"
+                        Text="{x:Bind ViewModel.DoneLabel, Mode=OneWay}"
                         TextTrimming="CharacterEllipsis"
-                        Visibility="{x:Bind DoneTextVisibility(IsCompact, ViewModel.HasDoneMessage), Mode=OneWay}" />
+                        Visibility="{x:Bind DoneLabelVisibility(IsCompact, ViewModel.HasDoneMessage), Mode=OneWay}" />
                     <HyperlinkButton
                         x:Uid="OpenUploadedLink"
                         Grid.Column="2"
@@ -246,7 +246,8 @@
                         VerticalAlignment="Center"
                         Command="{x:Bind ViewModel.OpenUploadedCommand, Mode=OneWay}"
                         FontSize="12"
-                        Foreground="{ThemeResource TextSecondaryBrush}" />
+                        Foreground="{ThemeResource TextSecondaryBrush}"
+                        Visibility="{x:Bind LinksVisibility(ViewModel.HasDoneMessage), Mode=OneWay}" />
                     <HyperlinkButton
                         Grid.Column="3"
                         Padding="0"
@@ -254,7 +255,19 @@
                         Command="{x:Bind ViewModel.CopyLinkCommand, Mode=OneWay}"
                         Content="{x:Bind ViewModel.CopyLinkLabel, Mode=OneWay}"
                         FontSize="12"
-                        Foreground="{ThemeResource TextSecondaryBrush}" />
+                        Foreground="{ThemeResource TextSecondaryBrush}"
+                        Visibility="{x:Bind LinksVisibility(ViewModel.HasDoneMessage), Mode=OneWay}" />
+                    <!-- A "Copiar link" failure takes the whole row for a moment, on up to two lines. -->
+                    <TextBlock
+                        Grid.Column="1"
+                        Grid.ColumnSpan="3"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        MaxLines="2"
+                        Text="{x:Bind ViewModel.DoneMessage, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind ViewModel.HasDoneMessage, Mode=OneWay}" />
                 </Grid>
 
                 <!-- Failed: not in the prototype; same layout as Done, with the reason on a second line. -->

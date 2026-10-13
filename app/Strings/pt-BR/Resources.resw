@@ -171,7 +171,7 @@
     <value>Não foi possível criar o link</value>
   </data>
   <data name="CopyLinkReconnectFormat" xml:space="preserve">
-    <value>Conecte o {0} de novo para copiar links</value>
+    <value>Reconecte o {0} nas Configurações para copiar links</value>
     <comment>{0} = provider name.</comment>
   </data>
   <data name="FooterHotkeyHint.Text" xml:space="preserve">

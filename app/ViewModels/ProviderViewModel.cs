@@ -134,20 +134,20 @@ namespace BoxeZone.ViewModels
         public partial int FileIndex { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(CountLabel), nameof(IsBatch), nameof(DoneLabel), nameof(DoneText))]
+        [NotifyPropertyChangedFor(nameof(CountLabel), nameof(IsBatch), nameof(DoneLabel))]
         public partial int FileCount { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(DoneLabel), nameof(DoneText), nameof(FailedLabel))]
+        [NotifyPropertyChangedFor(nameof(DoneLabel), nameof(FailedLabel))]
         public partial string FileName { get; set; }
 
         /// <summary>"Copiar link", "Copiando…" or "Link copiado".</summary>
         [ObservableProperty]
         public partial string CopyLinkLabel { get; set; }
 
-        /// <summary>A failure of "Copiar link", shown for a moment instead of "Enviado · nome".</summary>
+        /// <summary>A failure of "Copiar link", shown for a moment in place of the "Enviado" row.</summary>
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(DoneText), nameof(HasDoneMessage))]
+        [NotifyPropertyChangedFor(nameof(HasDoneMessage))]
         public partial string? DoneMessage { get; set; }
 
         /// <summary>One-line reason shown under a failed upload.</summary>
@@ -188,11 +188,9 @@ namespace BoxeZone.ViewModels
             Strings.GetString("UploadDoneFormat"),
             IsBatch ? string.Format(Strings.GetString("UploadFilesFormat"), FileCount) : FileName);
 
-        public string DoneText => DoneMessage ?? DoneLabel;
-
         public bool HasDoneMessage => DoneMessage is not null;
 
-        public string FailedLabel =>string.Format(Strings.GetString("UploadFailedFormat"), FileName);
+        public string FailedLabel => string.Format(Strings.GetString("UploadFailedFormat"), FileName);
 
         public string Status =>
             IsConnecting ? Strings.GetString("StatusConnecting")

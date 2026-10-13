@@ -20,7 +20,7 @@ Decisões do usuário (13/10/2026):
 - Clique em "Copiar link":
   1. o link vira **"Copiando…"** e fica desabilitado enquanto os links são criados;
   2. deu certo: os links vão para a área de transferência e o link vira **"Link copiado"** por 2 s, depois volta a "Copiar link";
-  3. falhou: o texto da linha (no lugar de "Enviado · nome") mostra **"Não foi possível criar o link"** por 3 s; o link volta a "Copiar link". Dropbox sem a permissão nova: **"Conecte o Dropbox de novo para copiar links"** por 5 s.
+  3. falhou: o texto da linha (no lugar de "Enviado · nome") mostra **"Não foi possível criar o link"** por 3 s; o link volta a "Copiar link". Dropbox sem a permissão nova: **"Reconecte o Dropbox nas Configurações para copiar links"** por 5 s. Enquanto a mensagem aparece, ela ocupa a linha inteira (até duas linhas) e os links saem.
 - Leva: o texto continua "Enviado · 5 arquivos"; "Copiar link" cria e copia os 5 links, um por linha (`\r\n`), na ordem do envio.
 - Clicar de novo depois de copiado cria de novo (os provedores devolvem o mesmo link; ver abaixo), sem custo para o usuário.
 - **Painel compacto (200 px)**: no estado "Enviado" a linha fica ✓ · "Abrir" · "Copiar link", sem o texto "Enviado · nome" (não cabe). As mensagens de falha aparecem no lugar do texto enquanto duram.
@@ -28,7 +28,7 @@ Decisões do usuário (13/10/2026):
 ### Notificação de envio concluído
 
 - Hoje: título "Enviado para o {provedor}", corpo nome ou "N arquivos", botão "Abrir" (quando há link). Passa a ter também o botão **"Copiar link"**.
-- Clique em "Copiar link" com o app aberto (o caso normal: ele vive na bandeja): cria os links da leva daquela notificação, copia e mostra uma notificação curta e **silenciosa** "Link copiado" (corpo: nome ou "N arquivos"). Falhou: notificação "Não foi possível criar o link" com o motivo.
+- Clique em "Copiar link" com o app aberto (o caso normal: ele vive na bandeja): cria os links da leva daquela notificação, copia e mostra uma notificação curta e **silenciosa** "Link copiado" (corpo: nome ou "N arquivos"). Falhou: notificação "Não foi possível criar o link" com o motivo no corpo (sem internet, sessão expirada, reconectar, erro inesperado).
 - O app guarda na memória só as últimas 20 levas. Se o app foi fechado desde o envio (ou a leva é mais antiga), o clique só abre o widget, como o "abrir" de hoje.
 - O app não toma o foco nem mostra o widget ao copiar pela notificação.
 
@@ -40,7 +40,7 @@ Decisões do usuário (13/10/2026):
 | `CopyLinkCopying` | Copiando… |
 | `CopyLinkCopied` | Link copiado |
 | `CopyLinkFailed` | Não foi possível criar o link |
-| `CopyLinkReconnectFormat` | Conecte o {0} de novo para copiar links |
+| `CopyLinkReconnectFormat` | Reconecte o {0} nas Configurações para copiar links |
 | `NotificationCopyLink` (botão) | Copiar link |
 | `NotificationLinkCopied` (título) | Link copiado |
 | `NotificationLinkFailed` (título) | Não foi possível criar o link |
@@ -78,7 +78,7 @@ Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);
 - Escopos: `files.content.write`, `account_info.read` e **`sharing.write`** (novo; precisa ser ligado no App Console antes, ver "Antes de testar").
 - `UploadAsync`: `UploadedItem(metadata.Id, metadata.Name, link de hoje)`.
 - `CreateShareLinkAsync`: `Sharing.CreateSharedLinkWithSettingsAsync(id)`; se o erro for "link já existe", `Sharing.ListSharedLinksAsync(id, directOnly: true)` e usa o primeiro. Devolve a URL.
-- Sessão antiga sem `sharing.write` (erro de escopo faltando): `StorageProviderException(MissingPermission)`. Para resolver, o usuário desconecta e conecta de novo (Configurações, ou desliga e liga o switch): o login novo pede os três escopos.
+- Sessão antiga sem `sharing.write` (erro de escopo faltando): `StorageProviderException(MissingPermission)`. Para resolver, o usuário desconecta e conecta de novo nas Configurações (desligar e ligar o switch não basta: a sessão continua válida): o login novo pede os três escopos.
 
 ### `ShareLinkService` (novo, `Services/ShareLinkService.cs`)
 

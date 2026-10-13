@@ -26,7 +26,7 @@ Interface em **pt-BR**. Código, nomes, comentários e commits em **inglês**.
 - **MVVM** com `CommunityToolkit.Mvvm`: `[ObservableProperty]` em **propriedades parciais** (`public partial string Status { get; set; }`), não em campos.
 - Pacotes permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.BuildTools`, `CommunityToolkit.Mvvm`, `H.NotifyIcon.WinUI` (bandeja), `Google.Apis.Drive.v3`, `Microsoft.Identity.Client` (MSAL; o Graph é chamado por `HttpClient`, sem o SDK `Microsoft.Graph`) e `Dropbox.Api`. Qualquer outro: perguntar antes.
 - Componentes do Windows App SDK que o app não usa (AI, ML, Search, Widgets, `Microsoft.Windows.AI.MachineLearning`) são referenciados com `ExcludeAssets="all"` para ficarem fora do pacote; ao atualizar o `Microsoft.WindowsAppSDK`, atualizar as versões deles junto (ver `arquitetura.md`, "Instalador e versões").
-- Instalador: **Inno Setup 6.3+** (`winget install JRSoftware.InnoSetup`). Não usar Electron, Tauri, WebView, WPF nem MSIX.
+- Instalador: **Inno Setup 6.5.2+** (imagens do assistente em PNG; o CI usa a 6.7.3; `winget install JRSoftware.InnoSetup`). Não usar Electron, Tauri, WebView, WPF nem MSIX.
 
 ## Comandos
 

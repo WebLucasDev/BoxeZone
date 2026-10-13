@@ -34,7 +34,7 @@ $iscc = @(
     "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-if (-not $iscc) { throw 'Inno Setup 6 (ISCC.exe) not found. Install it: winget install JRSoftware.InnoSetup' }
+if (-not $iscc) { throw 'Inno Setup 6.5.2+ (ISCC.exe) not found (the wizard images are PNG). Install it: winget install JRSoftware.InnoSetup' }
 
 & $iscc "/DAppVersion=$Version" "/DNumericVersion=$numericVersion" "/DArch=$Arch" (Join-Path $PSScriptRoot 'BoxeZone.iss')
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
