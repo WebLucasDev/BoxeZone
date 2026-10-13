@@ -43,12 +43,14 @@
     <h3>Google Drive</h3>
     <ul>
       <li>Permissão <code>drive.file</code>: acesso apenas aos arquivos e pastas que o próprio Boxe Zone criou ou enviou. O app não vê nem altera nenhum outro arquivo do seu Drive.</li>
+      <li>Quando você clica em "Copiar link", o app dá ao arquivo enviado a permissão "qualquer pessoa com o link pode ver" e copia esse link. Nada é compartilhado sem esse clique.</li>
       <li>O e-mail da conta, para mostrar no app qual conta está conectada.</li>
     </ul>
 
     <h3>OneDrive (Microsoft)</h3>
     <ul>
       <li>Permissão <code>Files.ReadWrite</code>: usada para criar a pasta de destino e enviar os arquivos para o seu OneDrive.</li>
+      <li>A mesma permissão cria o link de compartilhamento quando você clica em "Copiar link": um link de visualização para qualquer pessoa com o link, ou só para a sua organização, se a sua conta de trabalho ou escola não permitir links públicos. Nada é compartilhado sem esse clique.</li>
       <li>Permissões padrão de login da Microsoft (<code>openid</code>, <code>profile</code> e <code>offline_access</code>), que identificam a conta e mantêm você conectado sem pedir a senha a cada envio.</li>
       <li>O nome de usuário (e-mail) da conta, para mostrar no app qual conta está conectada.</li>
     </ul>
@@ -56,6 +58,7 @@
     <h3>Dropbox</h3>
     <ul>
       <li>Permissão <code>files.content.write</code>: usada para enviar os arquivos para a pasta de destino.</li>
+      <li>Permissão <code>sharing.write</code>: usada só quando você clica em "Copiar link", para criar um link de visualização do arquivo enviado. Nada é compartilhado sem esse clique.</li>
       <li>Permissão <code>account_info.read</code>: o e-mail da conta, para mostrar no app qual conta está conectada.</li>
     </ul>
 

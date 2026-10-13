@@ -11,7 +11,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Em andamento
 
 - [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). 2FA ativado no GitHub e pedido enviado em signpath.org (13/10/2026); aguardando a resposta por e-mail. Aprovado: criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
-- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável; 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (depois da assinatura, para conferir a assinatura do instalador baixado). Os itens estão descritos nas seções abaixo.
+- [ ] **Rodada de funções (decidida em 13/10/2026)**, uma por vez, cada uma com design e plano próprios, nesta ordem: 1. copiar link compartilhável (feito, aguardando o teste na `v1.2.0-rc.1`); 2. enviar pastas; 3. histórico de envios; 4. escolher a pasta de destino navegando; 5. retomar envios grandes; 6. inglês e seleção de idioma; 7. atualização automática (depois da assinatura, para conferir a assinatura do instalador baixado). Os itens estão descritos nas seções abaixo.
 
 ## Distribuição
 
@@ -30,7 +30,6 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Envio
 
 - [ ] **Enviar pastas** (hoje pastas soltas são ignoradas): recriar a estrutura no destino.
-- [ ] **Copiar link compartilhável** depois do envio (Dropbox precisa da permissão `sharing.write`; Drive e OneDrive têm APIs de compartilhamento).
 - [ ] **Escolher a pasta de destino navegando** (possível no OneDrive e no Dropbox; no Drive o escopo `drive.file` só enxerga pastas criadas pelo app).
 - [ ] **Retomar envios grandes** depois de queda de rede ou de fechar o app (as sessões de upload dos três provedores permitem).
 
@@ -92,3 +91,5 @@ Depois da versão 1:
 | Leva de vários arquivos com progresso total ("3 de 10", barra pelo tamanho; soltar durante um envio entra na leva) | `e11573d` |
 | Painel compacto vazio ("Ative um destino") quando o app abre recolhido | `0d8116a` |
 | **Versão 1.1.0 publicada** ("Cancelar", leva de vários arquivos, correção do painel compacto; testada antes como `v1.1.0-rc.1`) | tag `v1.1.0` |
+| Arrumação: imagens do instalador com a luva, Inno Setup fixo no CI, `publish` limpo, `.gitattributes`, ajustes da revisão da 1.0.0 | `58c5b7f` |
+| "Copiar link": link "qualquer um com o link" no clique, um por linha numa leva, na área de drop e na notificação | `0cbe542`, `646df8f`, `5171528` |

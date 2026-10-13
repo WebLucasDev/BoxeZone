@@ -84,12 +84,13 @@ public interface IStorageProvider
     Task RestoreAsync(CancellationToken ct);     // sessão salva, nunca abre o navegador
     Task ConnectAsync(CancellationToken ct);     // tenta a sessão salva, depois OAuth no navegador
     Task DisconnectAsync();
-    Task<string> UploadAsync(StorageFile file, string targetFolder,
-                             IProgress<double> progress, CancellationToken ct); // link do arquivo
+    Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder,
+                                   IProgress<double> progress, CancellationToken ct); // id, nome, link do dono
+    Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);    // "qualquer um com o link"
 }
 ```
 
-- Falhas saem como `StorageProviderException` com `StorageErrorKind` (NotConfigured, AccessDenied, SessionExpired, Offline, QuotaExceeded, Unknown). Cada provedor traduz as exceções do seu SDK; a UI só conhece o tipo e mostra a mensagem do `.resw`. `SessionExpired` também apaga a sessão local.
+- Falhas saem como `StorageProviderException` com `StorageErrorKind` (NotConfigured, AccessDenied, SessionExpired, MissingPermission, Offline, QuotaExceeded, Unknown). Cada provedor traduz as exceções do seu SDK; a UI só conhece o tipo e mostra a mensagem do `.resw`. `SessionExpired` também apaga a sessão local.
 - Ligar o switch de um provedor não conectado inicia o login ("Conectando…", área de drop escondida, limite de 2 min; desligar cancela). Nas Configurações, durante o login, "Conectar" vira "Cancelar" (comando com `AllowConcurrentExecutions`, senão o próprio login que ele iniciou o deixa desabilitado). Falhou ou foi cancelado: o switch desliga e o status mostra o motivo.
 - Fechar a aba do navegador **não avisa o app**: nenhuma requisição chega ao endereço de retorno (loopback). Por isso o limite de tempo e o cancelar. Cancelar libera o endereço: Google e OneDrive usam uma porta nova a cada login; o Dropbox reusa `localhost:53682` (o `HttpListener` é parado no cancelamento). Os endereços ficam no `http.sys`, não no processo: `netsh http show servicestate view=requestq` para conferir.
 - Falha no envio: "Não foi possível enviar · nome", o motivo e "Tentar de novo", que reenvia a partir do arquivo que falhou (reconectando antes, se preciso). Um provedor com falha não afeta os outros.
@@ -98,6 +99,10 @@ public interface IStorageProvider
 - "Cancelar" (ao lado da porcentagem) cancela o `CancellationToken` do lote: para o arquivo atual e descarta os seguintes; a área volta a "Solte arquivos aqui", sem notificação. Qualquer exceção depois do pedido conta como cancelamento (alguns SDKs não devolvem `OperationCanceledException`). Nada fica no destino: o upload em partes só vira arquivo no fim (o OneDrive ainda apaga a sessão; Drive e Dropbox deixam a sessão expirar).
 - Todo envio é em partes, para ter progresso real: Drive resumable upload (8 MB), Graph upload session (10 MiB, múltiplo de 320 KiB; arquivo vazio vai num PUT simples) e Dropbox upload session (8 MB; o envio simples não informa progresso e para em 150 MB).
 - Nome repetido não sobrescreve: Graph `conflictBehavior=rename`, Dropbox `WriteMode.Add` + `autorename`.
+- **"Copiar link"** (estado "Enviado", ao lado do "Abrir"; no painel compacto sem o texto "Enviado · nome", que não cabe): só compartilha no clique. Cria um link por arquivo da leva e copia um por linha. Google: permissão `anyone`/`reader` (o `drive.file` permite nos arquivos que o app criou; sem escopo novo). OneDrive: `createLink` `view`/`anonymous`, e `organization` se a conta de trabalho recusar (403/400); o Graph devolve o link existente. Dropbox: escopo `sharing.write` (precisa estar ligado no App Console, senão todo login falha com `invalid_scope`); "link já existe" reaproveita o da lista. Sessão do Dropbox anterior ao escopo dá `AuthException` de escopo faltando: vira `MissingPermission` ("Conecte o Dropbox de novo…") **sem** desconectar, porque o resto continua funcionando.
+- Área de transferência pela Win32 (`OpenClipboard`/`SetClipboardData`), com a janela da aba como dona: a `Clipboard` do WinRT exige app em primeiro plano, e sem dona o `SetClipboardData` falha. Outro app segurando a área de transferência: 10 tentativas de 50 ms e depois a mensagem de falha.
+- O `ShareLinkService` guarda na memória as últimas 20 levas. O botão "Copiar link" da notificação abre `boxezone:copy-link?batch=<id>`; o `Program.Main` redireciona para a instância aberta, e a URI chega no `ILaunchActivatedEventArgs.Arguments` (o comando registrado é `"BoxeZone.exe" "%1"`). Copia sem mostrar o widget e confirma com uma notificação silenciosa que some em 1 minuto; leva desconhecida (app reiniciado) abre o widget.
+- Testar links sem login: o Google responde 401 a um arquivo não compartilhado e 200 ao compartilhado (`Invoke-WebRequest` basta). O OneDrive recusa scripts (403) e o Edge comum entra sozinho com a conta da Microsoft do Windows: usar Edge headless `--inprivate` com perfil novo e `--disable-features=msImplicitSignin`, e comparar com a raiz do OneDrive, que precisa mostrar "Entrar".
 - `Progress<T>` criado na UI devolve o progresso na thread da UI.
 - Drop: `GetStorageItemsAsync` com `GetDeferral()`; pastas soltas são ignoradas. O drop não funciona se o app rodar como administrador.
 
