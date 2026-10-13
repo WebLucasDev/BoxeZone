@@ -147,6 +147,9 @@
   <data name="OpenUploadedLink.Content" xml:space="preserve">
     <value>Abrir</value>
   </data>
+  <data name="CancelUploadLink.Content" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="FooterHotkeyHint.Text" xml:space="preserve">
     <value>abre e fecha</value>
   </data>

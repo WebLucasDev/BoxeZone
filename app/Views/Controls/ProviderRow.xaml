@@ -150,6 +150,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Viewbox
                             Width="14"
@@ -170,9 +171,18 @@
                             TextTrimming="CharacterEllipsis" />
                         <TextBlock
                             Grid.Column="2"
+                            VerticalAlignment="Center"
                             FontSize="12"
                             Foreground="{ThemeResource TextSecondaryBrush}"
                             Text="{x:Bind ViewModel.ProgressLabel, Mode=OneWay}" />
+                        <HyperlinkButton
+                            x:Uid="CancelUploadLink"
+                            Grid.Column="3"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Command="{x:Bind ViewModel.CancelUploadCommand, Mode=OneWay}"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextSecondaryBrush}" />
                     </Grid>
                     <ProgressBar
                         Height="3"

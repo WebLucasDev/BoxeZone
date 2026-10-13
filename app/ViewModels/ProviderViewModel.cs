@@ -46,6 +46,7 @@ namespace BoxeZone.ViewModels
         private readonly ProviderSettings _settings;
         private readonly Action _save;
         private CancellationTokenSource? _connectCts;
+        private CancellationTokenSource? _uploadCts;
         private List<StorageFile> _failedFiles = [];
         private string? _uploadedLink;
         private bool _isRestoring;
@@ -188,6 +189,8 @@ namespace BoxeZone.ViewModels
                 return;
             }
 
+            using var cts = new CancellationTokenSource();
+            _uploadCts = cts;
             for (int i = 0; i < files.Count; i++)
             {
                 StorageFile file = files[i];
@@ -199,10 +202,22 @@ namespace BoxeZone.ViewModels
                 {
                     // Progress<T> reports on the UI thread (it captures the DispatcherQueue context).
                     var progress = new Progress<double>(value => Progress = value);
-                    _uploadedLink = await Provider.UploadAsync(file, TargetFolder, progress, CancellationToken.None);
+                    _uploadedLink = await Provider.UploadAsync(file, TargetFolder, progress, cts.Token);
+                }
+                catch (Exception) when (cts.IsCancellationRequested)
+                {
+                    // "Cancelar": the rest of the batch is dropped too. Providers leave no partial
+                    // file behind (unfinished upload sessions never become files). No notification.
+                    // Any exception after the request counts: some SDKs surface the abort as another error.
+                    _uploadCts = null;
+                    _failedFiles = [];
+                    Progress = 0;
+                    State = UploadState.Idle;
+                    return;
                 }
                 catch (Exception ex)
                 {
+                    _uploadCts = null;
                     // A failed upload only affects this provider's drop zone.
                     _failedFiles = files.Skip(i).ToList();
                     ErrorMessage = DescribeError(ex);
@@ -213,6 +228,7 @@ namespace BoxeZone.ViewModels
                 }
             }
 
+            _uploadCts = null;
             _failedFiles = [];
             State = UploadState.Done;
             UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, files.Select(f => f.Name).ToList(), _uploadedLink, null));
@@ -232,6 +248,10 @@ namespace BoxeZone.ViewModels
 
             await UploadFilesAsync(_failedFiles);
         }
+
+        /// <summary>"Cancelar" while uploading: stops the current file and the rest of the batch.</summary>
+        [RelayCommand]
+        private void CancelUpload() => _uploadCts?.Cancel();
 
         [RelayCommand]
         private void OpenUploaded()
