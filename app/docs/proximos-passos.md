@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). Falta: o usuário ativar 2FA no GitHub, enviar o pedido em signpath.org e, aprovado, criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
+- [ ] **Assinatura de código pela SignPath Foundation.** Feito na 1.0.1: licença MIT, README, seção "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" (instalador e Configurações). 2FA ativado no GitHub e pedido enviado em signpath.org (13/10/2026); aguardando a resposta por e-mail. Aprovado: criar o projeto na SignPath; depois ligar a assinatura no `release.yml` (enviar os binários e o instalador para a SignPath, aprovar manualmente cada versão). Risco: o Windows App SDK tem licença da Microsoft (não OSI); a regra aceita "bibliotecas de sistema", decisão da SignPath.
 
 ## Distribuição
 
@@ -30,7 +30,6 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 ## Envio
 
 - [ ] **Enviar pastas** (hoje pastas soltas são ignoradas): recriar a estrutura no destino.
-- [ ] **Cancelar um envio em andamento**: o `CancellationToken` já chega aos provedores; falta o botão na área de drop.
 - [ ] **Fila de vários arquivos** com progresso total ("3 de 10") em vez de um arquivo por vez.
 - [ ] **Copiar link compartilhável** depois do envio (Dropbox precisa da permissão `sharing.write`; Drive e OneDrive têm APIs de compartilhamento).
 - [ ] **Escolher a pasta de destino navegando** (possível no OneDrive e no Dropbox; no Drive o escopo `drive.file` só enxerga pastas criadas pelo app).
@@ -95,3 +94,5 @@ Depois da versão 1:
 | Site e política de privacidade em `website/` (GitHub Pages), repositório dividido em `app/` e `website/` | `d152ca8` |
 | Google OAuth publicado ("Em produção", sem verificação: o único escopo, `drive.file`, não é sensível); Microsoft e Dropbox com site e política cadastrados | configuração nos consoles |
 | **Versão 1.0.0 publicada** (instaladores x64 e ARM64 nas Releases do GitHub, botão de download no site) | tag `v1.0.0` |
+| Código aberto (MIT), README, "Code signing policy" no site, resumo de privacidade no instalador e opção "Verificar versões novas" | `e572c02`, tag `v1.0.1` |
+| "Cancelar" um envio em andamento (para o arquivo atual e o resto do lote, sem notificação) | `aa5872c` |
