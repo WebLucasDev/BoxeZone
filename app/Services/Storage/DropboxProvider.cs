@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Dropbox.Api;
 using Dropbox.Api.Files;
 using Dropbox.Api.Sharing;
-using Windows.Storage;
 
 namespace BoxeZone.Services.Storage
 {
@@ -101,15 +100,15 @@ namespace BoxeZone.Services.Storage
             ForgetSession();
         }
 
-        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(UploadJob job, IProgress<double> progress, Action<string> saveResumeState, CancellationToken ct)
         {
             DropboxClient client = _client
                 ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Dropbox.");
 
             try
             {
-                string folder = "/" + string.Join('/', targetFolder.Split('/', StringSplitOptions.RemoveEmptyEntries));
-                using Stream stream = await file.OpenStreamForReadAsync();
+                string folder = ToDropboxPath(job.TargetFolder);
+                using var stream = new FileStream(job.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
                 long totalBytes = stream.Length;
                 byte[] buffer = new byte[ChunkSize];
 
@@ -137,11 +136,31 @@ namespace BoxeZone.Services.Storage
                 // "Add" + autorename: an existing file with the same name gets a " (1)" copy instead of being replaced.
                 FileMetadata metadata = await client.Files.UploadSessionFinishAsync(
                     new UploadSessionCursor(session.SessionId, offset),
-                    new CommitInfo($"{folder}/{file.Name}", WriteMode.Add.Instance, autorename: true),
+                    new CommitInfo($"{folder.TrimEnd('/')}/{job.FileName}", WriteMode.Add.Instance, autorename: true),
                     body: new MemoryStream());
 
                 progress.Report(100);
                 return new UploadedItem(metadata.Id, metadata.Name, BuildWebLink(folder, metadata.Name));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
+        public async Task<UploadedItem> CreateFolderAsync(string parentFolder, string name, CancellationToken ct)
+        {
+            DropboxClient client = _client
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Dropbox.");
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                // Dropbox creates missing parents; autorename gives "Nome (1)" when the name is taken.
+                CreateFolderResult result = await client.Files.CreateFolderV2Async($"{ToDropboxPath(parentFolder).TrimEnd('/')}/{name}", autorename: true);
+                FolderMetadata folder = result.Metadata;
+                return new UploadedItem(folder.Id, folder.Name, "https://www.dropbox.com/home" + EscapePath(folder.PathDisplay));
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
@@ -255,11 +274,14 @@ namespace BoxeZone.Services.Storage
         }
 
         /// <summary>Owner link ("Abrir"): the folder on the web with the file in preview.</summary>
-        private static string BuildWebLink(string folder, string fileName)
-        {
-            string escapedFolder = string.Join('/', folder.Split('/').Select(Uri.EscapeDataString));
-            return $"https://www.dropbox.com/home{escapedFolder}?preview={Uri.EscapeDataString(fileName)}";
-        }
+        private static string BuildWebLink(string folder, string fileName) =>
+            $"https://www.dropbox.com/home{EscapePath(folder)}?preview={Uri.EscapeDataString(fileName)}";
+
+        private static string EscapePath(string path) => string.Join('/', path.Split('/').Select(Uri.EscapeDataString));
+
+        /// <summary>"BoxeZone/a/" -> "/BoxeZone/a"; the root is "/".</summary>
+        private static string ToDropboxPath(string folder) =>
+            "/" + string.Join('/', folder.Split('/', StringSplitOptions.RemoveEmptyEntries));
 
         private static void Report(IProgress<double> progress, ulong sent, long total)
         {

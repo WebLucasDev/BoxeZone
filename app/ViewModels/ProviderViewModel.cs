@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +10,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.Windows.ApplicationModel.Resources;
-using Windows.Storage;
+using BoxeZone.Services.Upload;
+using System.IO;
 
 namespace BoxeZone.ViewModels
 {
@@ -53,20 +54,19 @@ namespace BoxeZone.ViewModels
         private CancellationTokenSource? _connectCts;
         private CancellationTokenSource? _uploadCts;
 
-        // The batch being sent; files dropped while uploading join it. Each file weighs its
-        // size (at least 1, so empty files still count) in the total progress.
-        private readonly List<StorageFile> _batch = [];
-        private readonly List<ulong> _weights = [];
-        private ulong _totalWeight;
-        private ulong _sentWeight;
+        // The batch being sent (dropped folders and files); what is dropped while uploading
+        // joins it. Kept after a failure so "Tentar de novo" continues it.
+        private UploadQueueState? _queue;
 
         private readonly ShareLinkService _shareLinks;
+        private readonly DispatcherQueue _dispatcher;
         private readonly DispatcherQueueTimer _linkFeedbackTimer;
 
-        private List<StorageFile> _failedFiles = [];
-
-        // Files of the last batch that finished, for "Abrir" (last one) and "Copiar link" (all).
+        // The last batch that finished: for "Abrir" and "Copiar link" (dropped folders and
+        // loose files, in drop order), and the dropped folder's name when it was just one folder.
         private List<UploadedItem> _uploadedItems = [];
+        private UploadedItem? _openTarget;
+        private string? _doneTitle;
         private bool _isRestoring;
 
         public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save, ShareLinkService shareLinks)
@@ -85,7 +85,8 @@ namespace BoxeZone.ViewModels
             CopyLinkLabel = Strings.GetString("CopyLink");
 
             // "Link copiado" and the failure messages go away after a moment.
-            _linkFeedbackTimer = DispatcherQueue.GetForCurrentThread().CreateTimer();
+            _dispatcher = DispatcherQueue.GetForCurrentThread();
+            _linkFeedbackTimer = _dispatcher.CreateTimer();
             _linkFeedbackTimer.IsRepeating = false;
             _linkFeedbackTimer.Tick += (_, _) => ResetLinkFeedback();
         }
@@ -186,7 +187,7 @@ namespace BoxeZone.ViewModels
 
         public string DoneLabel => string.Format(
             Strings.GetString("UploadDoneFormat"),
-            IsBatch ? string.Format(Strings.GetString("UploadFilesFormat"), FileCount) : FileName);
+            _doneTitle ?? (IsBatch ? string.Format(Strings.GetString("UploadFilesFormat"), FileCount) : FileName));
 
         public bool HasDoneMessage => DoneMessage is not null;
 
@@ -235,61 +236,129 @@ namespace BoxeZone.ViewModels
         }
 
         /// <summary>
-        /// Sends the files one at a time. While a batch is uploading, new files join it
-        /// ("3 de 10" grows to "3 de 12") instead of starting another one.
+        /// Dropped files and folders. Folders are walked off the UI thread and recreated at the
+        /// destination. While a batch is uploading, what is dropped joins it ("3 de 10" grows).
         /// </summary>
-        public async Task UploadFilesAsync(IReadOnlyList<StorageFile> files)
+        public async Task EnqueueAsync(IReadOnlyList<string> paths)
         {
-            if (files.Count == 0)
+            ScanResult scan = await FolderScanner.ScanAsync(paths);
+            if (scan.IsEmpty)
             {
                 return;
             }
 
-            // Sizes first: from here on nothing awaits until the files are queued, so a batch
-            // finishing in the meantime cannot leave them behind.
-            ulong[] sizes = await GetSizesAsync(files);
-            if (IsUploading)
+            // From here on nothing awaits until the items are queued, so a batch finishing in
+            // the meantime cannot leave them behind.
+            if (IsUploading && _queue is not null)
             {
-                AddToBatch(files, sizes);
+                AddToQueue(_queue, scan);
+                FileCount = CountActive(_queue);
                 return;
             }
 
-            _batch.Clear();
-            _weights.Clear();
-            _totalWeight = 0;
-            _sentWeight = 0;
-            AddToBatch(files, sizes);
-            var uploaded = new List<UploadedItem>();
+            _queue = new UploadQueueState { TargetFolder = TargetFolder };
+            AddToQueue(_queue, scan);
+            await RunQueueAsync();
+        }
+
+        private static void AddToQueue(UploadQueueState queue, ScanResult scan)
+        {
+            foreach (object item in scan.Items)
+            {
+                int order = queue.NextOrder++;
+                if (item is ScannedFolder folder)
+                {
+                    queue.Folders.Add(new QueuedFolder { LocalPath = folder.LocalPath, Name = folder.Name, Order = order });
+                    foreach (ScannedFile file in folder.Files)
+                    {
+                        queue.Files.Add(ToQueued(file, queue.Folders.Count - 1, order));
+                    }
+                }
+                else if (item is ScannedFile file)
+                {
+                    queue.Files.Add(ToQueued(file, -1, order));
+                }
+            }
+        }
+
+        private static QueuedFile ToQueued(ScannedFile file, int folderIndex, int order) => new()
+        {
+            LocalPath = file.LocalPath,
+            FileName = Path.GetFileName(file.LocalPath),
+            FolderIndex = folderIndex,
+            RelativeFolder = file.RelativeFolder,
+            Order = order,
+            Size = file.Size,
+            LastWriteTime = file.LastWriteTime,
+        };
+
+        /// <summary>
+        /// Sends the queue's pending files one at a time. The queue can grow while a file is
+        /// uploading, so Count is read again on every pass.
+        /// </summary>
+        private async Task RunQueueAsync()
+        {
+            if (_queue is not { } queue || IsUploading)
+            {
+                return;
+            }
 
             using var cts = new CancellationTokenSource();
             _uploadCts = cts;
 
-            // _batch can grow while a file is uploading: Count is read again on every pass.
-            for (int i = 0; i < _batch.Count; i++)
+            for (int i = 0; i < queue.Files.Count; i++)
             {
-                StorageFile file = _batch[i];
-                int index = i + 1;
-                ulong weight = _weights[i];
-                ulong sentBefore = _sentWeight;
+                QueuedFile file = queue.Files[i];
+                if (file.Status != QueuedFileStatus.Pending)
+                {
+                    continue;
+                }
+
+                int index = queue.Files.Take(i + 1).Count(f => f.Status != QueuedFileStatus.Skipped);
+                long weight = Weight(file);
+                long sentBefore = queue.Files.Where(f => f.Status == QueuedFileStatus.Done).Sum(Weight);
                 FileIndex = index;
-                FileName = file.Name;
-                Progress = 100.0 * sentBefore / _totalWeight;
+                FileCount = CountActive(queue);
+                FileName = file.FileName;
+                Progress = 100.0 * sentBefore / TotalWeight(queue);
                 State = UploadState.Uploading;
 
                 try
                 {
+                    string target = await TargetFolderForAsync(queue, file, cts.Token);
+                    if (!File.Exists(file.LocalPath))
+                    {
+                        // Moved or deleted since the drop: "Tentar de novo" goes on without it.
+                        file.Status = QueuedFileStatus.Skipped;
+                        Fail(file, Strings.GetString("ErrorFileMissing"));
+                        return;
+                    }
+
+                    var info = new FileInfo(file.LocalPath);
+                    if (info.Length != file.Size || new DateTimeOffset(info.LastWriteTimeUtc) != file.LastWriteTime)
+                    {
+                        // Changed since the drop: whatever was sent of it no longer matches.
+                        file.Size = info.Length;
+                        file.LastWriteTime = info.LastWriteTimeUtc;
+                        file.ResumeState = null;
+                        weight = Weight(file);
+                    }
+
                     // Progress<T> reports on the UI thread (it captures the DispatcherQueue context),
                     // but posted: a file's last report can arrive after the next file started.
-                    // _totalWeight is read on each report, as files can still join the batch.
+                    // The total is read on each report, as files can still join the batch.
                     var progress = new Progress<double>(value =>
                     {
-                        if (FileIndex == index && IsUploading)
+                        if (FileIndex == index && IsUploading && ReferenceEquals(_queue, queue))
                         {
-                            Progress = 100.0 * (sentBefore + weight * value / 100) / _totalWeight;
+                            Progress = 100.0 * (sentBefore + weight * value / 100) / TotalWeight(queue);
                         }
                     });
-                    uploaded.Add(await Provider.UploadAsync(file, TargetFolder, progress, cts.Token));
-                    _sentWeight += weight;
+
+                    var job = new UploadJob(file.LocalPath, file.FileName, target, file.Size, file.LastWriteTime, file.ResumeState);
+                    file.Uploaded = await Provider.UploadAsync(job, progress, state => OnResumeState(file, state), cts.Token);
+                    file.Status = QueuedFileStatus.Done;
+                    file.ResumeState = null;
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
                 {
@@ -297,58 +366,93 @@ namespace BoxeZone.ViewModels
                     // file behind (unfinished upload sessions never become files). No notification.
                     // Any exception after the request counts: some SDKs surface the abort as another error.
                     _uploadCts = null;
-                    _failedFiles = [];
+                    _queue = null;
                     Progress = 0;
                     State = UploadState.Idle;
                     return;
                 }
                 catch (Exception ex)
                 {
-                    _uploadCts = null;
-                    // A failed upload only affects this provider's drop zone.
-                    _failedFiles = _batch.Skip(i).ToList();
-                    ErrorMessage = DescribeError(ex);
-                    State = UploadState.Failed;
-                    RefreshConnection();
-                    UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.Name], null, ErrorMessage, null));
+                    // A failed upload only affects this provider's drop zone; the queue stays
+                    // for "Tentar de novo".
+                    Fail(file, DescribeError(ex));
                     return;
                 }
             }
 
-            _uploadCts = null;
-            _failedFiles = [];
-            _uploadedItems = uploaded;
-            string batchId = _shareLinks.Register(Provider, uploaded);
-            State = UploadState.Done;
-            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, _batch.Select(f => f.Name).ToList(), uploaded[^1].WebUrl, null, batchId));
+            Finish(queue);
         }
 
-        private void AddToBatch(IReadOnlyList<StorageFile> files, ulong[] sizes)
+        /// <summary>A loose file goes to the destination; a folder's file, inside the folder created for it.</summary>
+        private async Task<string> TargetFolderForAsync(UploadQueueState queue, QueuedFile file, CancellationToken ct)
         {
-            for (int i = 0; i < files.Count; i++)
+            if (file.FolderIndex < 0)
             {
-                ulong weight = Math.Max(sizes[i], 1);
-                _batch.Add(files[i]);
-                _weights.Add(weight);
-                _totalWeight += weight;
+                return queue.TargetFolder;
             }
 
-            FileCount = _batch.Count;
+            QueuedFolder folder = queue.Folders[file.FolderIndex];
+            folder.Created ??= await Provider.CreateFolderAsync(queue.TargetFolder, folder.Name, ct);
+            return JoinPath(queue.TargetFolder, folder.Created.Name, file.RelativeFolder);
         }
 
-        private static Task<ulong[]> GetSizesAsync(IReadOnlyList<StorageFile> files) =>
-            Task.WhenAll(files.Select(async file =>
+        private void OnResumeState(QueuedFile file, string state) =>
+            _dispatcher.TryEnqueue(() => file.ResumeState = state);
+
+        private void Fail(QueuedFile file, string message)
+        {
+            _uploadCts = null;
+            FileName = file.FileName;
+            ErrorMessage = message;
+            State = UploadState.Failed;
+            RefreshConnection();
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.FileName], null, ErrorMessage, null));
+        }
+
+        private void Finish(UploadQueueState queue)
+        {
+            _uploadCts = null;
+            _queue = null;
+
+            // What "Copiar link" shares: each dropped folder as one link, each loose file as its own.
+            _uploadedItems = queue.Folders.Where(f => f.Created is not null).Select(f => (f.Order, Item: f.Created!))
+                .Concat(queue.Files.Where(f => f.FolderIndex < 0 && f.Uploaded is not null).Select(f => (f.Order, Item: f.Uploaded!)))
+                .OrderBy(x => x.Order)
+                .Select(x => x.Item)
+                .ToList();
+
+            List<QueuedFile> sent = queue.Files.Where(f => f.Status == QueuedFileStatus.Done).ToList();
+            if (_uploadedItems.Count == 0 || sent.Count == 0)
             {
-                try
-                {
-                    return (await file.GetBasicPropertiesAsync()).Size;
-                }
-                catch (Exception)
-                {
-                    // Unreadable now: it weighs like an empty file, and its upload reports the real error.
-                    return 0UL;
-                }
-            }));
+                Progress = 0;
+                State = UploadState.Idle;
+                return;
+            }
+
+            bool singleFolder = queue.Folders.Count == 1 && queue.Files.All(f => f.FolderIndex == 0);
+            _doneTitle = singleFolder ? queue.Folders[0].Created!.Name : null;
+            _openTarget = singleFolder ? queue.Folders[0].Created : sent[^1].Uploaded;
+            FileCount = sent.Count;
+            FileName = sent[^1].FileName;
+            OnPropertyChanged(nameof(DoneLabel));
+
+            string batchId = _shareLinks.Register(Provider, _uploadedItems);
+            State = UploadState.Done;
+            IReadOnlyList<string> names = singleFolder ? [_doneTitle!] : sent.Select(f => f.FileName).ToList();
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, names, _openTarget?.WebUrl, null, batchId));
+        }
+
+        private static long Weight(QueuedFile file) => Math.Max(file.Size, 1);
+
+        private static double TotalWeight(UploadQueueState queue) =>
+            queue.Files.Where(f => f.Status != QueuedFileStatus.Skipped).Sum(Weight);
+
+        private static int CountActive(UploadQueueState queue) =>
+            queue.Files.Count(f => f.Status != QueuedFileStatus.Skipped);
+
+        /// <summary>"/BoxeZone" + "Fotos (1)" + "a/b" -> "/BoxeZone/Fotos (1)/a/b".</summary>
+        private static string JoinPath(params string[] parts) =>
+            "/" + string.Join('/', parts.SelectMany(p => p.Split('/', StringSplitOptions.RemoveEmptyEntries)));
 
         [RelayCommand]
         private async Task RetryAsync()
@@ -362,7 +466,8 @@ namespace BoxeZone.ViewModels
                 }
             }
 
-            await UploadFilesAsync(_failedFiles);
+            // The queue goes on from the file that failed (or past a file that disappeared).
+            await RunQueueAsync();
         }
 
         /// <summary>"Cancelar" while uploading: stops the current file and the rest of the batch.</summary>
@@ -372,7 +477,8 @@ namespace BoxeZone.ViewModels
         [RelayCommand]
         private void OpenUploaded()
         {
-            if (_uploadedItems.LastOrDefault()?.WebUrl is { Length: > 0 } link)
+            // One dropped folder: the folder; otherwise the last file sent.
+            if (_openTarget?.WebUrl is { Length: > 0 } link)
             {
                 Process.Start(new ProcessStartInfo(link) { UseShellExecute = true });
             }

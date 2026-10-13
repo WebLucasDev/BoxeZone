@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Storage;
 
 namespace BoxeZone.Services.Storage
 {
@@ -29,15 +28,27 @@ namespace BoxeZone.Services.Storage
 
         Task DisconnectAsync();
 
-        /// <summary>Uploads the file into <paramref name="targetFolder"/> (created if missing).</summary>
-        Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct);
+        /// <summary>
+        /// Uploads job.LocalPath into job.TargetFolder (created if missing). Calls saveResumeState
+        /// whenever the upload can be continued from a new point; job.ResumeState continues one.
+        /// </summary>
+        Task<UploadedItem> UploadAsync(UploadJob job, IProgress<double> progress, Action<string> saveResumeState, CancellationToken ct);
+
+        /// <summary>
+        /// Creates a folder inside parentFolder, renamed ("Nome (1)") when the name is taken.
+        /// The item carries the real name; Id and WebUrl point to the folder.
+        /// </summary>
+        Task<UploadedItem> CreateFolderAsync(string parentFolder, string name, CancellationToken ct);
 
         /// <summary>Makes the file readable by anyone with the link and returns that link.</summary>
         Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);
     }
 
-    /// <summary>A file the app uploaded: what is needed to open it (owner link) and to share it later.</summary>
+    /// <summary>A file or folder the app created: what is needed to open it (owner link) and to share it later.</summary>
     public sealed record UploadedItem(string Id, string Name, string WebUrl);
+
+    /// <summary>A file to upload. ResumeState: the provider's own data to continue an interrupted upload (null: from zero).</summary>
+    public sealed record UploadJob(string LocalPath, string FileName, string TargetFolder, long Size, DateTimeOffset LastWriteTime, string? ResumeState);
 
     public enum StorageErrorKind
     {

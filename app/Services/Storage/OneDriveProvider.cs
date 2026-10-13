@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,7 +10,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
-using Windows.Storage;
 
 namespace BoxeZone.Services.Storage
 {
@@ -120,13 +120,13 @@ namespace BoxeZone.Services.Storage
             _tokenStore.Delete(CacheKey);
         }
 
-        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(UploadJob job, IProgress<double> progress, Action<string> saveResumeState, CancellationToken ct)
         {
             string? uploadUrl = null;
             try
             {
-                string itemPath = ToItemPath(targetFolder, file.Name);
-                using Stream stream = await file.OpenStreamForReadAsync();
+                string itemPath = ToItemPath(job.TargetFolder, job.FileName);
+                using var stream = new FileStream(job.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
                 long totalBytes = stream.Length;
 
                 if (totalBytes == 0)
@@ -180,6 +180,55 @@ namespace BoxeZone.Services.Storage
                 throw;
             }
         }
+
+        public async Task<UploadedItem> CreateFolderAsync(string parentFolder, string name, CancellationToken ct)
+        {
+            try
+            {
+                string[] parent = parentFolder.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                await EnsureFolderPathAsync(parent, ct);
+                using HttpRequestMessage request = await CreateGraphRequestAsync(HttpMethod.Post, ChildrenUrl(parent), ct);
+                request.Content = FolderBody(name, "rename");
+                return ReadItem(await SendAsync(request, ct));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
+        /// <summary>
+        /// "/children" does not create a missing parent (the destination may not exist yet in a
+        /// new account): create each segment, ignoring 409 (already there).
+        /// </summary>
+        private async Task EnsureFolderPathAsync(string[] segments, CancellationToken ct)
+        {
+            for (int i = 0; i < segments.Length; i++)
+            {
+                using HttpRequestMessage request = await CreateGraphRequestAsync(HttpMethod.Post, ChildrenUrl(segments[..i]), ct);
+                request.Content = FolderBody(segments[i], "fail");
+                try
+                {
+                    await SendAsync(request, ct);
+                }
+                catch (GraphHttpException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+                {
+                }
+            }
+        }
+
+        private static string ChildrenUrl(string[] folderSegments) =>
+            folderSegments.Length == 0
+                ? "/me/drive/root/children"
+                : $"/me/drive/root:/{string.Join('/', folderSegments.Select(Uri.EscapeDataString))}:/children";
+
+        private static StringContent FolderBody(string name, string conflictBehavior) =>
+            new(JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["name"] = name,
+                ["folder"] = new Dictionary<string, object>(),
+                ["@microsoft.graph.conflictBehavior"] = conflictBehavior,
+            }), Encoding.UTF8, "application/json");
 
         public async Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct)
         {

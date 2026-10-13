@@ -161,9 +161,9 @@ namespace BoxeZone.Views.Controls
                 deferral.Complete();
             }
 
-            // Folders are ignored for now; only files are uploaded.
-            var files = items.OfType<StorageFile>().ToList();
-            await ViewModel.UploadFilesAsync(files);
+            // Files and folders by their path on disk; items without one (virtual files) are skipped.
+            var paths = items.Select(item => item.Path).Where(path => !string.IsNullOrEmpty(path)).ToList();
+            await ViewModel.EnqueueAsync(paths);
         }
     }
 }

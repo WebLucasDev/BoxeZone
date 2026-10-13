@@ -137,6 +137,9 @@
   <data name="ErrorQuotaExceeded" xml:space="preserve">
     <value>Sem espaço na conta</value>
   </data>
+  <data name="ErrorFileMissing" xml:space="preserve">
+    <value>Arquivo não encontrado</value>
+  </data>
   <data name="ErrorUnknown" xml:space="preserve">
     <value>Erro inesperado</value>
   </data>

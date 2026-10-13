@@ -12,8 +12,7 @@ using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
-using Microsoft.Windows.ApplicationModel.Resources;
-using Windows.Storage;
+using Microsoft.Win32;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
 using Permission = Google.Apis.Drive.v3.Data.Permission;
 
@@ -95,21 +94,20 @@ namespace BoxeZone.Services.Storage
             await ForgetSessionAsync();
         }
 
-        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(UploadJob job, IProgress<double> progress, Action<string> saveResumeState, CancellationToken ct)
         {
             DriveService drive = _drive
                 ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Google Drive.");
 
             try
             {
-                string folderId = await GetOrCreateFolderAsync(drive, targetFolder, ct);
+                string folderId = await GetOrCreateFolderAsync(drive, job.TargetFolder, ct);
 
-                using Stream stream = await file.OpenStreamForReadAsync();
+                using var stream = new FileStream(job.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
                 long totalBytes = stream.Length;
-                var metadata = new DriveFile { Name = file.Name, Parents = [folderId] };
-                string contentType = string.IsNullOrEmpty(file.ContentType) ? FallbackContentType : file.ContentType;
+                var metadata = new DriveFile { Name = job.FileName, Parents = [folderId] };
 
-                FilesResource.CreateMediaUpload request = drive.Files.Create(metadata, stream, contentType);
+                FilesResource.CreateMediaUpload request = drive.Files.Create(metadata, stream, ContentTypeFor(job.FileName));
                 request.Fields = "id, name, webViewLink";
                 request.ChunkSize = ChunkSize;
                 request.ProgressChanged += upload =>
@@ -128,11 +126,42 @@ namespace BoxeZone.Services.Storage
 
                 progress.Report(100);
                 DriveFile created = request.ResponseBody;
-                return new UploadedItem(created.Id, created.Name ?? file.Name, created.WebViewLink);
+                return new UploadedItem(created.Id, created.Name ?? job.FileName, created.WebViewLink);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
                 // The folder may have been deleted or the session lost; look it up again next time.
+                _folderIds.Clear();
+                throw await ToStorageExceptionAsync(ex);
+            }
+        }
+
+        public async Task<UploadedItem> CreateFolderAsync(string parentFolder, string name, CancellationToken ct)
+        {
+            DriveService drive = _drive
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Google Drive.");
+
+            try
+            {
+                string parentId = await GetOrCreateFolderAsync(drive, parentFolder, ct);
+                string candidate = name;
+                for (int n = 1; await FindFolderAsync(drive, parentId, candidate, ct) is not null; n++)
+                {
+                    candidate = $"{name} ({n})";
+                }
+
+                FilesResource.CreateRequest create = drive.Files.Create(new DriveFile
+                {
+                    Name = candidate,
+                    MimeType = FolderMimeType,
+                    Parents = [parentId],
+                });
+                create.Fields = "id, name, webViewLink";
+                DriveFile folder = await create.ExecuteAsync(ct);
+                return new UploadedItem(folder.Id, folder.Name, folder.WebViewLink);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
                 _folderIds.Clear();
                 throw await ToStorageExceptionAsync(ex);
             }
@@ -200,15 +229,9 @@ namespace BoxeZone.Services.Storage
             string parentId = "root";
             foreach (string name in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
             {
-                FilesResource.ListRequest list = drive.Files.List();
-                list.Q = $"mimeType = '{FolderMimeType}' and name = '{EscapeQuery(name)}' and '{parentId}' in parents and trashed = false";
-                list.Fields = "files(id)";
-                list.Spaces = "drive";
-                DriveFile? existing = (await list.ExecuteAsync(ct)).Files.FirstOrDefault();
-
-                if (existing is not null)
+                if (await FindFolderAsync(drive, parentId, name, ct) is { } existingId)
                 {
-                    parentId = existing.Id;
+                    parentId = existingId;
                     continue;
                 }
 
@@ -224,6 +247,24 @@ namespace BoxeZone.Services.Storage
 
             _folderIds[normalized] = parentId;
             return parentId;
+        }
+
+        /// <summary>The ID of a folder the app can see with this name under the parent, or null.</summary>
+        private static async Task<string?> FindFolderAsync(DriveService drive, string parentId, string name, CancellationToken ct)
+        {
+            FilesResource.ListRequest list = drive.Files.List();
+            list.Q = $"mimeType = '{FolderMimeType}' and name = '{EscapeQuery(name)}' and '{parentId}' in parents and trashed = false";
+            list.Fields = "files(id)";
+            list.Spaces = "drive";
+            return (await list.ExecuteAsync(ct)).Files.FirstOrDefault()?.Id;
+        }
+
+        /// <summary>The MIME type Windows associates with the extension (Drive uses it for previews).</summary>
+        private static string ContentTypeFor(string fileName)
+        {
+            string extension = Path.GetExtension(fileName);
+            using RegistryKey? key = extension.Length > 0 ? Registry.ClassesRoot.OpenSubKey(extension) : null;
+            return key?.GetValue("Content Type") as string ?? FallbackContentType;
         }
 
         private async Task<StorageProviderException> ToStorageExceptionAsync(Exception ex)
