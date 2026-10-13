@@ -97,3 +97,4 @@ Depois da versão 1:
 | "Cancelar" um envio em andamento (para o arquivo atual e o resto do lote, sem notificação) | `aa5872c` |
 | Leva de vários arquivos com progresso total ("3 de 10", barra pelo tamanho; soltar durante um envio entra na leva) | `e11573d` |
 | Painel compacto vazio ("Ative um destino") quando o app abre recolhido | `0d8116a` |
+| **Versão 1.1.0 publicada** ("Cancelar", leva de vários arquivos, correção do painel compacto; testada antes como `v1.1.0-rc.1`) | tag `v1.1.0` |
