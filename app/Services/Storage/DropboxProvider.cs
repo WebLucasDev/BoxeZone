@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dropbox.Api;
 using Dropbox.Api.Files;
+using Dropbox.Api.Sharing;
 using Windows.Storage;
 
 namespace BoxeZone.Services.Storage
@@ -25,7 +26,8 @@ namespace BoxeZone.Services.Storage
         private const string RefreshTokenKey = "dropbox-refresh-token";
         private const int ChunkSize = 8 * 1024 * 1024;
 
-        private static readonly string[] Scopes = ["files.content.write", "account_info.read"];
+        // sharing.write only serves "Copiar link"; it must also be enabled in the App Console.
+        private static readonly string[] Scopes = ["files.content.write", "account_info.read", "sharing.write"];
 
         private DropboxClient? _client;
 
@@ -99,7 +101,7 @@ namespace BoxeZone.Services.Storage
             ForgetSession();
         }
 
-        public async Task<string> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
         {
             DropboxClient client = _client
                 ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Dropbox.");
@@ -139,7 +141,32 @@ namespace BoxeZone.Services.Storage
                     body: new MemoryStream());
 
                 progress.Report(100);
-                return BuildWebLink(folder, metadata.Name);
+                return new UploadedItem(metadata.Id, metadata.Name, BuildWebLink(folder, metadata.Name));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
+        public async Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct)
+        {
+            DropboxClient client = _client
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Dropbox.");
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    return (await client.Sharing.CreateSharedLinkWithSettingsAsync(item.Id)).Url;
+                }
+                catch (ApiException<CreateSharedLinkWithSettingsError> ex) when (ex.ErrorResponse.IsSharedLinkAlreadyExists)
+                {
+                    ListSharedLinksResult existing = await client.Sharing.ListSharedLinksAsync(item.Id, directOnly: true);
+                    return existing.Links.FirstOrDefault()?.Url
+                        ?? throw new InvalidDataException("Dropbox reported an existing link but listed none.");
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
@@ -220,10 +247,7 @@ namespace BoxeZone.Services.Storage
             }
         }
 
-        /// <summary>
-        /// Without the sharing.write scope there is no shared link; open the folder on the web
-        /// with the file in preview instead.
-        /// </summary>
+        /// <summary>Owner link ("Abrir"): the folder on the web with the file in preview.</summary>
         private static string BuildWebLink(string folder, string fileName)
         {
             string escapedFolder = string.Join('/', folder.Split('/').Select(Uri.EscapeDataString));
@@ -242,6 +266,10 @@ namespace BoxeZone.Services.Storage
             ex switch
             {
                 StorageProviderException storage => storage,
+
+                // A session from before sharing.write: keep it (uploads still work), ask to sign in again.
+                AuthException { ErrorResponse.IsMissingScope: true } =>
+                    new StorageProviderException(StorageErrorKind.MissingPermission, ex.Message, ex),
                 AuthException => Forget(new StorageProviderException(StorageErrorKind.SessionExpired, ex.Message, ex)),
                 _ when ex.Message.Contains("insufficient_space", StringComparison.Ordinal) =>
                     new StorageProviderException(StorageErrorKind.QuotaExceeded, ex.Message, ex),

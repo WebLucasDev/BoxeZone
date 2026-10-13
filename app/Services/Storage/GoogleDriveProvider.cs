@@ -15,6 +15,7 @@ using Google.Apis.Upload;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
+using Permission = Google.Apis.Drive.v3.Data.Permission;
 
 namespace BoxeZone.Services.Storage
 {
@@ -94,7 +95,7 @@ namespace BoxeZone.Services.Storage
             await ForgetSessionAsync();
         }
 
-        public async Task<string> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
         {
             DriveService drive = _drive
                 ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Google Drive.");
@@ -109,7 +110,7 @@ namespace BoxeZone.Services.Storage
                 string contentType = string.IsNullOrEmpty(file.ContentType) ? FallbackContentType : file.ContentType;
 
                 FilesResource.CreateMediaUpload request = drive.Files.Create(metadata, stream, contentType);
-                request.Fields = "id, webViewLink";
+                request.Fields = "id, name, webViewLink";
                 request.ChunkSize = ChunkSize;
                 request.ProgressChanged += upload =>
                 {
@@ -126,12 +127,34 @@ namespace BoxeZone.Services.Storage
                 }
 
                 progress.Report(100);
-                return request.ResponseBody.WebViewLink;
+                DriveFile created = request.ResponseBody;
+                return new UploadedItem(created.Id, created.Name ?? file.Name, created.WebViewLink);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
                 // The folder may have been deleted or the session lost; look it up again next time.
                 _folderIds.Clear();
+                throw await ToStorageExceptionAsync(ex);
+            }
+        }
+
+        public async Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct)
+        {
+            DriveService drive = _drive
+                ?? throw new StorageProviderException(StorageErrorKind.SessionExpired, "Not connected to Google Drive.");
+
+            try
+            {
+                // drive.file lets the app share the files it created. Creating the same
+                // "anyone" permission again does not add a second one.
+                PermissionsResource.CreateRequest request = drive.Permissions.Create(
+                    new Permission { Type = "anyone", Role = "reader" }, item.Id);
+                request.Fields = "id";
+                await request.ExecuteAsync(ct);
+                return item.WebUrl;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
                 throw await ToStorageExceptionAsync(ex);
             }
         }

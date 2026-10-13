@@ -29,9 +29,15 @@ namespace BoxeZone.Services.Storage
 
         Task DisconnectAsync();
 
-        /// <summary>Uploads the file into <paramref name="targetFolder"/> (created if missing) and returns a link to it.</summary>
-        Task<string> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct);
+        /// <summary>Uploads the file into <paramref name="targetFolder"/> (created if missing).</summary>
+        Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct);
+
+        /// <summary>Makes the file readable by anyone with the link and returns that link.</summary>
+        Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct);
     }
+
+    /// <summary>A file the app uploaded: what is needed to open it (owner link) and to share it later.</summary>
+    public sealed record UploadedItem(string Id, string Name, string WebUrl);
 
     public enum StorageErrorKind
     {
@@ -43,6 +49,9 @@ namespace BoxeZone.Services.Storage
 
         /// <summary>The saved session is no longer valid; the user has to sign in again.</summary>
         SessionExpired,
+
+        /// <summary>The saved session lacks a permission added in a later version; signing in again grants it.</summary>
+        MissingPermission,
 
         Offline,
         QuotaExceeded,

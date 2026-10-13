@@ -120,7 +120,7 @@ namespace BoxeZone.Services.Storage
             _tokenStore.Delete(CacheKey);
         }
 
-        public async Task<string> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
+        public async Task<UploadedItem> UploadAsync(StorageFile file, string targetFolder, IProgress<double> progress, CancellationToken ct)
         {
             string? uploadUrl = null;
             try
@@ -136,7 +136,7 @@ namespace BoxeZone.Services.Storage
                         HttpMethod.Put, $"/me/drive/root:/{itemPath}:/content?@microsoft.graph.conflictBehavior=rename", ct);
                     put.Content = new ByteArrayContent([]);
                     progress.Report(100);
-                    return ReadWebUrl(await SendAsync(put, ct));
+                    return ReadItem(await SendAsync(put, ct));
                 }
 
                 // Graph creates the missing folders of the path; "rename" keeps existing files.
@@ -165,7 +165,7 @@ namespace BoxeZone.Services.Storage
                     progress.Report(Math.Min(100, offset * 100.0 / totalBytes));
                     if (offset >= totalBytes)
                     {
-                        return ReadWebUrl(body);
+                        return ReadItem(body);
                     }
                 }
             }
@@ -179,6 +179,39 @@ namespace BoxeZone.Services.Storage
                 CancelSession(uploadUrl);
                 throw;
             }
+        }
+
+        public async Task<string> CreateShareLinkAsync(UploadedItem item, CancellationToken ct)
+        {
+            try
+            {
+                try
+                {
+                    return await CreateLinkAsync(item.Id, "anonymous", ct);
+                }
+                catch (GraphHttpException ex) when (ex.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.BadRequest)
+                {
+                    // Work and school accounts can forbid anonymous links: people in the organization instead.
+                    return await CreateLinkAsync(item.Id, "organization", ct);
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                throw ToStorageException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Graph returns the existing link when the item already has one of this type and scope.
+        /// The item ID goes unescaped: personal OneDrive IDs contain "!", valid in a path.
+        /// </summary>
+        private async Task<string> CreateLinkAsync(string itemId, string scope, CancellationToken ct)
+        {
+            using HttpRequestMessage request = await CreateGraphRequestAsync(HttpMethod.Post, $"/me/drive/items/{itemId}/createLink", ct);
+            request.Content = new StringContent($"{{\"type\":\"view\",\"scope\":\"{scope}\"}}", Encoding.UTF8, "application/json");
+            using JsonDocument response = JsonDocument.Parse(await SendAsync(request, ct));
+            return response.RootElement.GetProperty("link").GetProperty("webUrl").GetString()
+                ?? throw new InvalidDataException("createLink returned no webUrl.");
         }
 
         private async Task<bool> TrySignInSilentlyAsync(CancellationToken ct)
@@ -228,10 +261,14 @@ namespace BoxeZone.Services.Storage
             return body;
         }
 
-        private static string ReadWebUrl(string driveItemJson)
+        private static UploadedItem ReadItem(string driveItemJson)
         {
             using JsonDocument item = JsonDocument.Parse(driveItemJson);
-            return item.RootElement.GetProperty("webUrl").GetString() ?? string.Empty;
+            JsonElement root = item.RootElement;
+            return new UploadedItem(
+                root.GetProperty("id").GetString() ?? string.Empty,
+                root.GetProperty("name").GetString() ?? string.Empty,
+                root.GetProperty("webUrl").GetString() ?? string.Empty);
         }
 
         /// <summary>"/BoxeZone" + "a b.pdf" -> "BoxeZone/a%20b.pdf", for /root:/{path}: addressing.</summary>

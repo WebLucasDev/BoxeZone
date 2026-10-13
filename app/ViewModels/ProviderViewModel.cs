@@ -259,7 +259,7 @@ namespace BoxeZone.ViewModels
                             Progress = 100.0 * (sentBefore + weight * value / 100) / _totalWeight;
                         }
                     });
-                    _uploadedLink = await Provider.UploadAsync(file, TargetFolder, progress, cts.Token);
+                    _uploadedLink = (await Provider.UploadAsync(file, TargetFolder, progress, cts.Token)).WebUrl;
                     _sentWeight += weight;
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
