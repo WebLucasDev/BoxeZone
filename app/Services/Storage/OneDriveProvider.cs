@@ -139,18 +139,26 @@ namespace BoxeZone.Services.Storage
                     return ReadItem(await SendAsync(put, ct));
                 }
 
-                // Graph creates the missing folders of the path; "rename" keeps existing files.
-                using (HttpRequestMessage create = await CreateGraphRequestAsync(
-                    HttpMethod.Post, $"/me/drive/root:/{itemPath}:/createUploadSession", ct))
+                long offset = 0;
+                if (job.ResumeState is { } savedUrl && await NextExpectedOffsetAsync(savedUrl, ct) is { } next)
                 {
+                    uploadUrl = savedUrl;
+                    offset = next;
+                }
+                else
+                {
+                    // Graph creates the missing folders of the path; "rename" keeps existing files.
+                    using HttpRequestMessage create = await CreateGraphRequestAsync(
+                        HttpMethod.Post, $"/me/drive/root:/{itemPath}:/createUploadSession", ct);
                     create.Content = new StringContent(
                         "{\"item\":{\"@microsoft.graph.conflictBehavior\":\"rename\"}}", Encoding.UTF8, "application/json");
                     using JsonDocument session = JsonDocument.Parse(await SendAsync(create, ct));
-                    uploadUrl = session.RootElement.GetProperty("uploadUrl").GetString();
+                    uploadUrl = session.RootElement.GetProperty("uploadUrl").GetString()!;
+                    saveResumeState(uploadUrl);
                 }
 
+                stream.Seek(offset, SeekOrigin.Begin);
                 byte[] buffer = new byte[ChunkSize];
-                long offset = 0;
                 while (true)
                 {
                     int length = await stream.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, ct);
@@ -167,17 +175,39 @@ namespace BoxeZone.Services.Storage
                     {
                         return ReadItem(body);
                     }
+
+                    saveResumeState(uploadUrl);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
-                CancelSession(uploadUrl);
+                // The session stays: the upload continues from it when the network is back or
+                // after a restart. It expires on its own if nobody does.
                 throw ToStorageException(ex);
             }
             catch (OperationCanceledException)
             {
+                // "Cancelar": nothing will continue this upload.
                 CancelSession(uploadUrl);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Where a saved upload session continues: the start of its first expected range, or
+        /// null when Graph no longer knows the session (finished, expired or cancelled).
+        /// </summary>
+        private static async Task<long?> NextExpectedOffsetAsync(string uploadUrl, CancellationToken ct)
+        {
+            try
+            {
+                using JsonDocument status = JsonDocument.Parse(await SendAsync(new HttpRequestMessage(HttpMethod.Get, uploadUrl), ct));
+                string? range = status.RootElement.GetProperty("nextExpectedRanges").EnumerateArray().FirstOrDefault().GetString();
+                return range is not null && long.TryParse(range.Split('-')[0], out long start) ? start : null;
+            }
+            catch (GraphHttpException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Gone or HttpStatusCode.BadRequest)
+            {
+                return null;
             }
         }
 

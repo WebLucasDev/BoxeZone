@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BoxeZone.Helpers;
 using BoxeZone.Services;
 using BoxeZone.Services.Storage;
+using BoxeZone.Services.Upload;
 using BoxeZone.ViewModels;
 using BoxeZone.Views;
 using CommunityToolkit.Mvvm.Input;
@@ -106,6 +107,7 @@ namespace BoxeZone
                 _settingsService,
                 settings,
                 _shareLinks,
+                new UploadQueueStore(tokenStore),
                 new GoogleDriveProvider(credentials.Google, tokenStore),
                 new OneDriveProvider(credentials.MicrosoftClientId, tokenStore),
                 new DropboxProvider(credentials.DropboxAppKey, tokenStore));

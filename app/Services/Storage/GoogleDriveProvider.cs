@@ -105,20 +105,45 @@ namespace BoxeZone.Services.Storage
 
                 using var stream = new FileStream(job.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
                 long totalBytes = stream.Length;
-                var metadata = new DriveFile { Name = job.FileName, Parents = [folderId] };
 
-                FilesResource.CreateMediaUpload request = drive.Files.Create(metadata, stream, ContentTypeFor(job.FileName));
-                request.Fields = "id, name, webViewLink";
-                request.ChunkSize = ChunkSize;
-                request.ProgressChanged += upload =>
+                FilesResource.CreateMediaUpload NewRequest()
                 {
-                    if (totalBytes > 0)
+                    var metadata = new DriveFile { Name = job.FileName, Parents = [folderId] };
+                    FilesResource.CreateMediaUpload request = drive.Files.Create(metadata, stream, ContentTypeFor(job.FileName));
+                    request.Fields = "id, name, webViewLink";
+                    request.ChunkSize = ChunkSize;
+                    request.ProgressChanged += upload =>
                     {
-                        progress.Report(Math.Min(100, upload.BytesSent * 100.0 / totalBytes));
-                    }
-                };
+                        if (totalBytes > 0)
+                        {
+                            progress.Report(Math.Min(100, upload.BytesSent * 100.0 / totalBytes));
+                        }
+                    };
 
-                IUploadProgress result = await request.UploadAsync(ct);
+                    // The resumable session URI: with it, a new request continues where this one stopped.
+                    request.UploadSessionData += data => saveResumeState(data.UploadUri.AbsoluteUri);
+                    return request;
+                }
+
+                FilesResource.CreateMediaUpload request = NewRequest();
+                IUploadProgress result;
+                if (job.ResumeState is { } sessionUri)
+                {
+                    // The library asks Google how many bytes arrived and seeks the stream there.
+                    result = await request.ResumeAsync(new Uri(sessionUri), ct);
+                    if (result.Status != UploadStatus.Completed && result.Exception is GoogleApiException)
+                    {
+                        // Google refused the session (expired after a week, or unknown): from zero.
+                        stream.Position = 0;
+                        request = NewRequest();
+                        result = await request.UploadAsync(ct);
+                    }
+                }
+                else
+                {
+                    result = await request.UploadAsync(ct);
+                }
+
                 if (result.Status != UploadStatus.Completed)
                 {
                     throw result.Exception ?? new IOException("Upload did not complete.");

@@ -59,7 +59,9 @@ namespace BoxeZone.ViewModels
         private UploadQueueState? _queue;
 
         private readonly ShareLinkService _shareLinks;
+        private readonly UploadQueueStore _queueStore;
         private readonly DispatcherQueue _dispatcher;
+        private DateTime _lastResumeSave;
         private readonly DispatcherQueueTimer _linkFeedbackTimer;
 
         // The last batch that finished: for "Abrir" and "Copiar link" (dropped folders and
@@ -69,7 +71,7 @@ namespace BoxeZone.ViewModels
         private string? _doneTitle;
         private bool _isRestoring;
 
-        public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save, ShareLinkService shareLinks)
+        public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save, ShareLinkService shareLinks, UploadQueueStore queueStore)
         {
             Id = id;
             Name = name;
@@ -78,6 +80,7 @@ namespace BoxeZone.ViewModels
             _settings = settings;
             _save = save;
             _shareLinks = shareLinks;
+            _queueStore = queueStore;
             FileName = string.Empty;
             ErrorMessage = string.Empty;
             FolderDraft = string.Empty;
@@ -178,7 +181,12 @@ namespace BoxeZone.ViewModels
 
         public bool IsFailed => State == UploadState.Failed;
 
-        public string ProgressLabel => $"{Progress:0}%";
+        /// <summary>Continuing a batch saved before the app closed, until its first progress.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ProgressLabel))]
+        public partial bool IsResuming { get; set; }
+
+        public string ProgressLabel => IsResuming ? Strings.GetString("UploadResuming") : $"{Progress:0}%";
 
         /// <summary>Two or more files: the drop zone shows "3 de 10".</summary>
         public bool IsBatch => FileCount > 1;
@@ -232,7 +240,36 @@ namespace BoxeZone.ViewModels
                 _isRestoring = true;
                 IsEnabled = true;
                 _isRestoring = false;
+                await ResumeSavedQueueAsync();
             }
+        }
+
+        /// <summary>
+        /// Continues the batch saved when the app closed mid-upload ("Retomando…"). Only with
+        /// the provider on and connected; otherwise the saved batch waits.
+        /// </summary>
+        public async Task ResumeSavedQueueAsync()
+        {
+            if (IsUploading || _queue is not null || !IsEnabled || !Provider.IsConnected)
+            {
+                return;
+            }
+
+            UploadQueueState? saved = await _queueStore.LoadAsync(Id);
+            if (saved is null || IsUploading || _queue is not null)
+            {
+                return;
+            }
+
+            if (!saved.Files.Any(f => f.Status == QueuedFileStatus.Pending))
+            {
+                await _queueStore.DeleteAsync(Id);
+                return;
+            }
+
+            _queue = saved;
+            IsResuming = true;
+            await RunQueueAsync();
         }
 
         /// <summary>
@@ -253,11 +290,13 @@ namespace BoxeZone.ViewModels
             {
                 AddToQueue(_queue, scan);
                 FileCount = CountActive(_queue);
+                await SaveQueueAsync();
                 return;
             }
 
             _queue = new UploadQueueState { TargetFolder = TargetFolder };
             AddToQueue(_queue, scan);
+            await SaveQueueAsync();
             await RunQueueAsync();
         }
 
@@ -351,14 +390,17 @@ namespace BoxeZone.ViewModels
                     {
                         if (FileIndex == index && IsUploading && ReferenceEquals(_queue, queue))
                         {
+                            IsResuming = false;
                             Progress = 100.0 * (sentBefore + weight * value / 100) / TotalWeight(queue);
                         }
                     });
 
                     var job = new UploadJob(file.LocalPath, file.FileName, target, file.Size, file.LastWriteTime, file.ResumeState);
-                    file.Uploaded = await Provider.UploadAsync(job, progress, state => OnResumeState(file, state), cts.Token);
+                    file.Uploaded = await Provider.UploadAsync(job, progress, state => OnResumeState(queue, file, state), cts.Token);
                     file.Status = QueuedFileStatus.Done;
                     file.ResumeState = null;
+                    IsResuming = false;
+                    await SaveQueueAsync();
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
                 {
@@ -367,6 +409,8 @@ namespace BoxeZone.ViewModels
                     // Any exception after the request counts: some SDKs surface the abort as another error.
                     _uploadCts = null;
                     _queue = null;
+                    IsResuming = false;
+                    await _queueStore.DeleteAsync(Id);
                     Progress = 0;
                     State = UploadState.Idle;
                     return;
@@ -380,7 +424,7 @@ namespace BoxeZone.ViewModels
                 }
             }
 
-            Finish(queue);
+            await FinishAsync(queue);
         }
 
         /// <summary>A loose file goes to the destination; a folder's file, inside the folder created for it.</summary>
@@ -392,16 +436,57 @@ namespace BoxeZone.ViewModels
             }
 
             QueuedFolder folder = queue.Folders[file.FolderIndex];
-            folder.Created ??= await Provider.CreateFolderAsync(queue.TargetFolder, folder.Name, ct);
+            if (folder.Created is null)
+            {
+                folder.Created = await Provider.CreateFolderAsync(queue.TargetFolder, folder.Name, ct);
+                await SaveQueueAsync();
+            }
+
             return JoinPath(queue.TargetFolder, folder.Created.Name, file.RelativeFolder);
         }
 
-        private void OnResumeState(QueuedFile file, string state) =>
-            _dispatcher.TryEnqueue(() => file.ResumeState = state);
+        /// <summary>From the provider, maybe off the UI thread: keep the latest point, save at most every 2 s.</summary>
+        private void OnResumeState(UploadQueueState queue, QueuedFile file, string state) =>
+            _dispatcher.TryEnqueue(async () =>
+            {
+                if (!ReferenceEquals(_queue, queue) || file.Status != QueuedFileStatus.Pending)
+                {
+                    return;
+                }
+
+                file.ResumeState = state;
+                if (DateTime.UtcNow - _lastResumeSave >= TimeSpan.FromSeconds(2))
+                {
+                    _lastResumeSave = DateTime.UtcNow;
+                    await SaveQueueAsync();
+                }
+            });
+
+        private async Task SaveQueueAsync()
+        {
+            if (_queue is not { } queue)
+            {
+                return;
+            }
+
+            try
+            {
+                await _queueStore.SaveAsync(Id, queue);
+            }
+            catch (Exception ex)
+            {
+                // The upload goes on; only resuming after a restart is at stake.
+                Debug.WriteLine($"{Id}: saving the upload queue failed: {ex.GetType().Name}");
+            }
+        }
 
         private void Fail(QueuedFile file, string message)
         {
             _uploadCts = null;
+            IsResuming = false;
+
+            // The queue stays saved: "Tentar de novo", or the next start, continues it.
+            _ = SaveQueueAsync();
             FileName = file.FileName;
             ErrorMessage = message;
             State = UploadState.Failed;
@@ -409,10 +494,12 @@ namespace BoxeZone.ViewModels
             UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.FileName], null, ErrorMessage, null));
         }
 
-        private void Finish(UploadQueueState queue)
+        private async Task FinishAsync(UploadQueueState queue)
         {
             _uploadCts = null;
             _queue = null;
+            IsResuming = false;
+            await _queueStore.DeleteAsync(Id);
 
             // What "Copiar link" shares: each dropped folder as one link, each loose file as its own.
             _uploadedItems = queue.Folders.Where(f => f.Created is not null).Select(f => (f.Order, Item: f.Created!))
@@ -549,6 +636,10 @@ namespace BoxeZone.ViewModels
             }
             else if (IsConnected)
             {
+                // A batch in progress (or saved) belongs to this account: drop it.
+                _uploadCts?.Cancel();
+                _queue = null;
+                await _queueStore.DeleteAsync(Id);
                 await Provider.DisconnectAsync();
                 RefreshConnection();
                 IsEnabled = false;
@@ -616,6 +707,11 @@ namespace BoxeZone.ViewModels
             {
                 _ = ConnectAsync();
             }
+            else if (Provider.IsConnected && !_isRestoring)
+            {
+                // Switched back on with a batch saved while it was off.
+                _ = ResumeSavedQueueAsync();
+            }
         }
 
         private async Task ConnectAsync()
@@ -642,6 +738,10 @@ namespace BoxeZone.ViewModels
             if (!Provider.IsConnected)
             {
                 IsEnabled = false;
+            }
+            else if (IsEnabled)
+            {
+                _ = ResumeSavedQueueAsync();
             }
         }
 

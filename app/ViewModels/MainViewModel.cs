@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using BoxeZone.Services;
 using BoxeZone.Services.Storage;
+using BoxeZone.Services.Upload;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Windows.ApplicationModel.Resources;
 
@@ -16,6 +17,7 @@ namespace BoxeZone.ViewModels
             SettingsService settingsService,
             SettingsViewModel settings,
             ShareLinkService shareLinks,
+            UploadQueueStore queueStore,
             IStorageProvider googleDrive,
             IStorageProvider oneDrive,
             IStorageProvider dropbox)
@@ -25,9 +27,9 @@ namespace BoxeZone.ViewModels
             AppSettings saved = settingsService.Settings;
             Providers =
             [
-                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "google-drive.svg", googleDrive, saved.GetProvider("gdrive"), settingsService.Save, shareLinks),
-                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "onedrive.svg", oneDrive, saved.GetProvider("onedrive"), settingsService.Save, shareLinks),
-                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "dropbox.svg", dropbox, saved.GetProvider("dropbox"), settingsService.Save, shareLinks),
+                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "google-drive.svg", googleDrive, saved.GetProvider("gdrive"), settingsService.Save, shareLinks, queueStore),
+                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "onedrive.svg", oneDrive, saved.GetProvider("onedrive"), settingsService.Save, shareLinks, queueStore),
+                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "dropbox.svg", dropbox, saved.GetProvider("dropbox"), settingsService.Save, shareLinks, queueStore),
             ];
 
             foreach (ProviderViewModel provider in Providers)

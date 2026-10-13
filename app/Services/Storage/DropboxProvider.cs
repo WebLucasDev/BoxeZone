@@ -112,32 +112,85 @@ namespace BoxeZone.Services.Storage
                 long totalBytes = stream.Length;
                 byte[] buffer = new byte[ChunkSize];
 
-                // Start the session with the first chunk, append the rest, then commit with an empty body.
-                int length = await stream.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, ct);
-                UploadSessionStartResult session;
-                using (var first = new MemoryStream(buffer, 0, length))
+                // ResumeState "sessionId|offset": an upload session of this file to continue.
+                string? sessionId = null;
+                ulong offset = 0;
+                if (job.ResumeState?.Split('|') is [var savedId, var savedOffset] && ulong.TryParse(savedOffset, out ulong parsed))
                 {
-                    session = await client.Files.UploadSessionStartAsync(body: first);
+                    sessionId = savedId;
+                    offset = parsed;
                 }
 
-                ulong offset = (ulong)length;
-                Report(progress, offset, totalBytes);
-
-                while ((long)offset < totalBytes)
+                FileMetadata metadata;
+                while (true)
                 {
-                    ct.ThrowIfCancellationRequested();
-                    length = await stream.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, ct);
-                    using var chunk = new MemoryStream(buffer, 0, length);
-                    await client.Files.UploadSessionAppendV2Async(new UploadSessionCursor(session.SessionId, offset), body: chunk);
-                    offset += (ulong)length;
-                    Report(progress, offset, totalBytes);
-                }
+                    // Start (or restart from zero) with the first chunk, append the rest, then
+                    // commit with an empty body.
+                    if (sessionId is null)
+                    {
+                        stream.Seek(0, SeekOrigin.Begin);
+                        int firstLength = await stream.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, ct);
+                        using (var first = new MemoryStream(buffer, 0, firstLength))
+                        {
+                            sessionId = (await client.Files.UploadSessionStartAsync(body: first)).SessionId;
+                        }
 
-                // "Add" + autorename: an existing file with the same name gets a " (1)" copy instead of being replaced.
-                FileMetadata metadata = await client.Files.UploadSessionFinishAsync(
-                    new UploadSessionCursor(session.SessionId, offset),
-                    new CommitInfo($"{folder.TrimEnd('/')}/{job.FileName}", WriteMode.Add.Instance, autorename: true),
-                    body: new MemoryStream());
+                        offset = (ulong)firstLength;
+                        saveResumeState($"{sessionId}|{offset}");
+                        Report(progress, offset, totalBytes);
+                    }
+
+                    while ((long)offset < totalBytes)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        stream.Seek((long)offset, SeekOrigin.Begin);
+                        int length = await stream.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, ct);
+                        try
+                        {
+                            using var chunk = new MemoryStream(buffer, 0, length);
+                            await client.Files.UploadSessionAppendV2Async(new UploadSessionCursor(sessionId, offset), body: chunk);
+                            offset += (ulong)length;
+                        }
+                        catch (ApiException<UploadSessionAppendError> ex) when (ex.ErrorResponse.IsIncorrectOffset)
+                        {
+                            // A chunk arrived but its answer did not (or the saved offset was older).
+                            offset = ex.ErrorResponse.AsIncorrectOffset.Value.CorrectOffset;
+                        }
+                        catch (ApiException<UploadSessionAppendError> ex) when (ex.ErrorResponse.IsNotFound || ex.ErrorResponse.IsClosed)
+                        {
+                            // Expired (sessions last 7 days) or unknown: from zero.
+                            sessionId = null;
+                            break;
+                        }
+
+                        saveResumeState($"{sessionId}|{offset}");
+                        Report(progress, offset, totalBytes);
+                    }
+
+                    if (sessionId is null)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        // "Add" + autorename: an existing file with the same name gets a " (1)" copy instead of being replaced.
+                        metadata = await client.Files.UploadSessionFinishAsync(
+                            new UploadSessionCursor(sessionId, offset),
+                            new CommitInfo($"{folder.TrimEnd('/')}/{job.FileName}", WriteMode.Add.Instance, autorename: true),
+                            body: new MemoryStream());
+                        break;
+                    }
+                    catch (ApiException<UploadSessionFinishError> ex) when (ex.ErrorResponse.IsLookupFailed && ex.ErrorResponse.AsLookupFailed.Value.IsIncorrectOffset)
+                    {
+                        offset = ex.ErrorResponse.AsLookupFailed.Value.AsIncorrectOffset.Value.CorrectOffset;
+                    }
+                    catch (ApiException<UploadSessionFinishError> ex) when (ex.ErrorResponse.IsLookupFailed
+                        && (ex.ErrorResponse.AsLookupFailed.Value.IsNotFound || ex.ErrorResponse.AsLookupFailed.Value.IsClosed))
+                    {
+                        sessionId = null;
+                    }
+                }
 
                 progress.Report(100);
                 return new UploadedItem(metadata.Id, metadata.Name, BuildWebLink(folder, metadata.Name));
