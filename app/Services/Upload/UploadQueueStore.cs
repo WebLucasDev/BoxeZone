@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +54,11 @@ namespace BoxeZone.Services.Upload
             try
             {
                 tokenStore.Delete(Key(providerId));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Held by an antivirus for a moment: at worst the batch resumes at the next start.
+                Debug.WriteLine($"Deleting the upload queue of {providerId} failed: {ex.GetType().Name}");
             }
             finally
             {

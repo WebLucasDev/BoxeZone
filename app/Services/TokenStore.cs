@@ -41,8 +41,12 @@ namespace BoxeZone.Services
             IBuffer plain = CryptographicBuffer.ConvertStringToBinary(value, BinaryStringEncoding.Utf8);
             IBuffer encrypted = await new DataProtectionProvider(ProtectionDescriptor).ProtectAsync(plain);
 
+            // Write aside, then swap: the PC going off mid-write leaves the old value, not a broken one.
             Directory.CreateDirectory(_folder);
-            await File.WriteAllBytesAsync(GetPath(key), encrypted.ToArray());
+            string path = GetPath(key);
+            string temporary = path + ".tmp";
+            await File.WriteAllBytesAsync(temporary, encrypted.ToArray());
+            File.Move(temporary, path, overwrite: true);
         }
 
         public void Delete(string key)

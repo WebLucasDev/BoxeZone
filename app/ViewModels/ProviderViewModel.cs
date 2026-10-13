@@ -61,7 +61,10 @@ namespace BoxeZone.ViewModels
         private readonly ShareLinkService _shareLinks;
         private readonly UploadQueueStore _queueStore;
         private readonly DispatcherQueue _dispatcher;
-        private DateTime _lastResumeSave;
+        private DateTime _lastSave;
+
+        // The run in progress continues a batch saved before the app closed (no one is watching yet).
+        private bool _autoResume;
         private readonly DispatcherQueueTimer _linkFeedbackTimer;
 
         // The last batch that finished: for "Abrir" and "Copiar link" (dropped folders and
@@ -232,12 +235,16 @@ namespace BoxeZone.ViewModels
         /// </summary>
         public async Task RestoreAsync()
         {
+            // A revoked session comes back quietly (not connected); an exception means it could
+            // not be checked, usually because the network is not up yet.
+            bool restoreFailed = false;
             try
             {
                 await Provider.RestoreAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
+                restoreFailed = true;
                 // Offline at startup or similar: the user can still sign in by switching the provider on.
                 Debug.WriteLine($"{Id}: restore failed: {ex.GetType().Name}");
             }
@@ -249,6 +256,49 @@ namespace BoxeZone.ViewModels
                 IsEnabled = true;
                 _isRestoring = false;
                 await ResumeSavedQueueAsync();
+            }
+            else if (restoreFailed && _settings.Enabled)
+            {
+                // Started with the PC (Wi-Fi not up yet): reconnect when the network is back,
+                // then switch on and continue a saved batch, as promised for "PC desligado".
+                _ = RestoreWhenOnlineAsync();
+            }
+        }
+
+        /// <summary>
+        /// Retries the silent reconnection until it works, without limit, unless the user took
+        /// over (switched it, or signed in) or the saved session turned out to be gone.
+        /// </summary>
+        private async Task RestoreWhenOnlineAsync()
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                await NetworkWaiter.WaitAsync(attempt, CancellationToken.None);
+                if (IsConnected || IsConnecting || IsEnabled || !_settings.Enabled)
+                {
+                    return;
+                }
+
+                try
+                {
+                    await Provider.RestoreAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"{Id}: restore retry failed: {ex.GetType().Name}");
+                    continue;
+                }
+
+                RefreshConnection();
+                if (IsConnected && !IsEnabled)
+                {
+                    _isRestoring = true;
+                    IsEnabled = true;
+                    _isRestoring = false;
+                    await ResumeSavedQueueAsync();
+                }
+
+                return;
             }
         }
 
@@ -277,6 +327,7 @@ namespace BoxeZone.ViewModels
 
             _queue = saved;
             IsResuming = true;
+            _autoResume = true;
             await RunQueueAsync();
         }
 
@@ -406,17 +457,21 @@ namespace BoxeZone.ViewModels
                     });
 
                     // Each try takes the latest resume point: after a network drop, it goes on from there.
-                    file.Uploaded = await WhileOfflineAsync(
+                    UploadedItem uploaded = await WhileOfflineAsync(
                         () => Provider.UploadAsync(
                             new UploadJob(file.LocalPath, file.FileName, target, file.Size, file.LastWriteTime, file.ResumeState),
                             progress,
                             state => OnResumeState(queue, file, state),
                             cts.Token),
                         cts.Token);
+
+                    // Only loose files are listed by "Copiar link" (a folder is shared as a whole):
+                    // keeping the item of every file would make the saved queue grow with the batch.
+                    file.Uploaded = file.FolderIndex < 0 ? uploaded : null;
                     file.Status = QueuedFileStatus.Done;
                     file.ResumeState = null;
                     IsResuming = false;
-                    await SaveQueueAsync();
+                    await SaveQueueIfDueAsync();
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
                 {
@@ -426,7 +481,10 @@ namespace BoxeZone.ViewModels
                     _uploadCts = null;
                     _queue = null;
                     IsResuming = false;
-                    await _queueStore.DeleteAsync(Id);
+
+                    // Not awaited: the state must change right away, or a drop in between would be
+                    // queued behind a run that is ending. The gate keeps it before any later save.
+                    _ = _queueStore.DeleteAsync(Id);
                     Progress = 0;
                     State = UploadState.Idle;
                     return;
@@ -440,7 +498,7 @@ namespace BoxeZone.ViewModels
                 }
             }
 
-            await FinishAsync(queue);
+            Finish(queue);
         }
 
         /// <summary>A loose file goes to the destination; a folder's file, inside the folder created for it.</summary>
@@ -470,13 +528,21 @@ namespace BoxeZone.ViewModels
                     return;
                 }
 
+                // The first point of a file is saved at once: Google gives its session address only
+                // once, at the start; later points (each chunk) can wait for the 2 s throttle.
+                bool first = file.ResumeState is null;
                 file.ResumeState = state;
-                if (DateTime.UtcNow - _lastResumeSave >= TimeSpan.FromSeconds(2))
-                {
-                    _lastResumeSave = DateTime.UtcNow;
-                    await SaveQueueAsync();
-                }
+                await (first ? SaveQueueAsync() : SaveQueueIfDueAsync());
             });
+
+        /// <summary>At most every 2 s: a big folder would otherwise rewrite the whole queue after every file.</summary>
+        private async Task SaveQueueIfDueAsync()
+        {
+            if (DateTime.UtcNow - _lastSave >= TimeSpan.FromSeconds(2))
+            {
+                await SaveQueueAsync();
+            }
+        }
 
         private async Task SaveQueueAsync()
         {
@@ -485,6 +551,7 @@ namespace BoxeZone.ViewModels
                 return;
             }
 
+            _lastSave = DateTime.UtcNow;
             try
             {
                 await _queueStore.SaveAsync(Id, queue);
@@ -500,22 +567,32 @@ namespace BoxeZone.ViewModels
         {
             _uploadCts = null;
             IsResuming = false;
+            bool automatic = _autoResume;
+            _autoResume = false;
 
-            // The queue stays saved: "Tentar de novo", or the next start, continues it.
-            _ = SaveQueueAsync();
+            // The queue stays (in memory) for "Tentar de novo". Saved, the next start tries it
+            // again, but only once: a failure that persists (no space, a name the service refuses)
+            // must not come back with a notification at every start.
+            _ = automatic ? _queueStore.DeleteAsync(Id) : SaveQueueAsync();
             FileName = file.FileName;
             ErrorMessage = message;
             State = UploadState.Failed;
             RefreshConnection();
-            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.FileName], null, ErrorMessage, null));
+            if (!automatic)
+            {
+                UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.FileName], null, ErrorMessage, null));
+            }
         }
 
-        private async Task FinishAsync(UploadQueueState queue)
+        private void Finish(UploadQueueState queue)
         {
             _uploadCts = null;
             _queue = null;
             IsResuming = false;
-            await _queueStore.DeleteAsync(Id);
+            _autoResume = false;
+
+            // Not awaited, for the same reason as in the cancel path.
+            _ = _queueStore.DeleteAsync(Id);
 
             // What "Copiar link" shares: each dropped folder as one link, each loose file as its own.
             _uploadedItems = queue.Folders.Where(f => f.Created is not null).Select(f => (f.Order, Item: f.Created!))
@@ -534,7 +611,7 @@ namespace BoxeZone.ViewModels
 
             bool singleFolder = queue.Folders.Count == 1 && queue.Files.All(f => f.FolderIndex == 0);
             _doneTitle = singleFolder ? queue.Folders[0].Created!.Name : null;
-            _openTarget = singleFolder ? queue.Folders[0].Created : sent[^1].Uploaded;
+            _openTarget = singleFolder ? queue.Folders[0].Created : _uploadedItems[^1];
             FileCount = sent.Count;
             FileName = sent[^1].FileName;
             OnPropertyChanged(nameof(DoneLabel));
@@ -684,6 +761,8 @@ namespace BoxeZone.ViewModels
                 _uploadCts?.Cancel();
                 _queue = null;
                 await _queueStore.DeleteAsync(Id);
+                Progress = 0;
+                State = UploadState.Idle;
                 await Provider.DisconnectAsync();
                 RefreshConnection();
                 IsEnabled = false;
