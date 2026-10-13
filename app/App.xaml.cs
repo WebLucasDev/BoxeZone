@@ -26,6 +26,7 @@ namespace BoxeZone
         private HotkeyService? _hotkeyService;
         private SettingsService? _settingsService;
         private NotificationService? _notificationService;
+        private ShareLinkService? _shareLinks;
         private UpdateService? _updateService;
         private DispatcherQueueTimer? _updateTimer;
         private TaskbarIcon? _trayIcon;
@@ -57,9 +58,13 @@ namespace BoxeZone
             _hotkeyService = new HotkeyService(_tabWindow.GetHwnd());
             var settings = new SettingsViewModel(_settingsService, _hotkeyService);
 
+            // The tab window exists first and never closes early: it owns what the app puts on the clipboard.
+            _shareLinks = new ShareLinkService(_tabWindow.GetHwnd());
+
             var viewModel = new MainViewModel(
                 _settingsService,
                 settings,
+                _shareLinks,
                 new GoogleDriveProvider(credentials.Google, tokenStore),
                 new OneDriveProvider(credentials.MicrosoftClientId, tokenStore),
                 new DropboxProvider(credentials.DropboxAppKey, tokenStore));

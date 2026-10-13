@@ -211,6 +211,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Border
                         Width="18"
@@ -235,14 +236,23 @@
                         Grid.Column="1"
                         VerticalAlignment="Center"
                         FontSize="12"
-                        Text="{x:Bind ViewModel.DoneLabel, Mode=OneWay}"
-                        TextTrimming="CharacterEllipsis" />
+                        Text="{x:Bind ViewModel.DoneText, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis"
+                        Visibility="{x:Bind DoneTextVisibility(IsCompact, ViewModel.HasDoneMessage), Mode=OneWay}" />
                     <HyperlinkButton
                         x:Uid="OpenUploadedLink"
                         Grid.Column="2"
                         Padding="0"
                         VerticalAlignment="Center"
                         Command="{x:Bind ViewModel.OpenUploadedCommand, Mode=OneWay}"
+                        FontSize="12"
+                        Foreground="{ThemeResource TextSecondaryBrush}" />
+                    <HyperlinkButton
+                        Grid.Column="3"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.CopyLinkCommand, Mode=OneWay}"
+                        Content="{x:Bind ViewModel.CopyLinkLabel, Mode=OneWay}"
                         FontSize="12"
                         Foreground="{ThemeResource TextSecondaryBrush}" />
                 </Grid>

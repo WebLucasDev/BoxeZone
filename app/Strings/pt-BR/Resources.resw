@@ -158,6 +158,22 @@
     <value>{0} arquivos</value>
     <comment>{0} = number of files sent (2 or more).</comment>
   </data>
+  <data name="CopyLink" xml:space="preserve">
+    <value>Copiar link</value>
+  </data>
+  <data name="CopyLinkCopying" xml:space="preserve">
+    <value>Copiando…</value>
+  </data>
+  <data name="CopyLinkCopied" xml:space="preserve">
+    <value>Link copiado</value>
+  </data>
+  <data name="CopyLinkFailed" xml:space="preserve">
+    <value>Não foi possível criar o link</value>
+  </data>
+  <data name="CopyLinkReconnectFormat" xml:space="preserve">
+    <value>Conecte o {0} de novo para copiar links</value>
+    <comment>{0} = provider name.</comment>
+  </data>
   <data name="FooterHotkeyHint.Text" xml:space="preserve">
     <value>abre e fecha</value>
   </data>

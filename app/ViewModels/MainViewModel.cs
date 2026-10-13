@@ -15,6 +15,7 @@ namespace BoxeZone.ViewModels
         public MainViewModel(
             SettingsService settingsService,
             SettingsViewModel settings,
+            ShareLinkService shareLinks,
             IStorageProvider googleDrive,
             IStorageProvider oneDrive,
             IStorageProvider dropbox)
@@ -24,9 +25,9 @@ namespace BoxeZone.ViewModels
             AppSettings saved = settingsService.Settings;
             Providers =
             [
-                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "google-drive.svg", googleDrive, saved.GetProvider("gdrive"), settingsService.Save),
-                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "onedrive.svg", oneDrive, saved.GetProvider("onedrive"), settingsService.Save),
-                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "dropbox.svg", dropbox, saved.GetProvider("dropbox"), settingsService.Save),
+                new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "google-drive.svg", googleDrive, saved.GetProvider("gdrive"), settingsService.Save, shareLinks),
+                new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "onedrive.svg", oneDrive, saved.GetProvider("onedrive"), settingsService.Save, shareLinks),
+                new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "dropbox.svg", dropbox, saved.GetProvider("dropbox"), settingsService.Save, shareLinks),
             ];
 
             foreach (ProviderViewModel provider in Providers)

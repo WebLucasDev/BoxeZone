@@ -8,6 +8,7 @@ using BoxeZone.Services;
 using BoxeZone.Services.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Dispatching;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Storage;
 
@@ -21,12 +22,16 @@ namespace BoxeZone.ViewModels
         Failed,
     }
 
-    /// <summary>A batch of dropped files finished uploading, or stopped at the first failure.</summary>
+    /// <summary>
+    /// A batch of dropped files finished uploading, or stopped at the first failure.
+    /// BatchId: for the notification's "Copiar link"; null on failure.
+    /// </summary>
     public sealed record UploadFinishedEventArgs(
         bool Succeeded,
         IReadOnlyList<string> FileNames,
         string? Link,
-        string? ErrorMessage);
+        string? ErrorMessage,
+        string? BatchId);
 
     /// <summary>
     /// State of one provider: switched on/off, connected, its destination folder and the
@@ -55,11 +60,16 @@ namespace BoxeZone.ViewModels
         private ulong _totalWeight;
         private ulong _sentWeight;
 
+        private readonly ShareLinkService _shareLinks;
+        private readonly DispatcherQueueTimer _linkFeedbackTimer;
+
         private List<StorageFile> _failedFiles = [];
-        private string? _uploadedLink;
+
+        // Files of the last batch that finished, for "Abrir" (last one) and "Copiar link" (all).
+        private List<UploadedItem> _uploadedItems = [];
         private bool _isRestoring;
 
-        public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save)
+        public ProviderViewModel(string id, string name, string logoFile, IStorageProvider provider, ProviderSettings settings, Action save, ShareLinkService shareLinks)
         {
             Id = id;
             Name = name;
@@ -67,10 +77,17 @@ namespace BoxeZone.ViewModels
             Provider = provider;
             _settings = settings;
             _save = save;
+            _shareLinks = shareLinks;
             FileName = string.Empty;
             ErrorMessage = string.Empty;
             FolderDraft = string.Empty;
             TargetFolder = settings.TargetFolder;
+            CopyLinkLabel = Strings.GetString("CopyLink");
+
+            // "Link copiado" and the failure messages go away after a moment.
+            _linkFeedbackTimer = DispatcherQueue.GetForCurrentThread().CreateTimer();
+            _linkFeedbackTimer.IsRepeating = false;
+            _linkFeedbackTimer.Tick += (_, _) => ResetLinkFeedback();
         }
 
         public event EventHandler<UploadFinishedEventArgs>? UploadFinished;
@@ -117,12 +134,21 @@ namespace BoxeZone.ViewModels
         public partial int FileIndex { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(CountLabel), nameof(IsBatch), nameof(DoneLabel))]
+        [NotifyPropertyChangedFor(nameof(CountLabel), nameof(IsBatch), nameof(DoneLabel), nameof(DoneText))]
         public partial int FileCount { get; set; }
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(DoneLabel), nameof(FailedLabel))]
+        [NotifyPropertyChangedFor(nameof(DoneLabel), nameof(DoneText), nameof(FailedLabel))]
         public partial string FileName { get; set; }
+
+        /// <summary>"Copiar link", "Copiando…" or "Link copiado".</summary>
+        [ObservableProperty]
+        public partial string CopyLinkLabel { get; set; }
+
+        /// <summary>A failure of "Copiar link", shown for a moment instead of "Enviado · nome".</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(DoneText), nameof(HasDoneMessage))]
+        public partial string? DoneMessage { get; set; }
 
         /// <summary>One-line reason shown under a failed upload.</summary>
         [ObservableProperty]
@@ -162,7 +188,11 @@ namespace BoxeZone.ViewModels
             Strings.GetString("UploadDoneFormat"),
             IsBatch ? string.Format(Strings.GetString("UploadFilesFormat"), FileCount) : FileName);
 
-        public string FailedLabel => string.Format(Strings.GetString("UploadFailedFormat"), FileName);
+        public string DoneText => DoneMessage ?? DoneLabel;
+
+        public bool HasDoneMessage => DoneMessage is not null;
+
+        public string FailedLabel =>string.Format(Strings.GetString("UploadFailedFormat"), FileName);
 
         public string Status =>
             IsConnecting ? Strings.GetString("StatusConnecting")
@@ -231,6 +261,7 @@ namespace BoxeZone.ViewModels
             _totalWeight = 0;
             _sentWeight = 0;
             AddToBatch(files, sizes);
+            var uploaded = new List<UploadedItem>();
 
             using var cts = new CancellationTokenSource();
             _uploadCts = cts;
@@ -259,7 +290,7 @@ namespace BoxeZone.ViewModels
                             Progress = 100.0 * (sentBefore + weight * value / 100) / _totalWeight;
                         }
                     });
-                    _uploadedLink = (await Provider.UploadAsync(file, TargetFolder, progress, cts.Token)).WebUrl;
+                    uploaded.Add(await Provider.UploadAsync(file, TargetFolder, progress, cts.Token));
                     _sentWeight += weight;
                 }
                 catch (Exception) when (cts.IsCancellationRequested)
@@ -281,15 +312,17 @@ namespace BoxeZone.ViewModels
                     ErrorMessage = DescribeError(ex);
                     State = UploadState.Failed;
                     RefreshConnection();
-                    UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.Name], null, ErrorMessage));
+                    UploadFinished?.Invoke(this, new UploadFinishedEventArgs(false, [file.Name], null, ErrorMessage, null));
                     return;
                 }
             }
 
             _uploadCts = null;
             _failedFiles = [];
+            _uploadedItems = uploaded;
+            string batchId = _shareLinks.Register(Provider, uploaded);
             State = UploadState.Done;
-            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, _batch.Select(f => f.Name).ToList(), _uploadedLink, null));
+            UploadFinished?.Invoke(this, new UploadFinishedEventArgs(true, _batch.Select(f => f.Name).ToList(), uploaded[^1].WebUrl, null, batchId));
         }
 
         private void AddToBatch(IReadOnlyList<StorageFile> files, ulong[] sizes)
@@ -341,10 +374,61 @@ namespace BoxeZone.ViewModels
         [RelayCommand]
         private void OpenUploaded()
         {
-            if (_uploadedLink is not null)
+            if (_uploadedItems.LastOrDefault()?.WebUrl is { Length: > 0 } link)
             {
-                Process.Start(new ProcessStartInfo(_uploadedLink) { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo(link) { UseShellExecute = true });
             }
+        }
+
+        /// <summary>
+        /// Shares every file of the last batch and copies the links. A batch that starts
+        /// meanwhile keeps its own row: the result of this copy is then not shown.
+        /// </summary>
+        [RelayCommand]
+        private async Task CopyLinkAsync()
+        {
+            List<UploadedItem> items = _uploadedItems;
+            if (items.Count == 0)
+            {
+                return;
+            }
+
+            ResetLinkFeedback();
+            CopyLinkLabel = Strings.GetString("CopyLinkCopying");
+            ShareResult result = await _shareLinks.CopyAsync(Provider, items, CancellationToken.None);
+
+            if (!IsDone || items != _uploadedItems)
+            {
+                ResetLinkFeedback();
+                return;
+            }
+
+            if (result.Succeeded)
+            {
+                CopyLinkLabel = Strings.GetString("CopyLinkCopied");
+                ShowLinkFeedbackFor(TimeSpan.FromSeconds(2));
+                return;
+            }
+
+            CopyLinkLabel = Strings.GetString("CopyLink");
+            DoneMessage = ShareLinkService.DescribeFailure(result.Error!.Value, Name);
+            ShowLinkFeedbackFor(TimeSpan.FromSeconds(result.Error == StorageErrorKind.MissingPermission ? 5 : 3));
+            RefreshConnection();
+        }
+
+        partial void OnStateChanged(UploadState value) => ResetLinkFeedback();
+
+        private void ShowLinkFeedbackFor(TimeSpan duration)
+        {
+            _linkFeedbackTimer.Interval = duration;
+            _linkFeedbackTimer.Start();
+        }
+
+        private void ResetLinkFeedback()
+        {
+            _linkFeedbackTimer.Stop();
+            CopyLinkLabel = Strings.GetString("CopyLink");
+            DoneMessage = null;
         }
 
         /// <summary>

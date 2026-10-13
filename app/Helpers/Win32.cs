@@ -13,6 +13,8 @@ namespace BoxeZone.Helpers
         private const int GWL_EXSTYLE = -20;
         private const int GWLP_HWNDPARENT = -8;
         private const long WS_EX_NOACTIVATE = 0x08000000;
+        private const uint CF_UNICODETEXT = 13;
+        private const uint GMEM_MOVEABLE = 0x0002;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -259,6 +261,81 @@ namespace BoxeZone.Helpers
             else
             {
                 SetWindowLong32(hwnd, index, value.ToInt32());
+            }
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool OpenClipboard(IntPtr owner);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseClipboard();
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EmptyClipboard();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetClipboardData(uint format, IntPtr data);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalAlloc(uint flags, UIntPtr bytes);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalLock(IntPtr memory);
+
+        [DllImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GlobalUnlock(IntPtr memory);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalFree(IntPtr memory);
+
+        /// <summary>
+        /// Puts text on the clipboard without needing focus (the WinRT Clipboard wants a
+        /// foreground app). False when another app holds the clipboard open right now.
+        /// The owner window must be real: with no owner, SetClipboardData fails.
+        /// </summary>
+        public static bool TrySetClipboardText(IntPtr owner, string text)
+        {
+            if (!OpenClipboard(owner))
+            {
+                return false;
+            }
+
+            try
+            {
+                EmptyClipboard();
+                IntPtr memory = GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)((text.Length + 1) * 2));
+                if (memory == IntPtr.Zero)
+                {
+                    return false;
+                }
+
+                IntPtr target = GlobalLock(memory);
+                if (target == IntPtr.Zero)
+                {
+                    GlobalFree(memory);
+                    return false;
+                }
+
+                Marshal.Copy(text.ToCharArray(), 0, target, text.Length);
+                Marshal.WriteInt16(target, text.Length * 2, 0);
+                GlobalUnlock(memory);
+
+                if (SetClipboardData(CF_UNICODETEXT, memory) == IntPtr.Zero)
+                {
+                    GlobalFree(memory);
+                    return false;
+                }
+
+                // The clipboard owns the memory from here on.
+                return true;
+            }
+            finally
+            {
+                CloseClipboard();
             }
         }
     }
