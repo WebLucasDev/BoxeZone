@@ -1,18 +1,22 @@
 # Boxe Zone
 
-Widget gratuito para Windows 10 e 11: arraste arquivos para o canto da tela e eles são enviados para o **Google Drive**, o **OneDrive** ou o **Dropbox**. Sem conta própria e sem servidor no meio do caminho: os arquivos vão do seu computador direto para o serviço que você escolheu.
+Widget gratuito para Windows 10 e 11: solte arquivos ou pastas no canto da tela e eles são enviados para o **Google Drive**, o **OneDrive** ou o **Dropbox**, sem abrir o navegador. Sem cadastro e sem servidor no meio do caminho: os arquivos vão do seu computador direto para o serviço que você escolheu.
 
-*A free Windows 10/11 widget: drop files in a corner of the screen and they are uploaded to Google Drive, OneDrive or Dropbox, straight from your computer. Interface in Brazilian Portuguese.*
+*A free Windows 10/11 widget: drop files or folders in a corner of the screen and they are uploaded to Google Drive, OneDrive or Dropbox, straight from your computer. Interface in Portuguese and English.*
 
 **Download:** https://weblucasdev.github.io/BoxeZone/ (instaladores x64 e ARM64 nas [Releases](https://github.com/WebLucasDev/BoxeZone/releases)).
 
 ## O que faz
 
 - Um switch por serviço; ligado, ganha a sua área de drop no widget.
-- Envio em partes, com progresso real; nomes repetidos não sobrescrevem arquivos.
+- Envia arquivos e pastas inteiras, com progresso real ("3 de 12") e "Cancelar"; nomes repetidos não sobrescrevem nada.
+- Continua sozinho de onde parou se a internet cair ou o app fechar.
+- "Copiar link" depois do envio, no widget e na notificação do Windows.
+- Histórico dos últimos 50 envios, com "Abrir" e "Copiar link".
+- Pasta de destino escolhida navegando pelas pastas da conta ("Procurar…").
 - Fica por cima das outras janelas, recolhe numa faixa na borda da tela e abre e fecha com um atalho (Ctrl+Alt+D, configurável).
-- Notificação ao concluir, com link para o arquivo enviado.
-- Avisa quando há versão nova (pode ser desligado no instalador ou nas Configurações).
+- Português e inglês, tema claro e escuro.
+- Atualização automática: baixa a versão nova das Releases, confere o SHA256 e instala quando você clica em "Atualizar" (pode ser desligada no instalador ou nas Configurações).
 
 ## Privacidade
 
@@ -20,7 +24,12 @@ O app não coleta dados. O acesso às contas fica só no seu computador, criptog
 
 ## Instalador
 
-O instalador ainda não tem assinatura digital: na primeira vez, o Windows mostra "O Windows protegeu o computador" (clique em Mais informações e depois em Executar assim mesmo). Cada versão é compilada pelo GitHub Actions a partir deste repositório e publicada nas [Releases](https://github.com/WebLucasDev/BoxeZone/releases).
+O instalador não tem assinatura digital. Na primeira vez, o navegador e o Windows podem avisar que não o reconhecem:
+
+- No Edge, se o download disser que o arquivo "normalmente não é baixado": **⋯** → **Manter**, depois a seta ao lado de **Excluir** → **Manter mesmo assim**.
+- Se aparecer "O Windows protegeu o computador": **Mais informações** → **Executar assim mesmo**.
+
+O [site](https://weblucasdev.github.io/BoxeZone/#instalador) mostra esses passos numa animação. Cada versão é compilada pelo GitHub Actions a partir deste repositório e publicada nas [Releases](https://github.com/WebLucasDev/BoxeZone/releases), com as somas SHA256 em `SHA256SUMS.txt`.
 
 ## Compilar
 
