@@ -14,6 +14,11 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Distribuição
 
+- [ ] **Microsoft Store** (decisão do usuário em 14/10/2026: publicar no futuro). Dois caminhos:
+  - **Pacote MSIX** (recomendado): a Store assina de graça e o aviso do SmartScreen some para quem instala por ela. Exige um build empacotado ao lado do instalador do site: início com o Windows por `StartupTask` no manifesto (o `Run\BoxeZone` não vale para app empacotado), protocolo `boxezone:` e notificações declarados no manifesto, e atualização automática desligada nessa versão (a Store atualiza). Exige mudar a regra "não usar MSIX" do `CLAUDE.md`.
+  - **Instalador .exe atual**: a Store só aceita .exe/.msi assinado com certificado reconhecido (pago); pede URL fixa por versão (as Releases servem) e instalação silenciosa (o Inno já tem).
+  - Processo: conta de desenvolvedor no Partner Center (grátis para pessoa física, com verificação de identidade), reservar o nome "Boxe Zone", página da loja (descrição, prints, ícone, classificação etária, URL da política de privacidade), envio e certificação (de horas a ~3 dias úteis). Antes, pedir a produção do Dropbox (limite de 50 contas, abaixo) e conferir as regras atuais da Microsoft.
+  - Alternativa sem custo enquanto isso: **winget** (manifesto no repositório `microsoft/winget-pkgs`, aceita o instalador sem assinatura).
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
 ## Contas e provedores
