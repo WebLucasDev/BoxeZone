@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [ ] **Rodada de funções (decidida em 13/10/2026).** Copiar link compartilhável: feito (v1.2.0). O resto em 3 rodadas, cada uma com design, plano e uma versão de teste: **1. envio** (enviar pastas + retomar envios grandes; feito, aguardando o teste na `v1.3.0-rc.1`); **2. telas novas** (histórico de envios + escolher a pasta de destino navegando; feito); **3. acabamento** (inglês e seleção de idioma + atualização automática; feito). As três rodadas saem juntas, testadas numa versão de teste só. Os itens estão descritos nas seções abaixo.
+- [x] **Rodada de funções (decidida em 13/10/2026)**: copiar link (v1.2.0); enviar pastas, retomar envios, histórico, escolher a pasta navegando, inglês e atualização automática (v1.3.0, lançada sem teste do usuário em OneDrive e Dropbox, a pedido dele). Design e plano da rodada 1 no histórico do git (commit `465b36c`).
 
 ## Distribuição
 
@@ -90,3 +90,6 @@ Depois da versão 1:
 | "Copiar link": link "qualquer um com o link" no clique, um por linha numa leva, na área de drop e na notificação (design e plano no histórico do git, commit `749749e`) | `0cbe542`, `646df8f`, `5171528`, `e55cff6` |
 | **Versão 1.2.0 publicada** (arrumação + "Copiar link"; testada antes como `v1.2.0-rc.1`, a primeira com o Inno Setup fixo no CI) | tag `v1.2.0` |
 | Enviar pastas (pasta inteira, "(1)" se o nome existir, ocultos de fora) e retomar envios (depois de fechar o app e sem internet, "Aguardando conexão…") | `64dce3e`, `c2e692b`, `345df36`, `4f4dafa` |
+| Histórico de envios e "Procurar…" para a pasta de destino | `a896fbb` |
+| Inglês e escolha de idioma; atualização automática (baixa, confere o SHA256 e instala no "Atualizar") | `973c7dd`, `a8fc8a8` |
+| **Versão 1.3.0 publicada** (rodadas 1 a 3; `v1.3.0-rc.1` e `-rc.2` como versões de teste) | tag `v1.3.0` |
