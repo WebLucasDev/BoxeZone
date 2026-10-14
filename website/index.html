@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Boxe Zone</title>
-  <meta name="description" content="Boxe Zone é um widget gratuito para Windows: arraste arquivos para o canto da tela e eles são enviados para o Google Drive, OneDrive ou Dropbox.">
+  <meta name="description" content="Boxe Zone é um widget gratuito para Windows: solte arquivos ou pastas no canto da tela e eles vão para o Google Drive, o OneDrive ou o Dropbox, sem abrir o navegador.">
   <meta property="og:title" content="Boxe Zone">
-  <meta property="og:description" content="Arraste arquivos para o canto da tela e eles vão para o Google Drive, OneDrive ou Dropbox.">
+  <meta property="og:description" content="Envie para a nuvem sem abrir o navegador: solte arquivos ou pastas no canto da tela e eles vão para o Google Drive, o OneDrive ou o Dropbox.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://weblucasdev.github.io/BoxeZone/">
   <meta property="og:image" content="https://weblucasdev.github.io/BoxeZone/assets/logo.svg">
@@ -31,13 +31,13 @@
   <main id="conteudo">
     <section class="hero" aria-labelledby="titulo">
       <div>
-        <h1 id="titulo">Solte o arquivo no canto da tela. Ele vai para a sua nuvem.</h1>
-        <p class="lede">Boxe Zone é um widget pequeno para Windows que envia o que você arrastar até ele para o Google Drive, o OneDrive ou o Dropbox. Gratuito, sem conta própria e sem servidor no meio do caminho.</p>
+        <h1 id="titulo">Envie para a nuvem sem abrir o navegador.</h1>
+        <p class="lede">Um widget gratuito no canto da tela do Windows. Solte arquivos ou pastas nele e eles vão direto para o Google Drive, o OneDrive ou o Dropbox, com o link pronto para compartilhar. Sem cadastro e com código aberto.</p>
         <div class="get">
           <a class="button" href="https://github.com/WebLucasDev/BoxeZone/releases/latest/download/BoxeZone-Setup-x64.exe">Baixar para Windows</a>
           <small>Windows 10 e 11, 64 bits. <a href="https://github.com/WebLucasDev/BoxeZone/releases/latest/download/BoxeZone-Setup-arm64.exe">Versão para processadores ARM</a></small>
         </div>
-        <p class="smartscreen">Se o Windows mostrar "O Windows protegeu o computador", clique em Mais informações e depois em Executar assim mesmo. O aviso aparece porque o instalador ainda não tem assinatura digital.</p>
+        <p class="smartscreen">Na primeira vez, o navegador e o Windows podem avisar que não reconhecem o instalador. <a href="#instalador">Veja como continuar</a>.</p>
       </div>
 
       <div class="desk-glow" aria-hidden="true"></div>
@@ -74,7 +74,8 @@
                   <div class="z-file">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 1.5h5l3 3v10H4z"/><path d="M9 1.5v3h3"/></svg>
                     <span class="fname">proposta.pdf</span>
-
+                    <span class="pct"></span>
+                    <span class="z-link">Cancelar</span>
                   </div>
                   <div class="track"><i></i></div>
                 </div>
@@ -82,7 +83,8 @@
                   <div class="z-file">
                     <span class="check"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5l2.5 2.5 4.5-5"/></svg></span>
                     <span class="fname">Enviado · proposta.pdf</span>
-                    <a>Abrir</a>
+                    <span class="z-link">Abrir</span>
+                    <span class="z-link">Copiar link</span>
                   </div>
                 </div>
               </div>
@@ -106,6 +108,7 @@
           <div class="w-foot" aria-hidden="true">
             <kbd>Ctrl+Alt+D</kbd>
             <span>abre e fecha</span>
+            <span class="link push">Histórico</span>
             <span class="link">Configurações</span>
           </div>
         </figure>
@@ -183,7 +186,80 @@
 
     <section class="section policy" id="instalador" aria-labelledby="instalador-titulo">
       <h2 id="instalador-titulo">Sobre o instalador</h2>
-      <p class="note-strong">O instalador ainda não tem assinatura digital. Por isso, na primeira vez, o Windows mostra o aviso "O Windows protegeu o computador": clique em Mais informações e depois em Executar assim mesmo.</p>
+      <p class="note-strong">O instalador não tem assinatura digital. Por isso, na primeira vez, o navegador e o Windows podem avisar que não reconhecem o arquivo. É só confirmar:</p>
+
+      <div class="warn-demo">
+        <ol class="warn-steps" id="warn-steps">
+          <li data-step="1"><strong>No Edge</strong>, se o download disser que o arquivo "normalmente não é baixado", clique em <span class="ui">⋯</span> e depois em <span class="ui">Manter</span>.</li>
+          <li data-step="2">Em "Verifique se você confia…", clique na seta ao lado de <span class="ui">Excluir</span> e em <span class="ui">Manter mesmo assim</span>.</li>
+          <li data-step="3">Ao abrir o instalador, se aparecer <strong>"O Windows protegeu o computador"</strong>, clique em <span class="ui">Mais informações</span> e depois em <span class="ui">Executar assim mesmo</span>.</li>
+        </ol>
+
+        <div class="warn-col">
+          <figure class="stage more" id="warn" data-scene="ss" role="img" aria-label="Demonstração dos avisos do navegador e do Windows e de onde clicar em cada um">
+            <!-- Edge downloads panel -->
+            <div class="scene dl" aria-hidden="true">
+              <div class="dl-head">
+                <span>Downloads</span>
+                <span class="dl-tools">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l4 4"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="13" cy="8" r="1.1"/></svg>
+                </span>
+              </div>
+              <div class="dl-item">
+                <svg class="dl-warn" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 1.5l5.5 2v4.5c0 3.3-2.4 5.6-5.5 6.5-3.1-.9-5.5-3.2-5.5-6.5V3.5z"/><path d="M8 5v3.5M8 10.6v.4"/></svg>
+                <p>BoxeZone-Setup-x64.exe normalmente não é baixado. Verifique se você confia BoxeZone-Setup-x64.exe antes de abri-lo.</p>
+                <span class="dl-more" data-target="more">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="13" cy="8" r="1.1"/></svg>
+                </span>
+              </div>
+              <div class="menu dl-menu">
+                <span>Excluir</span>
+                <span data-target="keep">Manter</span>
+                <hr>
+                <span>Relatar este arquivo como seguro</span>
+                <span>Saiba mais</span>
+              </div>
+            </div>
+
+            <!-- Edge "check that you trust" dialog -->
+            <div class="scene trust" aria-hidden="true">
+              <p class="trust-title">Verifique se você confia BoxeZone-Setup-x64.exe antes de abrir</p>
+              <p>O Microsoft Defender SmartScreen não pôde verificar se este arquivo é seguro, pois não é normalmente baixado.</p>
+              <p class="trust-meta">Nome: BoxeZone-Setup-x64.exe<br>Fornecedor: Desconhecido</p>
+              <div class="trust-buttons">
+                <span class="btn">Cancelar</span>
+                <span class="btn primary">Excluir <span class="chev" data-target="chev"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 3.5l3 3 3-3"/></svg></span></span>
+              </div>
+              <div class="menu trust-menu"><span data-target="keep-anyway">Manter mesmo assim</span></div>
+            </div>
+
+            <!-- Windows SmartScreen -->
+            <div class="scene ss" aria-hidden="true">
+              <p class="ss-title">O Windows protegeu o computador</p>
+              <p>O Microsoft Defender SmartScreen impediu que um aplicativo não reconhecido fosse iniciado. A execução desse aplicativo pode colocar seu computador em risco.</p>
+              <p class="ss-link" data-target="info">Mais informações</p>
+              <p class="ss-meta">Aplicativo: BoxeZone-Setup-x64.exe<br>Fornecedor: Fornecedor desconhecido</p>
+              <div class="ss-buttons">
+                <span class="ss-run" data-target="run">Executar assim mesmo</span>
+                <span>Não executar</span>
+              </div>
+            </div>
+
+            <!-- The installer opens -->
+            <div class="scene setup" aria-hidden="true">
+              <img src="assets/logo.svg" alt="" width="40" height="40">
+              <p>Instalando o Boxe Zone…</p>
+              <div class="track"><i></i></div>
+            </div>
+
+            <svg class="cursor" aria-hidden="true" width="18" height="24" viewBox="0 0 18 24"><path d="M1.5 1.5v18l4.6-4.3 3 6.8 3.2-1.4-3-6.6h6.3z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </figure>
+          <button class="replay" type="button" id="warn-replay" hidden>Ver de novo</button>
+        </div>
+      </div>
+
       <p>O Boxe Zone é código aberto (<a href="https://github.com/WebLucasDev/BoxeZone/blob/main/LICENSE">licença MIT</a>). Cada versão é compilada pelo GitHub Actions a partir do <a href="https://github.com/WebLucasDev/BoxeZone">código público deste repositório</a>, e o botão de download baixa o instalador direto da página de <a href="https://github.com/WebLucasDev/BoxeZone/releases">Releases</a> do GitHub. Nenhum arquivo passa por outro lugar.</p>
       <dl class="facts">
         <div>
@@ -209,19 +285,113 @@
   </footer>
 
   <script>
-    // Replays the drop demo on request; the first run starts on load through the .play class.
     (function () {
-      var demo = document.getElementById('demo');
-      var replay = document.getElementById('replay');
       if (!window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
       }
+
+      // Replays the drop demo on request; the first run starts on load through the .play class.
+      var demo = document.getElementById('demo');
+      var replay = document.getElementById('replay');
       replay.hidden = false;
       replay.addEventListener('click', function () {
         demo.classList.remove('play');
         void demo.offsetWidth;
         demo.classList.add('play');
       });
+
+      // Installer warnings: a cursor walks through the clicks, with the matching step lit on the list.
+      // Without motion (or script) the stage rests on the expanded SmartScreen dialog.
+      var stage = document.getElementById('warn');
+      var cursor = stage.querySelector('.cursor');
+      var steps = document.querySelectorAll('#warn-steps li');
+      var warnReplay = document.getElementById('warn-replay');
+      var run = 0;
+
+      function wait(ms, id) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(function () { id === run ? resolve() : reject(); }, ms);
+        });
+      }
+
+      function step(n) {
+        steps.forEach(function (li) { li.classList.toggle('on', li.getAttribute('data-step') === String(n)); });
+      }
+
+      function moveTo(name) {
+        var target = stage.querySelector('[data-target="' + name + '"]');
+        var box = target.getBoundingClientRect();
+        var origin = stage.getBoundingClientRect();
+        var x = box.left - origin.left + box.width / 2 - 2;
+        var y = box.top - origin.top + box.height / 2 - 2;
+        cursor.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+        return target;
+      }
+
+      async function click(name, id) {
+        var target = moveTo(name);
+        await wait(750, id);
+        target.classList.add('hit');
+        cursor.classList.add('down');
+        await wait(180, id);
+        cursor.classList.remove('down');
+        await wait(220, id);
+        target.classList.remove('hit');
+      }
+
+      async function play() {
+        var id = ++run;
+        stage.className = 'stage anim';
+        stage.setAttribute('data-scene', 'dl');
+        cursor.style.transition = 'none';
+        cursor.style.transform = 'translate(' + stage.clientWidth * 0.7 + 'px,' + stage.clientHeight * 0.85 + 'px)';
+        void cursor.offsetWidth;
+        cursor.style.transition = '';
+        step(1);
+        try {
+          await wait(700, id);
+          await click('more', id);
+          stage.classList.add('menu-open');
+          await wait(500, id);
+          await click('keep', id);
+          stage.classList.remove('menu-open');
+          stage.setAttribute('data-scene', 'trust');
+          step(2);
+          await wait(900, id);
+          await click('chev', id);
+          stage.classList.add('menu-open');
+          await wait(500, id);
+          await click('keep-anyway', id);
+          stage.classList.remove('menu-open');
+          stage.setAttribute('data-scene', 'ss');
+          step(3);
+          await wait(1100, id);
+          await click('info', id);
+          stage.classList.add('more');
+          await wait(700, id);
+          await click('run', id);
+          stage.setAttribute('data-scene', 'setup');
+          step(0);
+          await wait(2600, id);
+          stage.classList.remove('anim');
+          stage.classList.add('more');
+          stage.setAttribute('data-scene', 'ss');
+        } catch (e) {
+          // A replay started a newer run.
+        }
+      }
+
+      warnReplay.hidden = false;
+      warnReplay.addEventListener('click', play);
+      if ('IntersectionObserver' in window) {
+        var seen = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            seen.disconnect();
+            play();
+          }
+        }, { threshold: 0.5 });
+        seen.observe(stage);
+      }
     })();
   </script>
 </body>

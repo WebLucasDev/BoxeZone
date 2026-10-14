@@ -122,7 +122,7 @@ img {
   margin: 0 auto;
   padding: clamp(40px, 8vw, 96px) var(--gutter) clamp(48px, 8vw, 104px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 316px;
+  grid-template-columns: minmax(0, 1fr) 356px;
   align-items: end;
   gap: 48px;
 }
@@ -212,7 +212,7 @@ img {
 
 .widget {
   position: relative;
-  width: 300px;
+  width: 340px;
   justify-self: end;
   border-radius: 8px;
   background: var(--surface);
@@ -373,8 +373,15 @@ img {
 }
 
 .w-foot .link {
-  margin-left: auto;
   color: #9fd8ff;
+}
+
+.w-foot .push {
+  margin-left: auto;
+}
+
+.w-foot .link + .link {
+  margin-left: 4px;
 }
 
 /* Drop zone: one sequence on load, a file lands and is sent. */
@@ -426,7 +433,7 @@ img {
 }
 
 /* Row status: "Pronto", and "Enviando…" while the demo file is being sent. */
-.status {
+.w-name .status {
   display: grid;
 }
 
@@ -464,9 +471,24 @@ img {
   flex-shrink: 0;
 }
 
-.z-done .z-file a {
-  color: #9fd8ff;
-  text-decoration: none;
+.z-link,
+.pct {
+  color: #b3bcc8;
+}
+
+/* "0%" to "100%" in step with the bar (browsers without @property show the end value). */
+@property --pct {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 100;
+}
+
+.pct {
+  counter-reset: pct var(--pct);
+}
+
+.pct::after {
+  content: counter(pct) "%";
 }
 
 .flying {
@@ -518,6 +540,10 @@ img {
     animation: fill 1.9s cubic-bezier(0.4, 0, 0.6, 1) 1.7s both;
   }
 
+  .play .pct {
+    animation: count 1.9s cubic-bezier(0.4, 0, 0.6, 1) 1.7s both;
+  }
+
   .play .z-done {
     animation: show-from 3.7s 0s both;
   }
@@ -567,6 +593,11 @@ img {
 @keyframes fill {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+@keyframes count {
+  from { --pct: 0; }
+  to { --pct: 100; }
 }
 
 /* The file hovering over the zone (about 1.2 s to 1.7 s), like a real drag. */
@@ -734,6 +765,365 @@ img {
   margin-top: 28px;
 }
 
+/* Installer warnings: the steps, and a stage where a cursor clicks through them (script in index.html). */
+
+.warn-demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: center;
+  gap: 48px;
+  margin: 8px 0 44px;
+}
+
+.warn-steps {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: warn;
+}
+
+.warn-steps li {
+  position: relative;
+  max-width: 40ch;
+  padding-left: 48px;
+  color: var(--muted);
+  counter-increment: warn;
+  transition: color 0.2s;
+}
+
+.warn-steps li::before {
+  content: counter(warn);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.warn-steps li.on {
+  color: var(--text);
+}
+
+.warn-steps li.on::before {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.warn-steps strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.warn-steps .ui {
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  color: #dbe1e8;
+  white-space: nowrap;
+}
+
+.warn-col {
+  display: grid;
+  justify-items: end;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 75% 85%, rgba(47, 93, 124, 0.55), transparent 60%),
+    var(--desk-raised);
+  font-size: 12px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(330px, calc(100% - 24px));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+
+.stage[data-scene="dl"] .dl,
+.stage[data-scene="trust"] .trust,
+.stage[data-scene="ss"] .ss,
+.stage[data-scene="setup"] .setup {
+  opacity: 1;
+  visibility: visible;
+}
+
+.scene p {
+  margin: 0;
+}
+
+.dl,
+.trust,
+.setup {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: #2b2b2b;
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* Higher than the others: its menu opens below it. */
+.scene.dl {
+  top: 34%;
+}
+
+.dl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dl-tools {
+  display: flex;
+  gap: 14px;
+  color: #ddd;
+}
+
+.dl-item {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) 24px;
+  align-items: start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #3a3a3a;
+}
+
+.dl-warn {
+  margin-top: 2px;
+  color: #f2c94c;
+}
+
+.dl-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  align-self: center;
+  border-radius: 4px;
+}
+
+.menu {
+  position: absolute;
+  display: grid;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: #2c2c2c;
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+
+.menu span {
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.menu hr {
+  width: 100%;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.menu-open .menu {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dl-menu {
+  right: -4px;
+  top: 104px;
+  width: 220px;
+}
+
+.trust {
+  display: grid;
+  gap: 8px;
+  color: #c8c8c8;
+}
+
+.trust .trust-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.trust-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+}
+
+.btn:first-child {
+  padding-right: 12px;
+}
+
+.btn.primary {
+  border-color: #fff;
+  background: #fff;
+  color: #111;
+}
+
+.chev {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.trust-menu {
+  right: 10px;
+  bottom: -34px;
+}
+
+.ss {
+  display: grid;
+  gap: 10px;
+  padding: 18px 18px 14px;
+  background: #1c5fa8;
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.ss .ss-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.ss-link {
+  justify-self: start;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ss-meta,
+.ss-run {
+  display: none;
+}
+
+.more .ss-meta {
+  display: block;
+}
+
+.more .ss-run {
+  display: inline-block;
+}
+
+.ss-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ss-buttons span {
+  padding: 4px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+}
+
+.setup {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  font-size: 13px;
+}
+
+.setup img {
+  border-radius: 9px;
+}
+
+.setup .track {
+  width: 100%;
+}
+
+.stage[data-scene="setup"] .track i {
+  animation: fill 2.2s cubic-bezier(0.4, 0, 0.6, 1) 0.2s both;
+}
+
+/* What the cursor just pressed. */
+.hit {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.btn.primary .hit {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.ss .hit {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), scale 0.15s, opacity 0.2s;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+.anim .cursor {
+  opacity: 1;
+}
+
+.cursor.down {
+  scale: 0.85;
+}
+
 /* Footer */
 
 .foot {
@@ -848,6 +1238,15 @@ img {
   .steps {
     grid-template-columns: minmax(0, 1fr);
     gap: 32px;
+  }
+
+  .warn-demo {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .warn-col {
+    justify-items: center;
   }
 
   .facts {
