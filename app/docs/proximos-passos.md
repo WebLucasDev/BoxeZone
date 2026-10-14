@@ -10,11 +10,10 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- [x] **Rodada de funções (decidida em 13/10/2026)**: copiar link (v1.2.0); enviar pastas, retomar envios, histórico, escolher a pasta navegando, inglês e atualização automática (v1.3.0, lançada sem teste do usuário em OneDrive e Dropbox, a pedido dele). Design e plano da rodada 1 no histórico do git (commit `465b36c`).
+-
 
 ## Distribuição
 
-- [ ] **Assinatura de código**: o programa gratuito da SignPath Foundation **recusou** o pedido em 13/10/2026 (o projeto ainda não tem sinais públicos suficientes: estrelas, forks, menções, artigos); dá para pedir de novo quando o projeto ganhar visibilidade. Decisão do usuário: seguir sem assinatura por enquanto. Alternativas pagas, se um dia valer a pena: certificado de código aberto da Certum (barato, pessoa física), SignPath paga ou certificado comercial (caros). Nenhum tira o aviso do SmartScreen na hora: a reputação vem com os downloads, mas com certificado ela passa de uma versão para a outra. O que ficou da candidatura (licença MIT, opção "Verificar versões novas", resumo de privacidade no instalador) continua valendo.
 - [ ] **Pacote ainda menor**: o maior arquivo é `Microsoft.Windows.SDK.NET.dll` (52,8 MB), que só encolhe com trimming, desligado por causa da reflexão dos SDKs dos provedores. Avaliar `PublishSingleFile` com WinUI.
 
 ## Contas e provedores
@@ -46,7 +45,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 - Abrir as Configurações e voltar pode mudar o widget de lugar: a tela de Configurações cresce para longe das bordas próximas e, na volta, o widget fica preso ao canto oposto do retângulo maior.
 - Ligar "Iniciar com o Windows" num build de desenvolvimento aponta para o `.exe` em `bin\x64\Debug`; o caminho é regravado a cada início com a opção ligada. O mesmo vale para o protocolo `boxezone:`, regravado a cada início pelo `.exe` que rodou por último.
 - Cópia instalada e cópia de desenvolvimento rodam ao mesmo tempo (a instância única vale por `.exe`), com dois ícones na bandeja. Fechar uma antes de testar a outra.
-- O instalador não é assinado: o SmartScreen mostra "O Windows protegeu o computador" (o site explica "Mais informações → Executar assim mesmo"). Ver "Assinatura de código" em Distribuição.
+- O instalador não é assinado: o SmartScreen mostra "O Windows protegeu o computador" (o site explica "Mais informações → Executar assim mesmo"). A SignPath Foundation recusou o pedido de assinatura gratuita em 13/10/2026 e o usuário decidiu não buscar assinatura.
 - Versões de teste (`-rc.N`) mostram só "1.0.0" na linha "Versão" das Configurações, porque a versão do assembly é numérica.
 
 ## Concluído
@@ -92,4 +91,4 @@ Depois da versão 1:
 | Enviar pastas (pasta inteira, "(1)" se o nome existir, ocultos de fora) e retomar envios (depois de fechar o app e sem internet, "Aguardando conexão…") | `64dce3e`, `c2e692b`, `345df36`, `4f4dafa` |
 | Histórico de envios e "Procurar…" para a pasta de destino | `a896fbb` |
 | Inglês e escolha de idioma; atualização automática (baixa, confere o SHA256 e instala no "Atualizar") | `973c7dd`, `a8fc8a8` |
-| **Versão 1.3.0 publicada** (rodadas 1 a 3; `v1.3.0-rc.1` e `-rc.2` como versões de teste) | tag `v1.3.0` |
+| **Versão 1.3.0 publicada** (rodadas 1 a 3; `v1.3.0-rc.1` e `-rc.2` como versões de teste; testada pelo usuário nos três provedores depois do lançamento). Design e plano da rodada 1 no histórico do git (commit `465b36c`) | tag `v1.3.0` |

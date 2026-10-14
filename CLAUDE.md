@@ -84,7 +84,7 @@ docs/                      # arquitetura, roadmap e protótipos
 - Strings de UI em `Strings/pt-BR/Resources.resw` **e** `Strings/en-US/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas: texto novo entra nos dois. O idioma é aplicado uma vez no início (`LanguageService`, antes de qualquer texto); trocar pede reiniciar.
 - Registro do Windows que o app grava (`Run\BoxeZone`, `Classes\AppUserModelId\BoxeZone.App`, `Classes\boxezone`) e que o instalador grava (`Software\BoxeZone`): o desinstalador apaga cada um; chave nova também precisa entrar no `BoxeZone.iss`.
 - Código aberto (MIT). O app só pode falar com sistemas que o usuário não escolheu se isso estiver na política, aparecer na instalação e puder ser desligado (hoje só a verificação de versão, com a opção "Verificar versões novas"). Mudou isso, atualizar a política e o `app/installer/privacidade.txt`.
-- Instalador **sem assinatura digital** (a SignPath Foundation recusou em 13/10/2026 por falta de visibilidade do projeto; ver roadmap). Não dizer em lugar nenhum que ele é assinado.
+- Instalador **sem assinatura digital** (a SignPath Foundation recusou em 13/10/2026 e o usuário decidiu não buscar assinatura). Não dizer em lugar nenhum que ele é assinado.
 
 ## Armadilhas (detalhes em `app/docs/arquitetura.md`)
 
