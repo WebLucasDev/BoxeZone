@@ -1,6 +1,6 @@
 # Boxe Zone
 
-App nativo para Windows 10/11: uma janelinha flutuante no canto da tela onde o usuário arrasta arquivos e eles são enviados para o **Google Drive**, **OneDrive** ou **Dropbox**. Cada provedor tem um switch; ligado, ganha a sua área de drop e a janela cresce.
+App nativo para Windows 10/11: uma janelinha flutuante no canto da tela onde o usuário arrasta arquivos e eles são enviados para o **Google Drive**, **OneDrive**, **Dropbox** ou **MEGA**. Cada provedor tem um switch; ligado, ganha a sua área de drop e a janela cresce.
 
 **Publicado e gratuito** (1.0.0 em 12/10/2026; 1.3.0 em 13/10/2026): instaladores x64 e ARM64 nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/. Nome visível "Boxe Zone"; nome interno (`.exe`, namespace, pastas, registro) `BoxeZone`.
 
@@ -24,7 +24,7 @@ Interface em **pt-BR e inglês** (escolha em Configurações > Idioma; "Sistema"
 - **WinUI 3** (Windows App SDK) + **C# / .NET 10** (`net10.0-windows10.0.19041.0`).
 - **Unpackaged e self-contained** (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`): `.exe` comum, sem instalar runtime. `DefaultLanguage=pt-BR`; `PublishTrimmed=false` (os SDKs dos provedores usam reflexão).
 - **MVVM** com `CommunityToolkit.Mvvm`: `[ObservableProperty]` em **propriedades parciais** (`public partial string Status { get; set; }`), não em campos.
-- Pacotes permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.BuildTools`, `CommunityToolkit.Mvvm`, `H.NotifyIcon.WinUI` (bandeja), `Google.Apis.Drive.v3`, `Microsoft.Identity.Client` (MSAL; o Graph é chamado por `HttpClient`, sem o SDK `Microsoft.Graph`) e `Dropbox.Api`. Qualquer outro: perguntar antes.
+- Pacotes permitidos: `Microsoft.WindowsAppSDK`, `Microsoft.Windows.SDK.BuildTools`, `CommunityToolkit.Mvvm`, `H.NotifyIcon.WinUI` (bandeja), `Google.Apis.Drive.v3`, `Microsoft.Identity.Client` (MSAL; o Graph é chamado por `HttpClient`, sem o SDK `Microsoft.Graph`), `Dropbox.Api` e `MegaApiClient` (da comunidade: o SDK oficial do MEGA é só C++). Qualquer outro: perguntar antes.
 - Componentes do Windows App SDK que o app não usa (AI, ML, Search, Widgets, `Microsoft.Windows.AI.MachineLearning`) são referenciados com `ExcludeAssets="all"` para ficarem fora do pacote; ao atualizar o `Microsoft.WindowsAppSDK`, atualizar as versões deles junto (ver `arquitetura.md`, "Instalador e versões").
 - Instalador: **Inno Setup 6.5.2+** (imagens do assistente em PNG; o CI usa a 6.7.3; `winget install JRSoftware.InnoSetup`). Não usar Electron, Tauri, WebView, WPF nem MSIX.
 
@@ -55,6 +55,7 @@ appsettings.example.json   # modelo; as credenciais reais ficam em appsettings.l
 Views/
   MainWindow               # janela do widget: Frame (WidgetPage/SettingsPage), faixa e painel compacto
   TabWindow                # aba lateral, numa janela própria
+  SignInWindow             # login por e-mail e senha (MEGA), aberta pelo SignInPrompt
   WidgetPage, SettingsPage, HistoryPage
   Controls/                # ProviderRow, AccountCard, TabHandle
 ViewModels/                # MainViewModel, ProviderViewModel, SettingsViewModel, HistoryViewModel
@@ -67,7 +68,7 @@ Services/
   ShareLinkService         # "Copiar link" (área de transferência, últimas levas)
   HistoryService           # history.json (últimos 50 envios)
   Upload/                  # fila de envio salva (UploadQueueStore), FolderScanner, NetworkWaiter
-  Storage/                 # IStorageProvider + Google Drive, OneDrive, Dropbox, SignInPage
+  Storage/                 # IStorageProvider + Google Drive, OneDrive, Dropbox, MEGA (+ MegaWebClient), SignInPage
 Helpers/                   # Win32 (P/Invoke), WindowExtensions, WindowDrag, BindConverters
 installer/                 # BoxeZone.iss (Inno Setup) e build.ps1; saída em installer/output/ (git-ignored)
 docs/                      # arquitetura, roadmap e protótipos
@@ -78,7 +79,7 @@ docs/                      # arquitetura, roadmap e protótipos
 - Toda integração passa por `IStorageProvider`; a UI nunca chama SDK de provedor. Falhas saem como `StorageProviderException` (com `StorageErrorKind`) e a UI mostra a mensagem do `.resw`.
 - Um provedor com falha não pode derrubar os outros: erros ficam na área de drop dele.
 - Uploads sempre `async`, em partes (progresso real), com `IProgress<double>` e `CancellationToken`.
-- OAuth de app desktop (navegador do sistema + loopback) nos três provedores. Tokens só no `TokenStore` (criptografados por usuário do Windows): nunca em texto puro, nunca em log.
+- OAuth de app desktop (navegador do sistema + loopback) no Google, na Microsoft e no Dropbox. O MEGA não tem OAuth: e-mail e senha na `SignInWindow`, usados só no login; a senha nunca é guardada, só a sessão. Tokens e sessões só no `TokenStore` (criptografados por usuário do Windows): nunca em texto puro, nunca em log.
 - Escopos mínimos: no Google só `drive.file` (não sensível; é o que deixa o app "Em produção" sem verificação). Escopo novo em qualquer provedor: atualizar a política de privacidade.
 - Preferências em `%LocalAppData%\BoxeZone\settings.json` (`ApplicationData.Current` não funciona sem pacote). Campos novos em `AppSettings` precisam de valor padrão (arquivos antigos não os têm).
 - Strings de UI em `Strings/pt-BR/Resources.resw` **e** `Strings/en-US/Resources.resw` (`x:Uid` no XAML, `ResourceLoader` no código), nunca fixas: texto novo entra nos dois. O idioma é aplicado uma vez no início (`LanguageService`, antes de qualquer texto); trocar pede reiniciar.
@@ -99,6 +100,7 @@ docs/                      # arquitetura, roadmap e protótipos
 - **`x:Bind` numa `Window`** só liga quando ela é ativada: `Bindings.Update()` no construtor (a faixa aparece sem ativar).
 - **Tema** se aplica no `Window.Content`, senão o Acrylic não acompanha.
 - **Lightweight styling** com o mesmo valor nos dois temas vai no dicionário principal do `App.xaml`, não nos `ThemeDictionaries`.
+- **MEGA e hashcash**: o solucionador do MegaApiClient 1.10.5 está errado (login trava para sempre); o `MegaWebClient` responde o desafio antes da biblioteca. Não trocar o `IWebClient` pelo da biblioteca.
 - Exceção no `OnLaunched` derruba o app em silêncio: ver `%LocalAppData%\BoxeZone\crash.log`.
 
 ## Visual
@@ -110,6 +112,7 @@ O protótipo em `app/docs/` é a **fonte da verdade visual**: antes de criar ou 
 | `app/docs/widget.dc.html` | Widget: cabeçalho, aba, linhas de provedor, áreas de drop, upload, rodapé |
 | `app/docs/configuracoes.dc.html` | Configurações (com o "Procurar…" da pasta de destino) |
 | `app/docs/historico.dc.html` | Histórico |
+| `app/docs/entrar.dc.html` | Janela de login por e-mail e senha (MEGA) |
 | `app/docs/estados-janela.dc.html` | Normal, Docked, Hidden e o painel compacto (esboço; nos detalhes do widget vale o `widget.dc.html`) |
 
 - São HTML de protótipo (dependem de um `support.js` ausente): ler como texto. Valores exatos nos `style="…"` e no `<style>` do `<helmet>`; `<sc-for>`/`<sc-if>`/`{{…}}` equivalem a `ItemsRepeater`, `Visibility` e `x:Bind`; o `<script>` final mostra estados e lógica. O que fica fora do widget é cenário.

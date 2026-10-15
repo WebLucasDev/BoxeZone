@@ -56,7 +56,7 @@ namespace BoxeZone.Services
     {
         public const string DefaultTargetFolder = "/BoxeZone";
 
-        /// <summary>Keyed by provider ID ("gdrive", "onedrive", "dropbox").</summary>
+        /// <summary>Keyed by provider ID ("gdrive", "onedrive", "dropbox", "mega").</summary>
         public Dictionary<string, ProviderSettings> Providers { get; set; } = [];
 
         public bool StartWithWindows { get; set; }

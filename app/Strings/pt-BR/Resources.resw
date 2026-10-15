@@ -444,4 +444,46 @@
     <value>Espaço</value>
     <comment>The space bar in a shortcut, like Ctrl+Alt+Space.</comment>
   </data>
+  <data name="ProviderMega" xml:space="preserve">
+    <value>MEGA</value>
+  </data>
+  <data name="SignInWindowCaption.Text" xml:space="preserve">
+    <value>Boxe Zone</value>
+    <comment>Title bar of the e-mail and password sign-in window (MEGA).</comment>
+  </data>
+  <data name="SignInTitleFormat" xml:space="preserve">
+    <value>Entrar no {0}</value>
+    <comment>{0}: provider name (MEGA). Also the window title.</comment>
+  </data>
+  <data name="SignInNoteFormat" xml:space="preserve">
+    <value>O e-mail e a senha vão direto para o {0}. O Boxe Zone guarda só a sessão, nunca a senha.</value>
+    <comment>{0}: provider name (MEGA).</comment>
+  </data>
+  <data name="SignInEmail.Header" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="SignInPassword.Header" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="SignInCode.Header" xml:space="preserve">
+    <value>Código de verificação</value>
+  </data>
+  <data name="SignInCodeHint.Text" xml:space="preserve">
+    <value>Sua conta tem verificação em duas etapas. Digite o código de 6 dígitos do seu app autenticador.</value>
+  </data>
+  <data name="SignInCancel.Content" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="SignInSubmit.Content" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="SignInWrongCredentials" xml:space="preserve">
+    <value>E-mail ou senha incorretos</value>
+  </data>
+  <data name="SignInWrongCode" xml:space="preserve">
+    <value>Código incorreto ou vencido</value>
+  </data>
+  <data name="SignInFailed" xml:space="preserve">
+    <value>Não foi possível entrar. Tente de novo</value>
+  </data>
 </root>

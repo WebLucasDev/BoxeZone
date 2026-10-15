@@ -230,7 +230,7 @@ namespace BoxeZone.ViewModels
             : Provider.AccountEmail is { Length: > 0 } email ? string.Format(Strings.GetString("AccountConnectedFormat"), email)
             : Strings.GetString("AccountConnected");
 
-        /// <summary>Settings button: "Conectar", "Cancelar" while the browser sign-in is open, or "Desconectar".</summary>
+        /// <summary>Settings button: "Conectar", "Cancelar" while the sign-in is open, or "Desconectar".</summary>
         public string AccountAction => Strings.GetString(
             IsConnecting ? "AccountCancel" : IsConnected ? "AccountDisconnect" : "AccountConnect");
 
@@ -956,7 +956,7 @@ namespace BoxeZone.ViewModels
 
         private async Task ConnectAsync()
         {
-            using var cts = new CancellationTokenSource(SignInTimeout);
+            using var cts = Provider.UsesBrowserSignIn ? new CancellationTokenSource(SignInTimeout) : new CancellationTokenSource();
             _connectCts = cts;
             IsConnecting = true;
             ConnectError = null;

@@ -146,7 +146,7 @@ a{color:#9fd8ff}a:hover{color:#cfeaff}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { on: { drive: true, onedrive: true, dropbox: false }, up: {}, mode: 'open' };
+    this.state = { on: { drive: true, onedrive: true, dropbox: false, mega: false }, up: {}, mode: 'open' };
     this._timers = {};
   }
   componentWillUnmount() {
@@ -157,9 +157,9 @@ class Component extends DCLogic {
     var self = this;
     var cur = this.state.up[id];
     if (cur && cur.pct < 100) return;
-    var files = { drive: 'apresentacao-q3.pptx', onedrive: 'planilha-custos.xlsx', dropbox: 'fotos-evento.zip' };
+    var files = { drive: 'apresentacao-q3.pptx', onedrive: 'planilha-custos.xlsx', dropbox: 'fotos-evento.zip', mega: 'contrato.pdf' };
     // Dropbox simulates a batch of 3 files: "x de 3", one bar for the whole batch, "Enviado · 3 arquivos".
-    var counts = { drive: 1, onedrive: 1, dropbox: 3 };
+    var counts = { drive: 1, onedrive: 1, dropbox: 3, mega: 1 };
     var up = Object.assign({}, this.state.up);
     up[id] = { pct: 0, file: files[id], count: counts[id] };
     this.setState({ up: up });
@@ -182,7 +182,9 @@ class Component extends DCLogic {
     var base = [
       { id: 'drive', name: 'Google Drive', initial: 'G' },
       { id: 'onedrive', name: 'OneDrive', initial: 'O' },
-      { id: 'dropbox', name: 'Dropbox', initial: 'D' }
+      { id: 'dropbox', name: 'Dropbox', initial: 'D' },
+      // MEGA: switching on opens the sign-in window (entrar.dc.html) instead of the browser.
+      { id: 'mega', name: 'MEGA', initial: 'M' }
     ];
     var providers = base.map(function (p) {
       var isOn = !!on[p.id];

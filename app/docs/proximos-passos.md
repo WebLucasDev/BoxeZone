@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
--
+- **MEGA** (pedido de um usuário, 15/10/2026), na branch `feature/mega`: provedor pelo MegaApiClient, login por e-mail e senha numa janela do app (sem OAuth no MEGA), política de privacidade atualizada. Falta: testar com uma conta real (login, código de verificação, envio, pastas, "Copiar link", "Desconectar"), e no lançamento atualizar site e README (hoje falam em três serviços).
 
 ## Distribuição
 
@@ -28,6 +28,8 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 - [ ] **Microsoft**: verificação de editor (publisher verification) para tirar o aviso de editor não verificado na tela de consentimento. Exige conta no programa de parceiros da Microsoft com domínio próprio.
 - [ ] **Revogar no servidor ao desconectar o OneDrive** (hoje o MSAL só apaga a conta do cache local).
 - [ ] **Mais provedores** (Box, pCloud, S3, servidor próprio…): basta implementar `IStorageProvider`.
+- [ ] **MEGA: chave de aplicativo própria** (opcional): hoje vai a padrão do MegaApiClient; uma do Boxe Zone se pede a developers@mega.nz.
+- [ ] **MEGA: voltar ao solucionador da biblioteca** quando gpailler/MegaApiClient#253 sair numa versão (opcional: o `MegaWebClient` continua funcionando).
 
 ## Envio
 

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Boxe Zone — entrar (MEGA)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cap{transition:background-color .1s ease,color .1s ease}
+.cap-close:hover{background-color:#c42b1c;color:#ffffff}
+.btn{transition:background-color .12s ease}
+.btn:hover{background-color:rgba(255,255,255,.12)}
+.field{box-sizing:border-box;width:100%;height:32px;padding:0 10px;border-radius:4px;border:1px solid rgba(255,255,255,.08);border-bottom-color:rgba(255,255,255,.55);background-color:rgba(255,255,255,.06);color:#f3f3f3;font-family:inherit;font-size:14px}
+.label{font-size:14px;margin-bottom:6px}
+</style>
+</helmet>
+<div style="width: 880px; height: 560px; box-sizing: border-box; position: relative; overflow: hidden; background-color: #1c2733; font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif; color: #f3f3f3">
+
+<div aria-hidden="true" style="position: absolute; left: 380px; top: 200px; width: 460px; height: 460px; border-radius: 230px; background-color: #2f5d7c; filter: blur(30px); opacity: .7"></div>
+
+<div style="position: absolute; left: 40px; top: 40px; display: flex; flex-direction: column; gap: 10px; max-width: 300px">
+<div style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fb0c2">POC · Boxe Zone</div>
+<div style="font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif; font-size: 28px; font-weight: 600; line-height: 1.2">Entrar no MEGA</div>
+<div style="font-size: 15px; line-height: 1.5; color: #c0cad6">O MEGA não tem login pelo navegador para outros apps: ligar o MEGA (switch ou "Conectar") abre esta janela, sempre no topo e centrada na tela do mouse. A senha só passa por aqui; o app guarda a sessão. Fica aberta, com o motivo, até o login dar certo; fechar ou "Cancelar" = "Login cancelado".</div>
+</div>
+
+<!-- Own window (SignInWindow): 360 px of content, Acrylic, height of the content. Title bar 32 px with "Boxe Zone" and the system close button. Padding 8/24/24, 12 px between rows. -->
+<section style="position: absolute; left: 420px; top: 40px; width: 360px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background-color: rgba(32,34,40,.72); box-shadow: 0 16px 40px rgba(0,0,0,.45)">
+<header style="display: flex; align-items: center; height: 32px">
+<div style="flex-grow: 1; padding-left: 16px; font-size: 12px; color: #b3bcc8">Boxe Zone</div>
+<button class="cap cap-close" aria-label="Fechar" style="width: 46px; height: 32px; border: 0; background: transparent; color: #e3e7ec">✕</button>
+</header>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 8px 24px 24px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 28px; height: 28px; border-radius: 6px; background-color: rgba(255,255,255,.09); display: flex; align-items: center; justify-content: center"><div style="width: 18px; height: 18px; border-radius: 9px; background-color: #d9272e"></div></div>
+<div style="font-size: 20px; font-weight: 600">Entrar no MEGA</div>
+</div>
+<div style="font-size: 12px; line-height: 1.4; color: #b3bcc8">O e-mail e a senha vão direto para o MEGA. O Boxe Zone guarda só a sessão, nunca a senha.</div>
+<div><div class="label">E-mail</div><input class="field" type="email" value="voce@exemplo.com"></div>
+<div><div class="label">Senha</div><input class="field" type="password" value="12345678"></div>
+
+<!-- Only after MEGA asks for it (two-factor authentication): code field (6 digits) and its hint. -->
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div><div class="label">Código de verificação</div><input class="field" inputmode="numeric" maxlength="6" value="" placeholder=""></div>
+<div style="font-size: 12px; line-height: 1.4; color: #b3bcc8">Sua conta tem verificação em duas etapas. Digite o código de 6 dígitos do seu app autenticador.</div>
+</div>
+
+<!-- Reason of the last try (critical color): "E-mail ou senha incorretos", "Código incorreto ou vencido", "Sem conexão com a internet", "Não foi possível entrar. Tente de novo". Hidden when empty. -->
+<div style="font-size: 12px; color: #ff99a4">Código incorreto ou vencido</div>
+
+<!-- While signing in: 16 px ring left of the buttons; fields and "Entrar" disabled. Enter in any field = "Entrar". -->
+<div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 4px">
+<button class="btn" style="min-width: 96px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,.08); background-color: rgba(255,255,255,.06); color: #f3f3f3; font-family: inherit; font-size: 14px">Cancelar</button>
+<button style="min-width: 96px; height: 32px; border-radius: 4px; border: 0; background-color: #4cc2ff; color: #000000; font-family: inherit; font-size: 14px">Entrar</button>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+</body>
+</html>

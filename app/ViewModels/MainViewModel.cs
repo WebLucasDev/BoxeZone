@@ -20,7 +20,8 @@ namespace BoxeZone.ViewModels
             UploadQueueStore queueStore,
             IStorageProvider googleDrive,
             IStorageProvider oneDrive,
-            IStorageProvider dropbox)
+            IStorageProvider dropbox,
+            IStorageProvider mega)
         {
             Settings = settings;
             var strings = new ResourceLoader();
@@ -30,6 +31,7 @@ namespace BoxeZone.ViewModels
                 new ProviderViewModel("gdrive", strings.GetString("ProviderGoogleDrive"), "google-drive.svg", googleDrive, saved.GetProvider("gdrive"), settingsService.Save, shareLinks, queueStore),
                 new ProviderViewModel("onedrive", strings.GetString("ProviderOneDrive"), "onedrive.svg", oneDrive, saved.GetProvider("onedrive"), settingsService.Save, shareLinks, queueStore),
                 new ProviderViewModel("dropbox", strings.GetString("ProviderDropbox"), "dropbox.svg", dropbox, saved.GetProvider("dropbox"), settingsService.Save, shareLinks, queueStore),
+                new ProviderViewModel("mega", strings.GetString("ProviderMega"), "mega.svg", mega, saved.GetProvider("mega"), settingsService.Save, shareLinks, queueStore),
             ];
 
             foreach (ProviderViewModel provider in Providers)

@@ -121,7 +121,7 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.state = {
-      conn: { drive: true, onedrive: true, dropbox: false },
+      conn: { drive: true, onedrive: true, dropbox: false, mega: false },
       opt: { startup: true, autohide: false, notify: true, updates: true },
       theme: 'system'
     };
@@ -133,7 +133,9 @@ class Component extends DCLogic {
     var accounts = [
       { id: 'drive', name: 'Google Drive', initial: 'G' },
       { id: 'onedrive', name: 'OneDrive', initial: 'O' },
-      { id: 'dropbox', name: 'Dropbox', initial: 'D' }
+      { id: 'dropbox', name: 'Dropbox', initial: 'D' },
+      // MEGA: "Conectar" opens the sign-in window (entrar.dc.html).
+      { id: 'mega', name: 'MEGA', initial: 'M' }
     ].map(function (a) {
       var c = !!conn[a.id];
       return {

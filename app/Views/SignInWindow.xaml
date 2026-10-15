@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="BoxeZone.Views.SignInWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Window.SystemBackdrop>
+        <DesktopAcrylicBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Sign-in for providers without browser sign-in (MEGA): docs/entrar.dc.html -->
+    <Grid
+        x:Name="Root"
+        Width="360"
+        VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar (the content extends into it; the close button stays) -->
+        <Grid x:Name="TitleBarArea">
+            <TextBlock
+                x:Uid="SignInWindowCaption"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="12"
+                Foreground="{ThemeResource TextSecondaryBrush}" />
+        </Grid>
+
+        <StackPanel
+            Grid.Row="1"
+            Padding="24,8,24,24"
+            Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Border
+                    Width="28"
+                    Height="28"
+                    Background="{ThemeResource ProviderIconBackgroundBrush}"
+                    CornerRadius="6">
+                    <Image Width="18" Height="18">
+                        <Image.Source>
+                            <SvgImageSource x:Name="LogoSource" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <TextBlock
+                    x:Name="TitleText"
+                    VerticalAlignment="Center"
+                    FontSize="20"
+                    FontWeight="SemiBold" />
+            </StackPanel>
+
+            <TextBlock
+                x:Name="NoteText"
+                FontSize="12"
+                Foreground="{ThemeResource TextSecondaryBrush}"
+                TextWrapping="Wrap" />
+
+            <TextBox
+                x:Name="EmailBox"
+                x:Uid="SignInEmail"
+                InputScope="EmailSmtpAddress"
+                IsSpellCheckEnabled="False"
+                KeyDown="Field_KeyDown" />
+
+            <PasswordBox
+                x:Name="PasswordBox"
+                x:Uid="SignInPassword"
+                KeyDown="Field_KeyDown" />
+
+            <!-- Only once MEGA asks for it (two-factor authentication) -->
+            <StackPanel
+                x:Name="CodePanel"
+                Spacing="4"
+                Visibility="Collapsed">
+                <TextBox
+                    x:Name="CodeBox"
+                    x:Uid="SignInCode"
+                    InputScope="Number"
+                    IsSpellCheckEnabled="False"
+                    KeyDown="Field_KeyDown"
+                    MaxLength="6" />
+                <TextBlock
+                    x:Uid="SignInCodeHint"
+                    FontSize="12"
+                    Foreground="{ThemeResource TextSecondaryBrush}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <TextBlock
+                x:Name="ErrorText"
+                FontSize="12"
+                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+
+            <StackPanel
+                Margin="0,4,0,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <ProgressRing
+                    x:Name="BusyRing"
+                    Width="16"
+                    Height="16"
+                    Margin="0,0,4,0"
+                    IsActive="False" />
+                <Button
+                    x:Name="CancelButton"
+                    x:Uid="SignInCancel"
+                    MinWidth="96"
+                    Click="CancelButton_Click" />
+                <Button
+                    x:Name="SignInButton"
+                    x:Uid="SignInSubmit"
+                    MinWidth="96"
+                    Click="SignInButton_Click"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

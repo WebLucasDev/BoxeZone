@@ -11,7 +11,7 @@ namespace BoxeZone.Services.Storage
     /// </summary>
     public interface IStorageProvider
     {
-        /// <summary>"gdrive" | "onedrive" | "dropbox"</summary>
+        /// <summary>"gdrive" | "onedrive" | "dropbox" | "mega"</summary>
         string Id { get; }
 
         string DisplayName { get; }
@@ -24,8 +24,14 @@ namespace BoxeZone.Services.Storage
         /// <summary>Reconnects silently from a saved session, if there is one. Never opens the browser.</summary>
         Task RestoreAsync(CancellationToken ct);
 
-        /// <summary>OAuth sign-in in the system browser.</summary>
+        /// <summary>OAuth sign-in in the system browser, or the app's sign-in window (MEGA).</summary>
         Task ConnectAsync(CancellationToken ct);
+
+        /// <summary>
+        /// False when the sign-in is a window of the app (MEGA, no OAuth). The browser sign-in has a
+        /// time limit, as closing its tab tells the app nothing; the window does not need one.
+        /// </summary>
+        bool UsesBrowserSignIn => true;
 
         Task DisconnectAsync();
 

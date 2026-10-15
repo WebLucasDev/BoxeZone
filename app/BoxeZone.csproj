@@ -56,6 +56,7 @@
     <PackageReference Include="Dropbox.Api" Version="7.4.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4276" />
     <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+    <PackageReference Include="MegaApiClient" Version="1.10.5" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.90.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
     <!-- The metapackage stays: H.NotifyIcon.WinUI depends on it, and without a direct reference an
@@ -83,7 +84,7 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <!-- Provider SDKs (Google, Graph, Dropbox) rely on reflection; trimming breaks them. -->
+    <!-- Provider SDKs (Google, Graph, Dropbox, MEGA) rely on reflection; trimming breaks them. -->
     <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
 </Project>

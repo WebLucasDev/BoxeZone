@@ -26,6 +26,7 @@ namespace BoxeZone
     {
         private MainWindow? _window;
         private TabWindow? _tabWindow;
+        private ElementTheme _theme = ElementTheme.Default;
         private WindowDockService? _dockService;
         private HotkeyService? _hotkeyService;
         private SettingsService? _settingsService;
@@ -123,7 +124,8 @@ namespace BoxeZone
                 new UploadQueueStore(tokenStore),
                 new GoogleDriveProvider(credentials.Google, tokenStore),
                 new OneDriveProvider(credentials.MicrosoftClientId, tokenStore),
-                new DropboxProvider(credentials.DropboxAppKey, tokenStore));
+                new DropboxProvider(credentials.DropboxAppKey, tokenStore),
+                new MegaProvider(tokenStore, new SignInPrompt(() => _theme)));
             _window = new MainWindow(viewModel);
             _dockService = new WindowDockService(_window, _tabWindow, viewModel, _settingsService);
 
@@ -227,6 +229,7 @@ namespace BoxeZone
                 AppTheme.Dark => ElementTheme.Dark,
                 _ => ElementTheme.Default,
             };
+            _theme = elementTheme;
             _window?.ApplyTheme(elementTheme);
             _tabWindow?.ApplyTheme(elementTheme);
         }
