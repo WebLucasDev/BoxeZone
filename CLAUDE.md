@@ -2,7 +2,7 @@
 
 App nativo para Windows 10/11: uma janelinha flutuante no canto da tela onde o usuário arrasta arquivos e eles são enviados para o **Google Drive**, **OneDrive**, **Dropbox** ou **MEGA**. Cada provedor tem um switch; ligado, ganha a sua área de drop e a janela cresce.
 
-**Publicado e gratuito** (1.0.0 em 12/10/2026; 1.3.0 em 13/10/2026): instaladores x64 e ARM64 nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/. Nome visível "Boxe Zone"; nome interno (`.exe`, namespace, pastas, registro) `BoxeZone`.
+**Publicado e gratuito** (1.0.0 em 12/10/2026; 1.4.0, com o MEGA, em 15/10/2026): instaladores x64 e ARM64 nas Releases do GitHub, download em https://weblucasdev.github.io/BoxeZone/. Nome visível "Boxe Zone"; nome interno (`.exe`, namespace, pastas, registro) `BoxeZone`.
 
 Interface em **pt-BR e inglês** (escolha em Configurações > Idioma; "Sistema" = português se o Windows estiver em português, senão inglês). Código, nomes, comentários e commits em **inglês**.
 

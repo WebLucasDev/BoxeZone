@@ -10,7 +10,7 @@ Espaço livre para ideias novas, antes de virarem itens das listas abaixo.
 
 ## Em andamento
 
-- **Lançar o MEGA** (versão 1.4.0): primeiro `v1.4.0-rc.1`; na versão final, atualizar o site e o README (hoje falam em três serviços).
+-
 
 ## Distribuição
 
@@ -100,3 +100,4 @@ Depois da versão 1:
 | Inglês e escolha de idioma; atualização automática (baixa, confere o SHA256 e instala no "Atualizar") | `973c7dd`, `a8fc8a8` |
 | **Versão 1.3.0 publicada** (rodadas 1 a 3; `v1.3.0-rc.1` e `-rc.2` como versões de teste; testada pelo usuário nos três provedores depois do lançamento). Design e plano da rodada 1 no histórico do git (commit `465b36c`) | tag `v1.3.0` |
 | MEGA (pedido de um usuário): MegaApiClient, login por e-mail e senha numa janela do app (sem OAuth no MEGA), solucionador de hashcash próprio (o da biblioteca trava o login); testado pelo usuário com uma conta real | `932df9a` |
+| **Versão 1.4.0 publicada** (MEGA; testada antes como `v1.4.0-rc.1`, aprovada pelo usuário que pediu), site e README com os quatro serviços | tag `v1.4.0` |
