@@ -3,7 +3,7 @@
 Publicado em https://weblucasdev.github.io/BoxeZone/ pelo workflow `.github/workflows/pages.yml` a cada push na `main` que mude esta pasta.
 
 - `index.html`: página do app.
-- `privacidade/`: política de privacidade (link exigido pelo Google, Microsoft e Dropbox na tela de login).
+- `privacidade/`: política de privacidade (link exigido pelo Google, Microsoft e Dropbox na tela de login; também explica o login do MEGA).
 - `assets/`: estilo, logo e ícones dos provedores (os mesmos de `app/Assets`).
 - `404.html`: usa caminhos absolutos com `/BoxeZone/`, porque é servido em qualquer endereço inexistente.
 
